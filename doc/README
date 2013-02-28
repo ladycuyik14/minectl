@@ -1,0 +1,46 @@
+#################################################################################
+#										#
+#			minectl - A Minecraft server manager			#
+#										#
+#################################################################################
+
+LICENSE
+	Copyright (C) 2012 Richard Neumann <mail@richard-neumann.de>
+
+	This program is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	at your option) any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+LEGAL
+	minectl is a collection of bash shell scripts and associated configuration 
+	files. It does not ship proprietary content of any kind, which also 
+	excludes Minecraft's JAR files and associated configuration.
+	"Minecraft" is a trademark of Mojang
+
+GENERAL
+	minectl's purpose is NOT to be the best minecraft server management 
+	software on the planet, but to deliver an easy-to-use interface to 
+	manage a minecraft server.
+
+DOCUMENTATION
+	All shell scripts in the mined collection, except the server wrapper 
+	(mined) respond to the "--help" parameter to print information about 
+	their usage. This means: if you want information about how to use 
+	script "./foo" type "./foo --help".
+
+BUGS
+	If you have experience with shell scripting (in fact you should have, 
+	when you run a linux server), feel free to study and modify the shell
+	scripts. I tried to do some helpful documentation in form of source code
+	comments. If you have problems understanding this or that or experience 
+	any bugs, feel free to write me an email to <mail@richard-neumann.de>. 
+	NOTE: The more detailed you describe the problem, the quicker i can fix it.
