@@ -20,7 +20,7 @@ start() {
 	else
 		if ( ! status "$SERVER_NAME" > /dev/null 2> /dev/null ); then
 			echo "Starting minecraft server $SERVER"
-			su - -c '/usr/local/bin/mcsrv "$SERVER" & echo $! > "/home/minecraft/servers/$SERVER.pid"' minecraft
+			su - -c '/usr/local/bin/mined "$SERVER" & echo $! > "/home/minecraft/servers/$SERVER.pid"' minecraft
 		else
 			echo "Server $SERVER is already running"
 		fi

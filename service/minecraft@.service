@@ -1,0 +1,11 @@
+[Unit]
+Description=The Minecraft %i Server
+After=syslog.target network.target
+
+[Service]
+Type=simple
+User=minecraft
+ExecStart=/usr/local/bin/mcsrv %i
+
+[Install]
+WantedBy=multi-user.target
