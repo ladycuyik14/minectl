@@ -1,0 +1,10 @@
+[Unit]
+Description=Minecraft server %i
+
+[Service]
+Type=simple
+User=minecraft
+ExecStart=/usr/local/bin/mined %i
+
+[Install]
+WantedBy=multi-user.target
