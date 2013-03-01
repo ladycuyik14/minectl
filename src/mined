@@ -20,16 +20,30 @@
 ####################
 # Global variables #
 ####################
+
+# Minectl's home directory
 MC_HOME="/home/minectl"
+
+# The directory containing the servers
 SERVERS_DIR="$MC_HOME/servers"
+
+# The directory containing the libraries
 LIB_DIR="/usr/local/libexec/minectl"
+
+# The shared library's path
 MC_LIB="$LIB_DIR/minelib"
+
+# The meta-config file's name
 CFG_FILE=./.mined.cfg
+
+# The name of the server
 SERVER_NAME=$1
+
 
 ###########################
 # Miscellaneous functions #
 ###########################
+
 # Create named pipes
 mk_fifos() {
 	for FIFO in stdin stdout stderr; do
@@ -43,9 +57,11 @@ mk_fifos() {
 	done
 }
 
+
 ###############
 # Main script #
 ###############
+
 # Check for shared library
 if [ -f $MC_LIB ]; then
 	. $MC_LIB
@@ -54,25 +70,35 @@ else
 	exit 1
 fi
 
+if [ $# -ne 1 ]; then
+	fail "Usage: `basename $0` <server_name>" 
+fi
+
 # Change to server's directory
 access_server "$SERVER_NAME" || fail
 
 # Source configuration file
 . $CFG_FILE 2> /dev/null || fail "Configuration file is missing"
 
+# Set default values for required 
+# configuration parameters
+if [ -z "$XMS" ]; then
+	XMS="512M"
+fi
+
+if [ -z "$XMX" ]; then
+	XMX="1024M"
+fi
+
 # Set executable
 EXEC="/usr/bin/java -Xms$XMS -Xmx$XMX $CUSTOM_JAVA_ARGS -jar minecraft_server.jar $JAR_FILE_ARGS"
 
 # If we specified a CPU affinity list, assign the process
-# XXX: Do this before the screen stuff, so that the 
-# affinity will be applied to the java process and not to screen
 if [ -n "$CPU_AFFINITY" ]; then
 	EXEC="/bin/taskset -c $CPU_AFFINITY $EXEC"
 fi
 
 # If we specified a nice value, run the process with it
-# XXX: Do this before the screen stuff, so that the 
-# niceness will be applied to the java process and not to screen
 if [ -n "$NICENESS" ]; then
 	EXEC="/bin/nice -n $NICENESS $EXEC"
 fi
@@ -80,7 +106,5 @@ fi
 # Create FIFO pipes
 mk_fifos
 
-# Start the server 
-# XXX: When not using screen, mined generates a mass of ">" symbols and and floods the log file /var/log/messages
-# with them. As long as I haven't figured out, why it's doing this, let's discard the output
+# Start the server and connect it to the named pipes
 exec $EXEC 0<> stdin 1<> stdout 2<> stderr

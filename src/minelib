@@ -193,3 +193,8 @@ access_server() {
 	# Check if we did really change to a subfolder of $MC_HOME/servers
 	test "`dirname $PWD`" == "$SERVERS_DIR" 2> /dev/null || fail "We are somehow in the '$SERVERS_DIR' directory"
 }
+
+###################################
+# Import error codes and messages #
+###################################
+. `dirname $0`/errcodes || err "Error codes could not be loaded from `dirname $0`/errcodes"

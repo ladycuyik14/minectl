@@ -1,0 +1,10 @@
+#! /bin/bash
+#
+############################
+#                          #
+# Error codes and messages #
+#                          #
+############################
+
+MSG_NO_SUCH_SERVER="No such server: "
+ERR_NO_SUCH_SERVER=1
