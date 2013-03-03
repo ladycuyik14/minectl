@@ -7,8 +7,10 @@
 
 CMD="$1"
 SERVER_NAME="$2"
-ENABLED_SERVERS="/etc/minecraftd.servers"
-ALL_SERVERS="/tmp/minecraftd.servers"
+MC_HOME="/home/minectl"
+SERVERS_DIR="$MC_HOME/servers"
+ENABLED_SERVERS="/etc/minectl.servers"
+ALL_SERVERS="/tmp/minectl.servers"
 
 minectl list > $ALL_SERVERS
 
@@ -20,7 +22,7 @@ start() {
 	else
 		if ( ! status "$SERVER_NAME" > /dev/null 2> /dev/null ); then
 			echo "Starting minecraft server $SERVER"
-			su - -c '/usr/local/bin/mcsrv "$SERVER" & echo $! > "/home/minecraft/servers/$SERVER.pid"' minecraft
+			su - -c '/usr/local/bin/mcsrv "$SERVER" & echo $! > "$SERVERS_DIR/$SERVER.pid"' minecraft
 		else
 			echo "Server $SERVER is already running"
 		fi
@@ -35,8 +37,8 @@ stop() {
         else
                 if ( status "$SERVER_NAME" > /dev/null 2> /dev/null ); then
                         echo "Stopping minecraft server $SERVER"
-                        su - -c 'kill $(cat "/home/minecraft/servers/$SERVER.pid")' minecraft
-			rm "/home/minecraft/servers/$SERVER.pid"
+                        su - -c 'kill $(cat "$SERVERS_DIR/$SERVER.pid")' minecraft
+			rm "$SERVERS_DIR/$SERVER.pid"
                 else
                         echo "Server $SERVER is not running"
                 fi
@@ -49,8 +51,8 @@ status() {
                         $0 status "$SERVER"
                 done < $ALL_SERVERS
         else
-		if [ -f "/home/minecraft/servers/$SERVER.pid" ]; then
-			local PID="`cat "/home/minecraft/servers/$SERVER.pid"`"
+		if [ -f "$SERVERS_DIR/$SERVER.pid" ]; then
+			local PID="`cat "$SERVERS_DIR/$SERVER.pid"`"
 			if ( ps -p $PID > /dev/null 2> /dev/null ); then
 				echo "Server is running"
 				return 0
