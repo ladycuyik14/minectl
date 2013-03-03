@@ -1080,7 +1080,7 @@ disable() {
 	if [ -f "/lib/systemd/system/minecraft@.service" ]; then
 		runas root /usr/bin/systemctl disable minecraft@$SERVER_NAME.service
 	else
-		runas root /bin/sed -i '/"$SERVER_NAME"/d' /etc/minectl.servers 2> /dev/null || fail "Could not disable server"
+		runas root /bin/sed -i "/$SERVER_NAME/d" /etc/minectl.servers 2> /dev/null || fail "Could not disable server"
 	fi
 }
 

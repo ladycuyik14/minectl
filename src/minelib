@@ -130,9 +130,8 @@ set_var() {
 		FILE="$2"
 		TMP_CONFIG_FILE=$TMP_DIR/tmp-config-file.cfg
 
-		# Remove the variable using 'grep -v' on the config file and writing it back
-		grep -v ^"$VARIABLE=" "$FILE" > "$TMP_CONFIG_FILE" 2> /dev/null
-		mv "$TMP_CONFIG_FILE" "$FILE" 2> /dev/null
+		# Remove the variable from the file
+		sed -i "/^$VARIABLE=/d" "$FILE"
 	}
 		
 
@@ -141,6 +140,15 @@ set_var() {
 		VARIABLE="$1"
 		VALUE="$2"
 		FILE="$3"
+
+		# If we had only two parameters, assume that they have the form
+		# <variable>=<value> and re-format data
+		if [ -z "$FILE" ]; then
+			VAL_SET="$VARIABLE"
+			FILE="$VALUE"
+			VARIABLE="`echo $VAL_SET | cut -d "=" -f 1`"
+			VALUE="`echo $VAL_SET | cut -d "=" -f 2`"
+		fi
 
 		# Search for variable inside the file	
 		VAR_LINE="`grep ^"$VARIABLE=" "$FILE" 2> /dev/null`"
