@@ -1087,7 +1087,6 @@ disable() {
 # Perform an execution on the respective init script
 init() {
 	if [ -f "/lib/systemd/system/minecraft@.service" ]; then
-		echo runas root /usr/bin/systemctl $1 minecraft@$SERVER_NAME.service
 		runas root /usr/bin/systemctl $1 minecraft@$SERVER_NAME.service
 	else
 		runas root /etc/init.d/minecraft $1 "$SERVER_NAME" || fail "Could not $1 server $SERVER_NAME"
