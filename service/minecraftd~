@@ -1,0 +1,83 @@
+#! /bin/bash
+#
+# minecraft    Start and stop minecraft servers
+#
+# chkconfig: 234 90 10
+# description: Start and stop minecraft servers
+
+CMD="$1"
+SERVER_NAME="$2"
+MC_HOME="/home/minectl"
+SERVERS_DIR="$MC_HOME/servers"
+ENABLED_SERVERS="/etc/minectl.servers"
+ALL_SERVERS="/tmp/minectl.servers"
+
+minectl list > $ALL_SERVERS
+
+start() {
+	if [ -z "$SERVER_NAME" ]; then
+		while read SERVER; do
+			$0 start "$SERVER"
+		done < $ENABLED_SERVERS
+	else
+		if ( ! status "$SERVER_NAME" > /dev/null 2> /dev/null ); then
+			echo "Starting minecraft server $SERVER"
+			su - -c '/usr/local/bin/mcsrv "$SERVER" & echo $! > "$SERVERS_DIR/$SERVER.pid"' minecraft
+		else
+			echo "Server $SERVER is already running"
+		fi
+	fi
+}
+
+stop() {
+	if [ -z "$SERVER_NAME" ]; then
+                while read SERVER; do
+                        $0 stop "$SERVER"
+                done < $ALL_SERVERS
+        else
+                if ( status "$SERVER_NAME" > /dev/null 2> /dev/null ); then
+                        echo "Stopping minecraft server $SERVER"
+                        su - -c 'kill $(cat "$SERVERS_DIR/$SERVER.pid")' minecraft
+			rm "$SERVERS_DIR/$SERVER.pid"
+                else
+                        echo "Server $SERVER is not running"
+                fi
+        fi
+}
+
+status() {
+	if [ -z "$SERVER_NAME" ]; then
+                while read SERVER; do
+                        $0 status "$SERVER"
+                done < $ALL_SERVERS
+        else
+		if [ -f "/home/minecraft/servers/$SERVER.pid" ]; then
+			local PID="`cat "/home/minecraft/servers/$SERVER.pid"`"
+			if ( ps -p $PID > /dev/null 2> /dev/null ); then
+				echo "Server is running"
+				return 0
+			else
+				echo "Server seems to have died" 1>&2
+				return 2
+			fi
+		else
+			echo "Server is not running"
+			return 1
+		fi
+	fi
+}
+	
+
+case $1 in
+	start)		start
+	;;
+	stop)		stop
+	;;
+	restart)	stop
+			sleep 3
+			start
+	;;
+	status)		status
+	;;
+	*)		echo "Usage: `basename $0` {start,stop,restart,status} [server_name]
+esac
