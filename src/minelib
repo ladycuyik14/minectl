@@ -81,9 +81,9 @@ runas() {
 		$@
 	else
 		# Test if user may run sudo
-		sudo -u "$TARGET_NAME" /usr/bin/true 2> /dev/null
+		sudo /usr/bin/true 2> /dev/null
 		if [ $? -eq 0 ]; then
-			sudo -u "$TARGET_NAME" su - -c "$@"
+			sudo su - -c "$@" "$TARGET_NAME"
 		else
 			su - -c "$@" "$TARGET_NAME"
 		fi
