@@ -1,6 +1,6 @@
 #! /bin/bash
 #
-#	minelib - Library for frequently used functions
+#	minelib - Library for functions frequently used by minectl's scripts
 #
 #	Version 1.0
 #
@@ -62,6 +62,33 @@ fail() {
                 echo -e "$1" 1>&2
         fi
         exit 1
+}
+
+# Run command as different user
+# Usage: runas <user_name> [COMMAND] [OPTIONS..]
+runas() {
+	if [ $# -lt 2 ]; then
+		echo "Usage: runas <user_name> [COMMAND] [OPTIONS..]" 1>&2
+		return 1
+	fi
+
+	TARGET_NAME="$1"
+	shift
+
+	ACTIVE_USER="`who am i | awk '{ print $1}'`"
+
+	if [ "$TARGET_NAME" == "ACTIVE_USER" ]; then
+		$@
+	else
+		# Test if user may run sudo
+		sudo -u "$TARGET_NAME" /usr/bin/true 2> /dev/null
+		if [ $? -eq 0 ]; then
+			sudo "$TARGET_NAME" su - -c "$@"
+		else
+			su - -c "$@" "$TARGET_NAME"
+		fi
+	fi
+	return $?
 }
 
 # Ask a question and return 0 on 'yes' or 1 otherwise

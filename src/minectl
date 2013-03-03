@@ -30,8 +30,11 @@ ARCH=noarch
 # Global variables #
 ####################
 
+# Define default minectl user
+MC_USER=minectl
+
 # Define home directory
-MC_HOME="/home/minectl"
+MC_HOME="/home/$MC_USER"
 
 # Binaries' directory
 BIN_DIR="/usr/local/bin"
@@ -108,7 +111,7 @@ USAGE="\033[1mUsage:	`basename $0` [COMMAND]\033[0m,
 		Manage the server's users
 		See '`basename $0` --help passwd' for further information
 
-	\033[1mconfigure, config\033[0m
+	\033[1mconfigure, config, cfg\033[0m
 		Show the server's meta-variables,
 	\033[1mor: configure <variable> <value>\033[0m
 		Configure the server meta-variables
@@ -117,7 +120,7 @@ USAGE="\033[1mUsage:	`basename $0` [COMMAND]\033[0m,
 	\033[1mor: configure --remove, --delete <variable>\033[0m
 		Delete the specified variable
 
-	\033[1mproperties, prop\033[0m
+	\033[1mproperties, props, pro\033[0m
 		Show variables in the appropriate server.properties file
 	\033[1mor: properties <variable> <value>\033[0m
 		Configure variables in the appropriate server.properties file
@@ -724,14 +727,14 @@ restore() {
 
 # Reset the server
 reset() {
-	# As default we don't want to keep our configuration
+	# As default we want to keep our configuration
 	local KEEP_CONFIG=false
 	local CFG_BACKUP=$TMP_DIR/minecraft-cfg-backup.tar.gz
 
 	# Switch options
 	while (( $# )); do
 		case $1 in
-			--keep-config|-k|-c)	KEEP_CONFIG=true
+			--erase-config|-ec|-e)	KEEP_CONFIG=false
 			;;
 			*)			error "Unrecognized argument '$1'"
 		esac
@@ -885,10 +888,10 @@ repo() {
 	\033[1mlist\033[0m
 		List available repositories
 
-	\033[1madd	<URL>	<name>\033[0m
+	\033[1madd <URL> <name>\033[0m
 		Add a repository
 
-	\033[1mremove	<name>\033[0m
+	\033[1mremove <name>\033[0m
 		Remove a repository
 "
 	
@@ -926,8 +929,8 @@ repo() {
 	# Add an entry to the repository
 	add_repo() {
 		# Clear variables
-		local REPO_URL=$1
-		local REPO_NAME=$2
+		local REPO_URL="$1"
+		local REPO_NAME="$2"
 
 		# If nothing has been specified via the parameters, go to interactive mode
 		if [ -z "$REPO_URL" ]; then
@@ -947,7 +950,7 @@ repo() {
 	# Remove an entry from the repository list
 	rm_repo() {
 		# Only argument: The Repo's name
-		local REPO_NAME=$2
+		local REPO_NAME="$1"
 
 		# If nothing has been specified via the parameters, go to interactive mode
 		if [ -z "$REPO_NAME" ]; then
@@ -1059,6 +1062,37 @@ srv_exec() {
 	fi
 }
 
+##################################
+# Init/Systemd control functions #
+##################################
+
+# Enable a server for startup
+enable() {
+	if [ -f "/lib/systemd/system/minecraft@.service" ]; then
+		/usr/bin/systemctl enable minecraft@$SERVER_NAME.service
+	else
+		echo "$SERVER_NAME" >> /etc/minectl.servers 2> /dev/null || fail "Could not enable server"
+	fi
+}
+
+# Disable a server for starup
+disable() {
+	if [ -f "/lib/systemd/system/minecraft@.service" ]; then
+		/usr/bin/systemctl disable minecraft@$SERVER_NAME.service
+	else
+		remove_from "$SERVER_NAME" /etc/minectl.servers 2> /dev/null || fail "Could not disable server"
+	fi
+}
+
+# Perform an execution on the respective init script
+init() {
+	if [ -f "/lib/systemd/system/minecraft@.service" ]; then
+		/usr/bin/systemctl $1 minecraft@$SERVER_NAME.service
+	else
+		/etc/init.d/minecraft $1 "$SERVER_NAME" || fail "Could not $1 server $SERVER_NAME"
+	fi
+}
+
 ######################################################################################################################
 
 ###############
@@ -1071,19 +1105,19 @@ shift
 
 # Switch commands and execute appropriate functions
 case $CMD in
-	init)			init "$@"
+	init)			runas "$MC_USER" init "$@"
 	;;
-	list)			list "$@"
+	list)			runas "$MC_USER" list "$@"
 	;;
-	add)			add "$@"
+	add)			runas "$MC_USER" add "$@"
 	;;
-	check-update)		check_update "$@"
+	check-update)		runas "$MC_USER" check_update "$@"
 	;;
-	update)			update "$@"
+	update)			runas "$MC_USER" update "$@"
 	;;
-	repo)			repo "$@"
+	repo)			runas "$MC_USER" repo "$@"
 	;;
-        lsjar)			ls_jar "$@"
+        lsjar)			runas "$MC_USER" ls_jar "$@"
 	;;
 	""|help|--help|-h)	case $1 in
 					passwd)	passwd --help
@@ -1108,23 +1142,35 @@ case $CMD in
 
 				case $CMD in
 
-					remove)			remove "$@"
+					remove)			runas "$MC_USER" remove "$@"
 					;;
-					passwd)			passwd "$@"
+					passwd)			runas "$MC_USER" passwd "$@"
 					;;
-					configure|config)	configure "$@"
+					configure|config|cfg)	runas "$MC_USER" configure "$@"
 					;;
-					properties|prop)	properties "$@"
+					properties|props|pro)	runas "$MC_USER" properties "$@"
 					;;
-					backup)			backup "$@"
+					backup)			runas "$MC_USER" backup "$@"
 					;;
-					restore)		restore "$@"
+					restore)		runas "$MC_USER" restore "$@"
 					;;
-					reset)			reset "$@"
+					reset)			runas "$MC_USER" reset "$@"
 					;;
-					set-jar|jar)		setjar "$@"
+					set-jar|jar)		runas "$MC_USER" setjar "$@"
 					;;
-					exec)			srv_exec "$@"
+					exec)			runas "$MC_USER" srv_exec "$@"
+					;;
+					enable)			runas "root" enable
+					;;
+					disable)		runas "root" disable
+					;;
+					start)			runas "root" init start
+					;;
+					stop)			runas "root" init stop
+					;;
+					restart)		runas "root" init restart
+					;;
+					status)			runas "root" init status
 					;;
 					"")			err "No command entered\nType\n\t$0 --help\nfor information about usage"
 					;;
