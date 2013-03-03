@@ -197,5 +197,4 @@ access_server() {
 ###################################
 # Import error codes and messages #
 ###################################
-# TODO: Implement later
-#. `dirname $0`/errcodes || err "Error codes could not be loaded from `dirname $0`/errcodes"
+. `dirname $0`/errcodes || err "Error codes could not be loaded from `dirname $0`/errcodes"
