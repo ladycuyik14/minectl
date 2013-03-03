@@ -1071,7 +1071,7 @@ enable() {
 	if [ -f "/lib/systemd/system/minecraft@.service" ]; then
 		runas root /usr/bin/systemctl enable minecraft@$SERVER_NAME.service
 	else
-		runas root echo "$SERVER_NAME" >> /etc/minectl.servers 2> /dev/null || fail "Could not enable server"
+		runas root /bin/echo "$SERVER_NAME" >> /etc/minectl.servers 2> /dev/null || fail "Could not enable server"
 	fi
 }
 
