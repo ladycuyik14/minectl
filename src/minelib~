@@ -77,7 +77,7 @@ runas() {
 
 	ACTIVE_USER="`who am i | awk '{ print $1}'`"
 
-	if [ "$TARGET_NAME" == "ACTIVE_USER" ]; then
+	if [ "$TARGET_NAME" == "$ACTIVE_USER" ]; then
 		$@
 	else
 		# Test if user may run sudo
