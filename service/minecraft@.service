@@ -4,7 +4,7 @@ After=syslog.target network.target
 
 [Service]
 Type=simple
-User=minecraft
+User=minectl
 ExecStart=/usr/local/bin/mcsrv %i
 
 [Install]
