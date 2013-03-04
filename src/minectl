@@ -143,9 +143,9 @@ USAGE="\033[1mUsage:	`basename $0` [COMMAND]\033[0m,
 	\033[1mset-jar <JAR_file>\033[0m
 		Set <JAR_file> as the active JAR file for the server
 
-	\033[1mreset [--keep-config]\033[0m
+	\033[1mreset [--erase-config,-e]\033[0m
 		Reset the server to default state (create a new server)
-		Use the --keep-config switch to keep the server's configuration
+		Use the --erase-config switch to also erase the server's configuration
 
 	\033[1mexec [ARGS..] <MINECRAFT_SERVER_COMMAND>\033[0m
 		Send commands to the server's stdin and print out replies
