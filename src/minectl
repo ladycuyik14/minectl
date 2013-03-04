@@ -156,6 +156,24 @@ USAGE="\033[1mUsage:	`basename $0` [COMMAND]\033[0m,
 		--wait-time,-w <seconds>	Specify waiting time in seconds
 						to wait for the pipe to close again
 
+	\033[1menable\033[0m
+		Enable the server to start on system startup
+
+	\033[1mdisable\033[0m
+		Disable the server on system startup
+
+	\033[1mstart\033[0m
+		Start the server
+
+	\033[1mstop\033[0m
+		Stop the server
+
+	\033[1mrestart\033[0m
+		Restart the server
+
+	\033[1mstatus\033[0m
+		Print status of the server
+
 \033[1mMETA\033[0m
 	\033[1m--help\033[0m
 		Print this infomation
@@ -1042,7 +1060,7 @@ srv_exec() {
 	# Per default, we don't want to see the verbose output
 	local VERBOSE=false
 	local SHOW_TAIL=false
-	local WAIT_TIME
+	local WAIT_TIME=0.1
 
 	# Switch options
 	while (( $# )); do
@@ -1073,7 +1091,7 @@ srv_exec() {
 				cat stderr 2> /dev/null& echo $! > $CAT_PID 2> /dev/null
 			) > /dev/null 2> /dev/null
 			# Wait a short time
-			sleep .1 2> /dev/null || err "Could not sleep"
+			sleep $WAIT_TIME 2> /dev/null || err "Could not sleep"
 			# Close the sterr fifo
 			kill `cat $CAT_PID` 2> /dev/null || err "Could not kill cat"
 			# Remove PID file
@@ -1087,7 +1105,7 @@ srv_exec() {
 		# Echo command into stdin fifo
 		echo $@ > stdin 2> /dev/null || fail "Could not execute command \"$@\""
 		# Wait a short time
-		sleep .1 2> /dev/null || err "Could not sleep"
+		sleep $WAIT_TIME 2> /dev/null || err "Could not sleep"
 		# Close the sterr fifo
 		kill `cat $CAT_PID` 2> /dev/null || err "Could not kill cat"
 		# Remove PID file
