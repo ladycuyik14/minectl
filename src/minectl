@@ -147,8 +147,14 @@ USAGE="\033[1mUsage:	`basename $0` [COMMAND]\033[0m,
 		Reset the server to default state (create a new server)
 		Use the --keep-config switch to keep the server's configuration
 
-	\033[1mexec [--verbose] <MINECRAFT_SERVER_COMMAND>\033[0m
+	\033[1mexec [ARGS..] <MINECRAFT_SERVER_COMMAND>\033[0m
 		Send commands to the server's stdin and print out replies
+		Possible arguments are:
+		--verbose,-v			Show verbose output
+		--show-tail,-s			Show the tail of the pipe and 
+						not only the command's results
+		--wait-time,-w <seconds>	Specify waiting time in seconds
+						to wait for the pipe to close again
 
 \033[1mMETA\033[0m
 	\033[1m--help\033[0m
@@ -1034,25 +1040,58 @@ setjar() {
 # Send commands to server and print results
 srv_exec() {
 	# Per default, we don't want to see the verbose output
-	VERBOSE=false
+	local VERBOSE=false
+	local SHOW_TAIL=false
+	local WAIT_TIME
 
 	# Switch options
-	case $1 in
-		--verbose|-v)	VERBOSE=true
-				shift
-	esac
+	while (( $# )); do
+		case $1 in
+			--verbose|-v)	VERBOSE=true
+					shift
+			;;
+			--show-tail|-s)	SHOW_TAIL=true
+					shift
+			;;
+			--wait-time|-w)	WAIT_TIME=$2
+					shift 2
+			;;
+			*)		break
+		esac
+	done
 
 	# Execute a raw query
 	exec_cmd() {
 		access_server "$SERVER_NAME"
-	
+
+		local CAT_PID=/tmp/minectl.cat.pid
+		
+		# Delete tail if unwanted
+		if ( ! $SHOW_TAIL ); then
+			# Open stderr fifo for reading and discard the output
+			(	
+				cat stderr 2> /dev/null& echo $! > $CAT_PID 2> /dev/null
+			) > /dev/null 2> /dev/null
+			# Wait a short time
+			sleep .1 2> /dev/null || err "Could not sleep"
+			# Close the sterr fifo
+			kill `cat $CAT_PID` 2> /dev/null || err "Could not kill cat"
+			# Remove PID file
+			rm -f $CAT_PID 2> /dev/null || err "Could not remove cat.pid"
+		fi
+
+		# Open stderr fifo for reading
 		(	
-			cat stderr 2> /dev/null& echo $! > cat.pid 2> /dev/null
+			cat stderr 2> /dev/null& echo $! > $CAT_PID 2> /dev/null
 		) 2> /dev/null
+		# Echo command into stdin fifo
 		echo $@ > stdin 2> /dev/null || fail "Could not execute command \"$@\""
+		# Wait a short time
 		sleep .1 2> /dev/null || err "Could not sleep"
-		kill `cat cat.pid` 2> /dev/null || err "Could not kill cat"
-		rm -f catpid 2> /dev/null || err "Could not remove cat.pid"
+		# Close the sterr fifo
+		kill `cat $CAT_PID` 2> /dev/null || err "Could not kill cat"
+		# Remove PID file
+		rm -f $CAT_PID 2> /dev/null || err "Could not remove cat.pid"
 	}
 
 	if ( $VERBOSE ); then
