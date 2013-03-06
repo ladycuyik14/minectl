@@ -655,9 +655,7 @@ passwd() {
 
 	# Reload the whitelist
 	whitelist_reload() {
-		if ( service status > /dev/null 2> /dev/null ); then
-                        srv_exec whitelist reload > /dev/null 2> /dev/null
-                fi
+		srv_exec whitelist reload > /dev/null 2> /dev/null
 	}
 
 	# Check if we are given a valid user name
@@ -727,10 +725,9 @@ passwd() {
 		if ( is_whitelisted "$1" > /dev/null 2> /dev/null ); then
 			if ( ! is_op "$1" > /dev/null 2> /dev/null ); then		
 				if ( add_to "$1" "$OP_LIST" > /dev/null 2> /dev/null ); then
-					# Make the user an operator instantly iff the server is running
-					if ( service status > /dev/null 2> /dev/null ); then
-						srv_exec op "$1" > /dev/null 2> /dev/null
-					fi
+					# Make the user an operator instantly 
+					# on the running server
+					srv_exec op "$1" > /dev/null 2> /dev/null
 
 					succ "User \033[1m$1\033[0m is \033[1mnow an operator\033[0m on server \033[1m$SERVER_NAME\033[0m."
 				else
@@ -749,10 +746,8 @@ passwd() {
 		valid_user "$1"
 		if ( is_op "$1" > /dev/null 2> /dev/null ); then
 			if ( remove_from "$1" "$OP_LIST" > /dev/null 2> /dev/null ); then
-					# Deop the user iff the server is running
-					if ( service status > /dev/null 2> /dev/null ); then
-						srv_exec deop "$1" > /dev/null 2> /dev/null
-					fi
+				# Deop the user on running server
+				srv_exec deop "$1" > /dev/null 2> /dev/null
 
 				succ "User \033[1m$1\033[0m is \033[1mno longer an operator\033[0m on server \033[1m$SERVER_NAME\033[0m."
 			else
@@ -1318,18 +1313,33 @@ srv_exec() {
 		esac
 	done
 
-	# Execute a raw query
+	# Execute a Java command on the server
 	exec_cmd() {
 		access_server "$SERVER_NAME"
 
-		local CAT_PID=/tmp/minectl.cat.pid
+		if ( service status > /dev/null 2> /dev/null ); then
+			local CAT_PID="`mktemp`"
 		
-		# Delete tail if unwanted
-		if ( ! $SHOW_TAIL ); then
-			# Open stderr fifo for reading and discard the output
+			# Delete tail if unwanted
+			if ( ! $SHOW_TAIL ); then
+				# Open stderr fifo for reading and discard the output
+				(	
+					cat stderr 2> /dev/null& echo $! > $CAT_PID 2> /dev/null
+				) > /dev/null 2> /dev/null
+				# Wait a short time
+				sleep $WAIT_TIME 2> /dev/null || err "Could not sleep"
+				# Close the sterr fifo
+				kill `cat $CAT_PID` 2> /dev/null || err "Could not kill cat"
+				# Remove PID file
+				rm -f $CAT_PID 2> /dev/null || err "Could not remove cat.pid"
+			fi
+
+			# Open stderr fifo for reading
 			(	
 				cat stderr 2> /dev/null& echo $! > $CAT_PID 2> /dev/null
-			) > /dev/null 2> /dev/null
+			) 2> /dev/null
+			# Echo command into stdin fifo
+			echo $@ > stdin 2> /dev/null || fail "Could not execute command \"$@\""
 			# Wait a short time
 			sleep $WAIT_TIME 2> /dev/null || err "Could not sleep"
 			# Close the sterr fifo
@@ -1337,19 +1347,8 @@ srv_exec() {
 			# Remove PID file
 			rm -f $CAT_PID 2> /dev/null || err "Could not remove cat.pid"
 		fi
-
-		# Open stderr fifo for reading
-		(	
-			cat stderr 2> /dev/null& echo $! > $CAT_PID 2> /dev/null
-		) 2> /dev/null
-		# Echo command into stdin fifo
-		echo $@ > stdin 2> /dev/null || fail "Could not execute command \"$@\""
-		# Wait a short time
-		sleep $WAIT_TIME 2> /dev/null || err "Could not sleep"
-		# Close the sterr fifo
-		kill `cat $CAT_PID` 2> /dev/null || err "Could not kill cat"
-		# Remove PID file
-		rm -f $CAT_PID 2> /dev/null || err "Could not remove cat.pid"
+	
+		err "Server is not running"
 	}
 
 	if ( $VERBOSE ); then
