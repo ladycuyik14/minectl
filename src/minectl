@@ -1449,10 +1449,18 @@ service() {
 
 	# Perform an execution on the respective init script
 	init() {
-		if [ -f "/lib/systemd/system/minecraft@.service" ]; then
-			runas root /usr/bin/systemctl $1 minecraft@$SERVER_NAME.service
+		if [ "$1" == "status" ]; then
+			if [ -f "/lib/systemd/system/minecraft@.service" ]; then
+				/usr/bin/systemctl $1 minecraft@$SERVER_NAME.service
+			else
+				/etc/init.d/minecraft $1 "$SERVER_NAME" || fail "Could determine $1 of server $SERVER_NAME"
+			fi
 		else
-			runas root /etc/init.d/minecraft $1 "$SERVER_NAME" || fail "Could not $1 server $SERVER_NAME"
+			if [ -f "/lib/systemd/system/minecraft@.service" ]; then
+				runas root /usr/bin/systemctl $1 minecraft@$SERVER_NAME.service
+			else
+				runas root /etc/init.d/minecraft $1 "$SERVER_NAME" || fail "Could not $1 server $SERVER_NAME"
+			fi
 		fi
 	}
 	
