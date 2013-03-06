@@ -1162,7 +1162,7 @@ repo() {
 		# Parse our repo list
 		parse_repo
 
-		echo -e "\nAvailable Repositories:\n\n|\t\t\033[1mName\033[0m\t\t|\t\t\t\033[1mURL\033[0m"
+		echo -e "\nAvailable Repositories:\n\n│\t\t\033[1mName\033[0m\t\t│\t\t\t\t\033[1mURL\033[0m"
 
 		# Iterate over each repository entry in the repository list
 		while read REPO; do
@@ -1178,10 +1178,10 @@ repo() {
 			# The name of the file we want to store
 			local REPO_FILE=`basename $REPO_URL`
 
-			echo -e "├───────────────────────────────┼───────────────────────────────────────────────────────────────────────────────────┤"
+			echo -e "├───────────────────────────────┼───────────────────────────────────────────────────────────────────────────────────"
 			echo -e "│\t$REPO_NAME\t│\t$REPO_URL"
 		done < $TMP_REPO_LIST
-		echo -e "└───────────────────────────────┴───────────────────────────────────────────────────────────────────────────────────┘"
+		echo -e "└───────────────────────────────┴───────────────────────────────────────────────────────────────────────────────────"
 	}
 
 	# Add an entry to the repository
