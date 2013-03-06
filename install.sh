@@ -30,6 +30,9 @@ install -o minectl -g minectl -m 775 -d /usr/local/libexec/minectl/jar
 install -o minectl -g minectl -m 775 -t /usr/local/libexec/minectl minelib .repolist
 install -o minectl -g minectl -m 775 -t /usr/local/bin mcpasswd mcsrv minectl
 
+# Add binaries' path to the users's PATH variable
+echo -e 'export PATH=\"$PATH:/usr/local/bin\"' >> /home/minectl/.bashrc
+
 # Install system services
 cd ../service
 if [ -d /lib/systemd/system ]; then
