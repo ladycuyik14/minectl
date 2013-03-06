@@ -146,6 +146,10 @@ USAGE="\033[1mUsage:	`basename $0` [COMMAND]\033[0m,
 	\033[1mreset [--erase-config,-e]\033[0m
 		Reset the server to default state (create a new server)
 		Use the --erase-config switch to also erase the server's configuration
+	
+	 \033[1mservice [SERVICE_COMMAND]\033[0m
+                Manage the respctive system service
+                See '`basename $0` --help service' for further information
 
 	\033[1mexec [ARGS..] <MINECRAFT_SERVER_COMMAND>\033[0m
 		Send commands to the server's stdin and print out replies
@@ -155,24 +159,15 @@ USAGE="\033[1mUsage:	`basename $0` [COMMAND]\033[0m,
 						not only the command's results
 		--wait-time,-w <seconds>	Specify waiting time in seconds
 						to wait for the pipe to close again
+	\033[1mplayers\033[0m
+                List players logged in to the server
+	
+	\033[1mplayer-count\033[0m
+                List count of players logged in to the server
 
-	\033[1menable\033[0m
-		Enable the server to start on system startup
-
-	\033[1mdisable\033[0m
-		Disable the server on system startup
-
-	\033[1mstart\033[0m
-		Start the server
-
-	\033[1mstop\033[0m
-		Stop the server
-
-	\033[1mrestart\033[0m
-		Restart the server
-
-	\033[1mstatus\033[0m
-		Print status of the server
+	\033[1m[MINECRAFT_JAVA_COMMAND [ARGS..]]\033[0m
+                If none of the aforementioned commands apply, minectl will
+                interpret the command as command for the Java program
 
 \033[1mMETA\033[0m
 	\033[1m--help\033[0m
@@ -483,7 +478,7 @@ passwd() {
 	local TMP=$TMP_DIR/`basename $0`-$CMD.tmp
 
 	# Usage information
-	local USAGE="\033[1mUsage: `basename $0` <server_name> passwd <COMMAND [user_name]>*\033[0m
+	local USAGE="\033[1mUsage: `basename $0` <server_name> passwd <COMMAND [user_name]> [COMMAND [user_name]..]\033[0m
 
 \033[1mCOMMANDS\033[0m
 	\033[1madd, whitelist		<user_name>\033[0m
@@ -1055,6 +1050,10 @@ setjar() {
 	unlink minecraft_server.jar 2> /dev/null; ln -sf $JAR_FILE minecraft_server.jar 2> /dev/null &&	echo "Server should be restarted" || fail "Could not set new JAR file"
 }
 
+#############################
+# Minecraft server commands #
+#############################
+
 # Send commands to server and print results
 srv_exec() {
 	# Per default, we don't want to see the verbose output
@@ -1119,35 +1118,116 @@ srv_exec() {
 	fi
 }
 
+# List players that are logged in
+# Return 0 iff there are players on the server
+# or 1 else
+list_players() {
+	local PLAYERS="`exec list | tail +1`"
+
+	if [ -n "$PLAYERS" ]; then
+		echo "$PLAYERS"
+		return 0
+	fi
+
+	echo "There are no players on the server"
+	return 1	
+}
+
+# Display count of players logged in
+# Return 0 iff there are players on the server
+# or 1 else
+player_count()  {
+	local PLAYERS=`exec list | head -n 1 | awk '{ print $3 }' | cut -d "/" -f 1`
+	
+	echo $PLAYERS
+
+	if [ $PLAYERS -gt 0 ]; then
+		return 0
+	fi
+
+	return 1
+}
+
 ##################################
 # Init/Systemd control functions #
 ##################################
 
-# Enable a server for startup
-enable() {
-	if [ -f "/lib/systemd/system/minecraft@.service" ]; then
-		runas root /usr/bin/systemctl enable minecraft@$SERVER_NAME.service
-	else
-		runas root /bin/echo "$SERVER_NAME" >> /etc/minectl.servers 2> /dev/null || fail "Could not enable server"
-	fi
-}
+# Perform operations on minectl's system service
+service() {
+	# Usage information
+        local USAGE="\033[1mUsage: `basename $0` <server_name> service <COMMAND> [COMMAND..]\033[0m
 
-# Disable a server for starup
-disable() {
-	if [ -f "/lib/systemd/system/minecraft@.service" ]; then
-		runas root /usr/bin/systemctl disable minecraft@$SERVER_NAME.service
-	else
-		runas root /bin/sed -i "/$SERVER_NAME/d" /etc/minectl.servers 2> /dev/null || fail "Could not disable server"
-	fi
-}
+\033[1mCOMMANDS\033[0m
+        \033[1enable\033[0m
+                Enable the server on system startup
 
-# Perform an execution on the respective init script
-init() {
-	if [ -f "/lib/systemd/system/minecraft@.service" ]; then
-		runas root /usr/bin/systemctl $1 minecraft@$SERVER_NAME.service
-	else
-		runas root /etc/init.d/minecraft $1 "$SERVER_NAME" || fail "Could not $1 server $SERVER_NAME"
-	fi
+        \033[1mdisable\033[0m
+                Disable the server on system startup
+
+        \033[1mstart\033[0m
+                Start the server
+
+        \033[1mstop\033[0m
+                Stop the server
+
+        \033[1mstatus\033[0m
+                Print status of the server
+
+        \033[1mrestart\033[0m
+                Restart the server
+
+        \033[1mhelp\033[0m
+                Print this information
+"
+
+	# Enable a server for startup
+	enable() {
+		if [ -f "/lib/systemd/system/minecraft@.service" ]; then
+			runas root /usr/bin/systemctl enable minecraft@$SERVER_NAME.service
+		else
+			runas root /bin/echo "$SERVER_NAME" >> /etc/minectl.servers 2> /dev/null || fail "Could not enable server"
+		fi
+	}
+
+	# Disable a server for starup
+	disable() {
+		if [ -f "/lib/systemd/system/minecraft@.service" ]; then
+			runas root /usr/bin/systemctl disable minecraft@$SERVER_NAME.service
+		else
+			runas root /bin/sed -i "/$SERVER_NAME/d" /etc/minectl.servers 2> /dev/null || fail "Could not disable server"
+		fi
+	}
+
+	# Perform an execution on the respective init script
+	init() {
+		if [ -f "/lib/systemd/system/minecraft@.service" ]; then
+			runas root /usr/bin/systemctl $1 minecraft@$SERVER_NAME.service
+		else
+			runas root /etc/init.d/minecraft $1 "$SERVER_NAME" || fail "Could not $1 server $SERVER_NAME"
+		fi
+	}
+	
+	# Switch commands
+	while (( $# )); do
+		case $1 in
+			enable)		enable
+			;;
+			disable)	disable
+			;;
+			start)		init start
+			;;
+			stop)		init stop
+			;;
+			restart)	init restart
+			;;
+			status)		init status
+			;;
+			--help|-h|help)	echo -e "$USAGE"
+			;;
+			*)		error "Unknown argument '$1'. Try:\n\t\$ $0 $CMD --help"
+		esac
+		shift
+	done
 }
 
 ######################################################################################################################
@@ -1182,9 +1262,11 @@ case $CMD in
         lsjar)			ls_jar "$@"
 	;;
 	""|help|--help|-h)	case $1 in
-					passwd)	passwd --help
+					passwd)		passwd --help
 					;;
-					repo)	repo --help
+					repo)		repo --help
+					;;
+					service)	service --help
 					;;
 					*)	echo -e "$USAGE" | /usr/bin/less -r
 				esac
@@ -1220,23 +1302,19 @@ case $CMD in
 					;;
 					set-jar|jar)		setjar "$@"
 					;;
+					service)		service "$@"
+					;;
 					exec)			srv_exec "$@"
 					;;
-					enable)			enable
+					players)		list_players "$@"
 					;;
-					disable)		disable
-					;;
-					start)			init start
-					;;
-					stop)			init stop
-					;;
-					restart)		init restart
-					;;
-					status)			init status
+					player-count)		player_count "$@"
 					;;
 					"")			err "No command entered\nType\n\t$0 --help\nfor information about usage"
 					;;
-					*)			err "Unrecognized command '$CMD'\nType\n\t$0 --help\nfor information about usage"
+					# Assume that we want to run a command of the Java program
+					# iff nothing else applies
+					*)			srv_exec "$CMD $@"
 				esac
 esac
 
