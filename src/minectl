@@ -535,10 +535,10 @@ configure() {
 		shift
 
 		# Change variable
-		set_var $VAR "$@" $SERVER_CONFIG
+		set_var "$VAR" "$@" "$SERVER_CONFIG"
 
 		# Print new configuration after modifications
-		configure $VAR
+		configure "$VAR"
 	fi
 
 	rm -f $TMP_SERVER_CONFIG 2> /dev/null
@@ -567,14 +567,14 @@ properties() {
 		done < $TMP_SERVER_PROPERTIES
 	else
 		# Put var to lower case
-		declare -l VAR=$1
+		declare -l VAR="$1"
 		shift
 
 		# Change variable
-		set_var $VAR "$@" $SERVER_PROPERTIES
+		set_var "$VAR" "$@" "$SERVER_PROPERTIES"
 	
 		# Print new properties after modifications
-		properties $VAR
+		properties "$VAR"
 	fi
 
 	rm -f $TMP_SERVER_PROPERTIES 2> /dev/null
