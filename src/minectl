@@ -1507,6 +1507,7 @@ if [ "$USER" != "$MC_USER" ]; then
 		fail "You need to be either $MC_USER or root to run this"
 	else
 		su - -c "$0 $CMD $@" minectl
+		exit $?
 	fi
 fi
 
