@@ -1122,7 +1122,7 @@ srv_exec() {
 # Return 0 iff there are players on the server
 # or 1 else
 list_players() {
-	local PLAYERS="`exec list | tail +1`"
+	local PLAYERS="`exec list | tail -n +1`"
 
 	if [ -n "$PLAYERS" ]; then
 		echo "$PLAYERS"
