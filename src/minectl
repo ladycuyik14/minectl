@@ -1147,7 +1147,7 @@ player_count()  {
 	srv_exec list | head -n 1 | awk '{ print $3 }' | cut -d "/" -f 1 > $TMP_PLAYERS 2> /dev/null
 	cat $TMP_PLAYERS
 
-	if [ `cat $PLAYERS` -gt 0 ]; then
+	if [ `echo $(cat $PLAYERS)` -gt 0 ]; then
 		RETVAL=0
 	fi
 
