@@ -1506,7 +1506,7 @@ if [ "$USER" != "$MC_USER" ]; then
 	if [ $EUID -ne 0 ]; then
 		fail "You need to be either $MC_USER or root to run this"
 	else
-		su - -c "$0 $CMD $@" minectl
+		su - -c "$0 $CMD $*" minectl
 		exit $?
 	fi
 fi
