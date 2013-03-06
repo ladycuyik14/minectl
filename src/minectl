@@ -147,10 +147,10 @@ USAGE="Usage:	\033[1m`basename $0`\033[0m [\033[1mINDEPENDENT_COMMAND\033[0m],
 	\033[1m\033[3mBackup, Restore and Reset\033[0m
 		For \033[1mbackup\033[0m, \033[1mrestore\033[0m and \033[1mreset\033[0m you can use the
 			following common options:
-			\033[1m--force\033[0m		To activate non-interactive mode in operations.
+			\033[1m--force\033[0m			To activate non-interactive mode in operations.
 			\033[1m--grace-time\033[0m \033[3mgrace_time\033[0m	To set the grace time in seconds for when the 
-				appropriate server will be shut down (default: 10).
-			\033[1m--message\033[0m \033[3mmessage\033[0m	To specify the message send to users on the server.
+						appropriate server will be shut down (default: 10).
+			\033[1m--message\033[0m \033[3mmessage\033[0m		To specify the message send to users on the server.
 
 		\033[1mbackup\033[0m [\033[1mCOMMON_OPTIONS\033[0m] [\033[1mbackup_name\033[0m]\033[0m
 			Create a backup of the server.
@@ -178,9 +178,9 @@ USAGE="Usage:	\033[1m`basename $0`\033[0m [\033[1mINDEPENDENT_COMMAND\033[0m],
 			Possible arguments are:
 			\033[1m--verbose\033[0m, \033[1m-v\033[0m		Show verbose output.
 			\033[1m--show-tail\033[0m, \033[1m-s\033[0m		Show the tail of the pipe and 
-						not only the command's results.
+							not only the command's results.
 			\033[1m--wait-time\033[0m, \033[1m-w\033[0m \033[3mseconds\033[0m	Specify waiting time in seconds
-						to wait for the pipe to close again.
+							to wait for the pipe to close again.
 
 		\033[1mplayers\033[0m
 		        List players logged in to the server
