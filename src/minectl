@@ -83,113 +83,116 @@ CHANGED_VARS=
 SERVER_RUNNING=
 
 # Synopsis of usage for user information
-USAGE="Usage:	\033[1m`basename $0`\033[0m [\033[1mCOMMAND\033[0m],
-		\033[1m`basename $0`\033[0m \033[3mSERVER_NAME\033[0m [\033[1mSERVER_SPECIFIC_COMMAND\033[0m]
+USAGE="Usage:	\033[1m`basename $0`\033[0m [\033[1mINDEPENDENT_COMMAND\033[0m],
+   or:	\033[1m`basename $0`\033[0m \033[3mSERVER_NAME\033[0m [\033[1mSERVER_SPECIFIC_COMMAND\033[0m]
+   or:	\033[1m`basename $0`\033[0m [\033[1mMETA_COMMAND\033[0m]
 
 \033[1mINDEPENDENT COMMANDS\033[0m
 	\033[1minit\033[0m
-		Initialize the server manager
+		Initialize the server manager.
 
 	\033[1mlist\033[0m [\033[1m--verbose\033[0m, \033[1m--very-verbose\033[0m]
-		List available servers
+		List available servers.
 
 	\033[1madd\033[0m \033[3mserver_name\033[0m [\033[1m--jar\033[0m \033[3mjar_file\033[0m]
-		Add a new server
-		You can specify a jar file to be used or select it interactively
+		Add a new server. 
+		You can specify a jar file to be used or select it interactively.
 
 	\033[1mcheck-update\033[0m
-		Check for updates for the JAR files
-		Return number of available updates
+		Check for updates for the JAR files.
+		Return number of available updates.
 
 	\033[1mupdate\033[0m
-		Update the JAR files
+		Update the JAR files.
 
 	\033[1mrepo\033[0m [\033[1mREPO_COMMAND\033[0m]
-		Manage the JAR files repository
-		See \033[1m`basename $0` --help repo\033[0m for further information
+		Manage the JAR files repository.
+		See \033[1m`basename $0` --help repo\033[0m for further information.
 
 	\033[1mlsjar\033[0m [\033[1m--all\033[0m]
-		List available JAR files
-		Or list all files in the JARs' folder by using the \033[1m--all\033[0m switch
+		List available JAR files.
+		Or list all files in the JARs' folder by using the \033[1m--all\033[0m switch.
 
 \033[1mSERVER SPECIFIC COMMANDS\033[0m
 	\033[1mremove\033[0m [\033[1m--force\033[0m]
-		Entirely remove a server from the disk
-		You can avoid querying by using the --force switch
+		Entirely remove a server from the disk.
+		You can avoid querying by using the \033[1m--force\033[0m switch.
 
-	\033[3mServer configuration\033[0m
+	\033[1m\033[3mServer configuration\033[0m
 		\033[1mpasswd\033[0m [\033[1mPASSWD_COMMAND\033[0m \033[3muser_name\033[0m]
-			Manage the server's users
-			See \033[1m`basename $0` --help passwd\033[0m for further information
+			Manage the server's users.
+			See \033[1m`basename $0` --help passwd\033[0m for further information.
 
 		\033[1mconfigure\033[0m, \033[1mconfig\033[0m or \033[1mcfg\033[0m
-			Show the server's meta-variables
+			Show the server's meta-configuration.
 		\033[1mconfigure\033[0m \033[3mvariable\033[0m \033[4mvalue\033[0m
-			Configure the server meta-variables
+			Set \033[3mvariable\033[0m to \033[4mvalue\033[0m in the server's meta-configuration file.
 		\033[1mconfigure\033[0m \033[1m--clear\033[0m, \033[1m--unset\033[0m \033[3mvariable\033[0m
-			Unset the specified variable
+			Unset \033[3mvariable\033[0m in the server's meta-configuration file.
 		\033[1mconfigure\033[0m \033[1m--remove\033[0m, \033[1m--delete\033[0m \033[3mvariable\033[0m
-			Delete the specified variable
+			Delete \033[3mvariable\033[0m from the server's meta-configuration file.
 
-		\033[1mproperties\033[0m, \033[1mprops\033[0m, \033[1mpro\033[0m
-			Show variables in the appropriate server.properties file
+		\033[1mproperties\033[0m, \033[1mprops\033[0m or \033[1mpro\033[0m
+			Show the appropriate server.properties data.
 		\033[1mproperties\033[0m \033[3mvariable\033[0m \033[4mvalue\033[0m
-			Configure variables in the appropriate server.properties file
-		\033[1mproperties\033[0m \033[1m--clear\033[0m, \033[1m--unsett\033[0m \033[3mvariable\033[0m
-			Unset the specified variables in the appropriate server.properties file
+			Set \033[3mvariable\033[0m to \033[4mvalue\033[0m in the server's server.properties file.
+		\033[1mproperties\033[0m \033[1m--clear\033[0m, \033[1m--unset\033[0m \033[3mvariable\033[0m
+			Unset \033[3mvariable\033[0m in the server's server.properties file.
 		\033[1mproperties\033[0m \033[1m--remove\033[0m, \033[1m--delete\033[0m \033[3mvariable\033[0m
-			Delete the specified variables in the appropriate server.properties file
+			Delete \033[3mvariable\033[0m from the server's server.properties file.
 
-		\033[1mset-jar\033[0m \033[3mJAR file\033[0m
-			Set \033[3mJAR file\033[0m as the active JAR file for the server
+		\033[1mset-jar\033[0m \033[3mJAR_file\033[0m
+			Set \033[3mJAR_file\033[0m as the active JAR file for the server.
 
-	\033[3Backup, Restore and Reset\033[0m
-		For \033[1mbackup\033[0m, \033[1mrestore\033[0m and \033[1mreset\033[0m you can use the \033[3mcommon options\033[0m
-			\033[1m--force\033[0m				To activate non-interactive mode in operations
+	\033[1m\033[3mBackup, Restore and Reset\033[0m
+		For \033[1mbackup\033[0m, \033[1mrestore\033[0m and \033[1mreset\033[0m you can use the
+			following common options:
+			\033[1m--force\033[0m		To activate non-interactive mode in operations.
 			\033[1m--grace-time\033[0m \033[3mgrace_time\033[0m	To set the grace time in seconds for when the 
-							appropriate server will be shut down (default: 10)
-			\033[1m--message\033[0m \033[3mmessage\033[0m		To specify the message send to users on the server
+				appropriate server will be shut down (default: 10).
+			\033[1m--message\033[0m \033[3mmessage\033[0m	To specify the message send to users on the server.
 
 		\033[1mbackup\033[0m [\033[1mCOMMON_OPTIONS\033[0m] [\033[1mbackup_name\033[0m]\033[0m
-			Create a backup of the server
-			You can specify the name of the backup to be saved
+			Create a backup of the server.
+			You can specify the name of the backup to be saved.
 
 		\033[1mrestore\033[0m [\033[1m--clean\033[0m, \033[1mCOMMON_OPTIONS\033[0m] [\033[1mbackup_name\033[0m]\033[0m
-			Restore latest backup of the server	
-			You can specify the name of the backup to be restored in backup_name instead of 
-			restoring the latest one
-			To erase the server's data before restoring (to clean it up) use the \033[1m--clean\033[0m switch, 
-			which must be the first argument
+			Restore latest backup of the server.
+			You can specify the name of the backup to be restored in \033[3mbackup_name\033[0m 
+			instead of restoring the latest one.
+			To erase the server's data before restoring (to clean it up) use the 
+			\033[1m--clean\033[0m switch, which must be the first argument.
 
 		\033[1mreset\033[0m [\033[1m--erase-config\033[0m, \033[1mCOMMON_OPTIONS\033[0m]\033[0m
-			Reset the server to default state (create a new server)
-			Use the \033[1m--erase-config\033[0m switch to also erase the server's configuration
+			Reset the server to its initial state.
+			Use the \033[1m--erase-config\033[0m switch to also erase the server's configuration.
 
-	\033[3mInit / Systemd service control\033[0m
+	\033[1m\033[3mInit / Systemd service control\033[0m
 		\033[1mservice\033[0m [\033[1mSERVICE_COMMAND\033[0m]
-		        Manage the respctive system service
-		        See \033[1m`basename $0` --help service\033[0m for further information
+		        Manage the respctive system service.
+		        See \033[1m`basename $0` --help service\033[0m for further information.
 
-	\033[3mJava program commands\033[0m
+	\033[1m\033[3mJava program commands\033[0m
 		\033[1mexec\033[0m [\033[1mARGS\033[0m] \033[3mMINECRAFT_SERVER_COMMAND\033[0m
 			Send commands to the server's stdin and print out replies
 			Possible arguments are:
-			\033[1m--verbose\033[0m, \033[1m-v\033[0m			Show verbose output
-			\033[1m--show-tail\033[0m, \033[1m-s\033[0m			Show the tail of the pipe and 
-							not only the command's results
+			\033[1m--verbose\033[0m, \033[1m-v\033[0m		Show verbose output.
+			\033[1m--show-tail\033[0m, \033[1m-s\033[0m		Show the tail of the pipe and 
+						not only the command's results.
 			\033[1m--wait-time\033[0m, \033[1m-w\033[0m \033[3mseconds\033[0m	Specify waiting time in seconds
-							to wait for the pipe to close again
+						to wait for the pipe to close again.
+
 		\033[1mplayers\033[0m
 		        List players logged in to the server
 	
 		\033[1mplayer-count\033[0m
-		        List count of players logged in to the server
+		        List count of players logged in to the server.
 
-		\033[3mMINECRAFT_JAVA_COMMAND\033[0m [\033[3mARGS\033[0m]]
+		\033[3mMINECRAFT_JAVA_COMMAND\033[0m [\033[3mARGS\033[0m]
 		        If none of the aforementioned commands apply, minectl will
-		        interpret the command as command for the Java program
+		        interpret the command as command for the Java program.
 
-\033[1mMETA\033[0m
+\033[1mMETA COMMANDS\033[0m
 	\033[1m--help\033[0m
 		Print this infomation
 
