@@ -313,6 +313,9 @@ add() {
 
 			# Create basic minecraft-specific files
 			touch server.properties ops.txt white-list.txt 2> /dev/null || err "Could not create basic config files"
+
+			# Create named pipes for the server
+			mk_fifos
 		fi
 	# If no name was specified, we cannot create a server
 	else

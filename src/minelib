@@ -239,6 +239,19 @@ access_server() {
 	test "`dirname $PWD`" == "$SERVERS_DIR" 2> /dev/null || fail "We are somehow in the '$SERVERS_DIR' directory"
 }
 
+# Create named pipes
+mk_fifos() {
+        for FIFO in stdin stdout stderr; do
+                if [ -e $FIFO ]; then
+                        if [ ! -p $FIFO ]; then
+                                fail "File $FIFO is blocking eponymous pipe"
+                        fi
+                else
+                        mkfifo $FIFO
+                fi
+        done
+}
+ 
 ###################################
 # Import error codes and messages #
 ###################################

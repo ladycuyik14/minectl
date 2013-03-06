@@ -39,25 +39,6 @@ CFG_FILE=./.mined.cfg
 # The name of the server
 SERVER_NAME=$1
 
-
-###########################
-# Miscellaneous functions #
-###########################
-
-# Create named pipes
-mk_fifos() {
-	for FIFO in stdin stdout stderr; do
-		if [ -e $FIFO ]; then
-			if [ ! -p $FIFO ]; then
-				fail "File $FIFO is blocking eponymous pipe"
-			fi
-		else
-			mkfifo $FIFO
-		fi
-	done
-}
-
-
 ###############
 # Main script #
 ###############
