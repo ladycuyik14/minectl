@@ -245,7 +245,7 @@ shutdown() {
 	local FORCE=$3
 
 	# Check whether the server is running
-	if ( service status ); then
+	if ( service status > /dev/null 2> /dev/null ); then
 		SERVER_RUNNING=true
 		# If we force it, just shut it down ...
 		if ( $FORCE ); then
