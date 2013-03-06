@@ -1125,7 +1125,7 @@ list_players() {
 	local TMP_PLAYERS="`mktemp`"
 	local RETVAL=1
 
-	exec list | tail -n +1 > $TMP_PLAYERS 2> /dev/null
+	srv_exec list | tail -n +1 > $TMP_PLAYERS 2> /dev/null
 
 	if [ -n "`cat $TMP_PLAYERS`" ]; then
 		cat "$TMP_PLAYERS"
@@ -1144,7 +1144,7 @@ player_count()  {
 	local TMP_PLAYERS="`mktemp`"
 	local RETVAL=1
 	
-	exec list | head -n 1 | awk '{ print $3 }' | cut -d "/" -f 1 > $TMP_PLAYERS 2> /dev/null
+	srv_exec list | head -n 1 | awk '{ print $3 }' | cut -d "/" -f 1 > $TMP_PLAYERS 2> /dev/null
 	cat $TMP_PLAYERS
 
 	if [ `cat $PLAYERS` -gt 0 ]; then
