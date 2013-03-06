@@ -1125,7 +1125,7 @@ list_players() {
 	local TMP_PLAYERS="`mktemp`"
 	local RETVAL=1
 
-	srv_exec list | tail -n +1 > $TMP_PLAYERS 2> /dev/null
+	srv_exec list | tail -n +2 > $TMP_PLAYERS 2> /dev/null
 
 	if [ -n "`cat $TMP_PLAYERS`" ]; then
 		cat "$TMP_PLAYERS"
@@ -1148,7 +1148,7 @@ player_count()  {
 	cat $TMP_PLAYERS
 
 	if [ `cat $PLAYERS` -gt 0 ]; then
-		RETVAL= 0
+		RETVAL=0
 	fi
 
 	rm -f $TMP_PLAYERS 2> /dev/null
