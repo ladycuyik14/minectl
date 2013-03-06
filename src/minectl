@@ -535,7 +535,7 @@ configure() {
 		shift
 
 		# Change variable
-		set_var "$VAR" "$@" "$SERVER_CONFIG"
+		set_var "$VAR" "$*" "$SERVER_CONFIG"
 
 		# Print new configuration after modifications
 		configure "$VAR"
@@ -571,7 +571,7 @@ properties() {
 		shift
 
 		# Change variable
-		set_var "$VAR" "$@" "$SERVER_PROPERTIES"
+		set_var "$VAR" "$*" "$SERVER_PROPERTIES"
 	
 		# Print new properties after modifications
 		properties "$VAR"
