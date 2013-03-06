@@ -522,11 +522,11 @@ configure() {
                         while read LINE; do
                                 for VAR in $CHANGED_VARS; do
                                         if [ -n "`echo $LINE | grep ^"$VAR="`" ]; then
-                                                echo -e "       \033[1m$LINE\033[0m"
+                                                echo -e "	\033[1m$LINE\033[0m"
                                                 continue
                                         fi
 
-                                        echo -e "       $LINE"
+                                        echo -e "	$LINE"
                                 done
                         done < $TMP_SERVER_CONFIG
 
@@ -534,7 +534,7 @@ configure() {
 			CHANGED_VARS=
                 else
                         while read LINE; do
-                                echo -e "       $LINE"
+                                echo -e "	$LINE"
                         done < $TMP_SERVER_CONFIG
                 fi
 	else
