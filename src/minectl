@@ -127,7 +127,7 @@ USAGE="Usage:	\033[1m`basename $0`\033[0m [\033[1mINDEPENDENT_COMMAND\033[0m]
 
 		\033[1mconfigure\033[0m, \033[1mconfig\033[0m or \033[1mcfg\033[0m
 			Show the server's meta-configuration.
-		\033[1mconfigure\033[0m \033[3mvariable\033[0m \033[4mvalue\033[0m
+		\033[1mconfigure\033[0m [\033[3mvariable\033[0m \033[4mvalue\033[0m]
 			Set \033[3mvariable\033[0m to \033[4mvalue\033[0m in the server's meta-configuration file.
 		\033[1mconfigure\033[0m \033[1m--clear\033[0m, \033[1m--unset\033[0m \033[3mvariable\033[0m
 			Unset \033[3mvariable\033[0m in the server's meta-configuration file.
@@ -136,7 +136,7 @@ USAGE="Usage:	\033[1m`basename $0`\033[0m [\033[1mINDEPENDENT_COMMAND\033[0m]
 
 		\033[1mproperties\033[0m, \033[1mprops\033[0m or \033[1mpro\033[0m
 			Show the appropriate server.properties data.
-		\033[1mproperties\033[0m \033[3mvariable\033[0m \033[4mvalue\033[0m
+		\033[1mproperties\033[0m [\033[3mvariable\033[0m \033[4mvalue\033[0m]
 			Set \033[3mvariable\033[0m to \033[4mvalue\033[0m in the server's server.properties file.
 		\033[1mproperties\033[0m \033[1m--clear\033[0m, \033[1m--unset\033[0m \033[3mvariable\033[0m
 			Unset \033[3mvariable\033[0m in the server's server.properties file.
