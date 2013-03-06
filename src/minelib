@@ -76,16 +76,21 @@ runas() {
 	shift
 
 	ACTIVE_USER="`who am i | awk '{ print $1}'`"
+	TMP_EXEC="`mktemp`"
+
+	echo "#! /bin/bash
+$@" > $TMP_EXEC
+	chmod +x $TMP_EXEC
 
 	if [ "$TARGET_NAME" == "$ACTIVE_USER" ]; then
-		$@
+		$TMP_EXEC
 	else
 		# Test if user may run sudo
 		/bin/sudo /usr/bin/true 2> /dev/null
 		if [ $? -eq 0 ]; then
-			/bin/sudo /bin/su -c '"$@"' "$TARGET_NAME"
+			/bin/sudo /bin/su -c $TMP_EXEC $TARGET_NAME
 		else
-			/bin/su -c '"$@"' "$TARGET_NAME"
+			/bin/su -c $TMP_EXEC $TARGET_NAME
 		fi
 	fi
 	return $?
