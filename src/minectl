@@ -553,6 +553,11 @@ passwd() {
 		else
 			err "User \033[1m$1\033[0m is \033[1malready\033[0m whitelisted on server \033[1m$SERVER_NAME\033[0m."
 		fi
+
+		# Reload altered white list
+		if ( service status > /dev/null 2> /dev/null ); then
+			srv_exec whitelist reload
+		fi
 	}
 
 	# Remove user from the white list, iff he's in it
@@ -568,6 +573,11 @@ passwd() {
 		else
 			err "User \033[1m$1\033[0m is \033[1mnot whitelisted\033[0m on server \033[1m$SERVER_NAME\033[0m."
 		fi
+
+		# Reload altered white list
+		if ( service status > /dev/null 2> /dev/null ); then
+			srv_exec whitelist reload
+		fi
 	}
 
 	# Add a user to the operators list
@@ -576,6 +586,11 @@ passwd() {
 		if ( is_whitelisted "$1" > /dev/null 2> /dev/null ); then
 			if ( ! is_op "$1" > /dev/null 2> /dev/null ); then		
 				if ( add_to "$1" "$OP_LIST" > /dev/null 2> /dev/null ); then
+					# Make the user an operator instantly iff the server is running
+					if ( service status > /dev/null 2> /dev/null ); then
+						srv_exec op "$1"
+					fi
+
 					succ "User \033[1m$1\033[0m is \033[1mnow an operator\033[0m on server \033[1m$SERVER_NAME\033[0m."
 				else
 					err "\033[1mFailed opping $1\033[0m on server \033[1m$SERVER_NAME\033[0m.\nCheck your configuration."
@@ -593,6 +608,11 @@ passwd() {
 		valid_user "$1"
 		if ( is_op "$1" > /dev/null 2> /dev/null ); then
 			if ( remove_from "$1" "$OP_LIST" > /dev/null 2> /dev/null ); then
+					# Deop the user iff the server is running
+					if ( service status > /dev/null 2> /dev/null ); then
+						srv_exec deop "$1"
+					fi
+
 				succ "User \033[1m$1\033[0m is \033[1mno longer an operator\033[0m on server \033[1m$SERVER_NAME\033[0m."
 			else
 				err "\033[1mFailed de-opping $1\033[0m on server \033[1m$SERVER_NAME\033[0m.\nCheck your configuration."
