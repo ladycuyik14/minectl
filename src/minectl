@@ -1474,28 +1474,24 @@ service() {
 			fi
 		fi
 	}
-	
-	# Switch commands
-	while (( $# )); do
-		case $1 in
-			enable)		enable
-			;;
-			disable)	disable
-			;;
-			start)		init start
-			;;
-			stop)		init stop
-			;;
-			restart)	init restart
-			;;
-			status)		init status
-			;;
-			--help|-h|help)	echo -e "$USAGE"
-			;;
-			*)		error "Unknown argument '$1'. Try:\n\t\$ $0 $CMD --help"
-		esac
-		shift
-	done
+
+	case $1 in
+		enable)		enable
+		;;
+		disable)	disable
+		;;
+		start)		init start
+		;;
+		stop)		init stop
+		;;
+		restart)	init restart
+		;;
+		status)		init status
+		;;
+		--help|-h|help)	echo -e "$USAGE"
+		;;
+		*)		error "Unknown argument '$1'. Try:\n\t\$ $0 $CMD --help"
+	esac
 }
 
 ######################################################################################################################
