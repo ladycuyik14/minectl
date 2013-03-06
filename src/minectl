@@ -255,7 +255,11 @@ shutdown() {
 				sleep $GRACE_TIME
 			fi
 
+			# Stop the service
 			service stop
+			
+			# Give the process a little grace time to die
+			sleep 3
 		# ... or else ask the user to decide
 		else
 			if ( ask "Do you really want to shut down the server?" ); then
@@ -265,7 +269,11 @@ shutdown() {
 					sleep $GRACE_TIME
 				fi
 
+				# Stop the service
 				service stop
+			
+				# Give the process a little grace time to die
+				sleep 3
 			else
 				fail "Aborting..."
 			fi
