@@ -36,6 +36,6 @@ if [ -d /lib/systemd/system ]; then
 	cp "minecraft@.service" /lib/systemd/system/
 	echo "Systemd service template '/lib/systemd/system/minecraft@.service' installed"
 else
-	cp minecraftd /etc/init.d/
-	echo "Init service '/etc/init.d/minecraftd' installed"
+	cp minecraft /etc/init.d/
+	echo "Init service '/etc/init.d/minecraft' installed"
 fi
