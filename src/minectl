@@ -507,9 +507,6 @@ configure() {
 	# Set temporary configuration file
 	local TMP_SERVER_CONFIG="`mktemp`"
 
-	# Clear list of changed variables
-	CHANGED_VARS=
-
 	# Print configuration of server, if no arguments are specified
 	if [ $# -eq 0 ]; then
 		# Delete comments and empty lines from config file
@@ -532,6 +529,9 @@ configure() {
                                         echo -e "       $LINE"
                                 done
                         done < $TMP_SERVER_CONFIG
+
+			# Clear list of changed variables
+			CHANGED_VARS=
                 else
                         while read LINE; do
                                 echo -e "       $LINE"
@@ -562,9 +562,6 @@ properties() {
 	# Set temporary properties file
 	local TMP_SERVER_PROPERTIES="`mktemp`"
 
-	# Clear list of changed variables
-	CHANGED_VARS=
-
 	# Print server properties, if no arguments are specified
 	if [ $# -eq 0 ]; then
 		# Delete comments and empty lines from config file
@@ -584,6 +581,9 @@ properties() {
 					echo -e "	$LINE"
 				done
 			done < $TMP_SERVER_PROPERTIES
+
+			# Clear list of changed variables
+			CHANGED_VARS=
 		else
 			while read LINE; do
 				echo -e "	$LINE"
