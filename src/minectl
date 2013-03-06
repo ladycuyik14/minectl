@@ -616,25 +616,25 @@ passwd() {
 	local TMP="`mktemp`"
 
 	# Usage information
-	local USAGE="\033[1mUsage: `basename $0` <server_name> passwd <COMMAND [user_name]> [COMMAND [user_name]..]\033[0m
+	local USAGE="Usage: \033[1m`basename $0`\033[0m \033[3mserver_name\033[0m \033[1mpasswd\033[0m [\033[3mCOMMAND\033[0m \033[4muser_name\033[0m]
 
 \033[1mCOMMANDS\033[0m
-	\033[1madd, whitelist		<user_name>\033[0m
-		Add <user_name> to the white-list
+	\033[1madd\033[0m, \033[1mwhitelist\033[0m \033[3muser_name\033[0m
+		Add \033[3muser_name\033[0m to the white-list
 
-	\033[1mremove, blacklist	<user_name>\033[0m
-		Remove <user_name> from white-list
+	\033[1mremove\033[0m, \033[1mblacklist\033[0m \033[3muser_name\033[0m
+		Remove \033[3muser_name\033[0m from white-list
 
-	\033[1mop			<user_name>\033[0m
-		Add <user_name> to the ops list
+	\033[1mop\033[0m \033[3muser_name\033[0m
+		Add \033[3muser_name\033[0m to the ops list
 
-	\033[1mdeop			<user_name>\033[0m
-		Remove <user_name> from the ops list
+	\033[1mdeop\033[0m \033[3muser_name\033[0m
+		Remove \033[3muser_name\033[0m from the ops list
 
-	\033[1mstatus			<user_name>\033[0m
-		List status of <user_name>
+	\033[1mstatus\033[0m \033[3muser_name\033[0m
+		List status of \033[3muser_name\033[0m
 
-	\033[1mprint, list\033[0m
+	\033[1mprint\033[0m, \033[1mlist\033[0m
 		Print current status, white- and ops-list
 
 	\033[1mlock\033[0m
@@ -833,7 +833,7 @@ passwd() {
 			;;
 			""|list|print)		print
 			;;
-			-h|--help|help)		echo -e "$USAGE"
+			-h|--help|help)		echo -e "$USAGE" | /usr/bin/less -r
 						exit 0
 			;;
 			*)			fail "Unknown argument '$1'. Try:\n\t\$ $0 $CMD --help"
@@ -1140,16 +1140,16 @@ update() {
 # Manage the repository
 repo() {
 	# Usage information
-	USAGE="\033[1mUsage: `basename $0` repo [COMMAND]\033[0m
+	USAGE="Usage: \033[1m`basename $0`\033[0m \033[1mrepo\033[0m [\033[3mCOMMAND\033[0m]
 
 \033[1mCOMMANDS\033[0m
 	\033[1mlist\033[0m
 		List available repositories
 
-	\033[1madd <URL> <name>\033[0m
+	\033[1madd\033[0m \033[3mURL\033[0m \033[3mname\033[0m
 		Add a repository
 
-	\033[1mremove <name>\033[0m
+	\033[1mremove\033[0m \033[3mname\033[0m
 		Remove a repository
 "
 	
