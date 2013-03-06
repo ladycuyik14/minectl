@@ -1315,9 +1315,9 @@ srv_exec() {
 			kill `cat $CAT_PID` 2> /dev/null || err "Could not kill cat"
 			# Remove PID file
 			rm -f $CAT_PID 2> /dev/null || err "Could not remove cat.pid"
+		else
+			err "Server is not running"
 		fi
-	
-		err "Server is not running"
 	}
 
 	if ( $VERBOSE ); then
