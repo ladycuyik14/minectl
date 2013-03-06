@@ -31,7 +31,9 @@ install -o minectl -g minectl -m 775 -t /usr/local/libexec/minectl minelib .repo
 install -o minectl -g minectl -m 775 -t /usr/local/bin mcpasswd mcsrv minectl
 
 # Add binaries' path to the users's PATH variable
-echo 'export PATH="$PATH:/usr/local/bin"' >> /home/minectl/.bashrc
+if [ -z "`grep "PATH=.*/usr/local/bin /home/minectl/.bashrc`" ]; then
+	echo 'export PATH="$PATH:/usr/local/bin"' >> /home/minectl/.bashrc
+fi
 
 # Install system services
 cd ../service
