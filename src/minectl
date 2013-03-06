@@ -1502,8 +1502,12 @@ CMD=$1
 shift
 
 # Check if we are a valid user
-if [ "$USER" != "$MC_USER" -a $EUID -ne 0 ]; then
-	fail "You need to be either $MC_USER or root to run this"
+if [ "$USER" != "$MC_USER" ]; then
+	if [ $EUID -ne 0 ]; then
+		fail "You need to be either $MC_USER or root to run this"
+	else
+		su "$0 $CMD $@" minectl
+	fi
 fi
 
 # Switch commands and execute appropriate functions
