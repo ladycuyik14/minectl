@@ -526,6 +526,8 @@ configure() {
 	                        echo -e "	\033[1m$LINE\033[0m"
 	                        continue
 	                fi
+			
+			echo -e "	$LINE"
                 done < $TMP_SERVER_CONFIG
 	else
 		# Put var to upper case
@@ -572,7 +574,7 @@ properties() {
 		set_var $VAR "$@" $SERVER_PROPERTIES
 	
 		# Print new properties after modifications
-		properties
+		properties $VAR
 	fi
 
 	rm -f $TMP_SERVER_PROPERTIES 2> /dev/null
