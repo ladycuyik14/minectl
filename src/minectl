@@ -518,7 +518,7 @@ configure() {
 	# Print configuration of server, if no arguments are specified
 	if [ $# -eq 0 ]; then
 		# Delete comments and empty lines from config file
-		grep -vE "^#|^$" $SERVER_CONFIG > $TMP_SERVER_CONFIG 2> /dev/null || fail "Configuration file is missing"
+		grep -vE "^#|^$" $SERVER_CONFIG > $TMP_SERVER_CONFIG 2> /dev/null
 
 		# Print used JAR file	
 		echo -e "	JAR_FILE=`readlink minecraft_server.jar 2> /dev/null`"
@@ -573,7 +573,7 @@ properties() {
 	# Print server properties, if no arguments are specified
 	if [ $# -eq 0 ]; then
 		# Delete comments and empty lines from config file
-		grep -vE "^#|^$" $SERVER_PROPERTIES > $TMP_SERVER_PROPERTIES 2> /dev/null || fail "Properties file is missing"
+		grep -vE "^#|^$" $SERVER_PROPERTIES > $TMP_SERVER_PROPERTIES 2> /dev/null
 
 		# Print properties file content
 		# Check if variables have been altered
@@ -1439,18 +1439,18 @@ service() {
 	# Enable a server for startup
 	enable() {
 		if [ -f "/lib/systemd/system/minecraft@.service" ]; then
-			runas root /usr/bin/systemctl enable minecraft@$SERVER_NAME.service
+			su - -c "/usr/bin/systemctl enable minecraft@$SERVER_NAME.service"
 		else
-			runas root /bin/echo "$SERVER_NAME" >> /etc/minectl.servers 2> /dev/null || fail "Could not enable server"
+			su - -c "/bin/echo $SERVER_NAME >> /etc/minectl.servers 2> /dev/null" || fail "Could not enable server"
 		fi
 	}
 
 	# Disable a server for starup
 	disable() {
 		if [ -f "/lib/systemd/system/minecraft@.service" ]; then
-			runas root /usr/bin/systemctl disable minecraft@$SERVER_NAME.service
+			su - -c "/usr/bin/systemctl disable minecraft@$SERVER_NAME.service"
 		else
-			runas root /bin/sed -i "/$SERVER_NAME/d" /etc/minectl.servers 2> /dev/null || fail "Could not disable server"
+			su - -c "/bin/sed -i '/$SERVER_NAME/d' /etc/minectl.servers 2> /dev/null" || fail "Could not disable server"
 		fi
 	}
 
@@ -1459,17 +1459,14 @@ service() {
 		if [ "$1" == "status" ]; then
 			if [ -f "/lib/systemd/system/minecraft@.service" ]; then
 				/usr/bin/systemctl $1 minecraft@$SERVER_NAME.service
-				return $?
 			else
 				/etc/init.d/minecraft $1 "$SERVER_NAME" || fail "Could determine $1 of server $SERVER_NAME"
-				return $?
 			fi
 		else
 			if [ -f "/lib/systemd/system/minecraft@.service" ]; then
-				runas root /usr/bin/systemctl $1 minecraft@$SERVER_NAME.service
-				return $?
+				su - -c "/usr/bin/systemctl $1 minecraft@$SERVER_NAME.service"
 			else
-				runas root /etc/init.d/minecraft $1 "$SERVER_NAME" || fail "Could not $1 server $SERVER_NAME"
+				su - -c "/etc/init.d/minecraft $1 $SERVER_NAME" || fail "Could not $1 server $SERVER_NAME"
 				return $?
 			fi
 		fi

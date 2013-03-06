@@ -64,49 +64,6 @@ fail() {
         exit 1
 }
 
-# Run command as different user
-# Usage: runas <user_name> [COMMAND] [OPTIONS..]
-runas() {
-	if [ $# -lt 2 ]; then
-		echo "Usage: runas <user_name> [COMMAND] [OPTIONS..]" 1>&2
-		return 1
-	fi
-
-	TARGET_NAME="$1"
-	shift
-
-	ACTIVE_USER="`who am i | awk '{ print $1}'`"
-	TMP_EXEC="`mktemp`"
-	RETVAL=
-
-	echo "#! /bin/bash
-$@" > $TMP_EXEC
-	chmod +x $TMP_EXEC
-
-	if [ "$TARGET_NAME" == "$ACTIVE_USER" ]; then
-		$TMP_EXEC
-	else
-		# Assume user minectl cannot run sudo
-		if [ "$ACTIVE_USER" == "minectl" ]; then
-			/bin/su -c $TMP_EXEC $TARGET_NAME
-			RETVAL=$?
-		else
-			# Test if user may run sudo
-			/bin/sudo /usr/bin/true 2> /dev/null
-			if [ $? -eq 0 ]; then
-				/bin/sudo /bin/su -c $TMP_EXEC $TARGET_NAME
-				RETVAL=$?
-			else
-				/bin/su -c $TMP_EXEC $TARGET_NAME
-				RETVAL=$?
-			fi
-		fi
-	fi
-	
-	rm -f $TMP_EXEC 2> /dev/null
-	return $RETVAL
-}
-
 # Ask a question and return 0 on 'yes' or 1 otherwise
 ask() {
 
