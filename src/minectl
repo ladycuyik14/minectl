@@ -72,11 +72,6 @@ REPO_LIST="$LIB_DIR/.repolist"
 # Set temporary repository for re-formatted repo list
 TMP_REPO_LIST="`mktemp`"
 
-# Global status if the server is running
-# used to determine whether it should be 
-# rstarted after shutdown operations
-SERVER_RUNNING=
-
 # Synopsis of usage for user information
 USAGE="Usage:	\033[1m`basename $0`\033[0m [\033[1mINDEPENDENT_COMMAND\033[0m]
 
@@ -168,9 +163,8 @@ USAGE="Usage:	\033[1m`basename $0`\033[0m [\033[1mINDEPENDENT_COMMAND\033[0m]
 			Use the \033[1m--erase-config\033[0m switch to also erase the server's configuration.
 
 	\033[1m\033[3mInit / Systemd service control\033[0m
-		\033[1mservice\033[0m [\033[1mSERVICE_COMMAND\033[0m]
-		        Manage the respctive system service.
-		        See \033[1m`basename $0` --help service\033[0m for further information.
+		\033[1mstatus\033[0m
+		        Check if the server is running
 
 	\033[1m\033[3mJava program commands\033[0m
 		\033[1mexec\033[0m [\033[1mARGS\033[0m] \033[3mMINECRAFT_SERVER_COMMAND\033[0m
@@ -230,71 +224,6 @@ parse_repo() {
 	# Re-format repo file
 	grep -v ";" $REPO_LIST > $TMP_REPO_LIST 2> /dev/null || fail "Parsing repository file failed"
 }
-
-# Shut down the server displaying a message
-# after a short grace time
-# shutdown <message> <grace_time> <force>
-shutdown() {
-	local MESSAGE="$1"
-	local GRACE_TIME=$2
-	local FORCE=$3
-
-	# Check whether the server is running
-	if ( service status > /dev/null 2> /dev/null ); then
-		SERVER_RUNNING=true
-		# If we force it, just shut it down ...
-		if ( $FORCE ); then
-			srv_exec say "$MESSAGE"
-			if [ $GRACE_TIME -gt 0 ]; then
-				srv_exec say "You've got $GRACE_TIME seconds to log out"
-				sleep $GRACE_TIME
-			fi
-
-			# Stop the service
-			service stop
-			
-			# Give the process a little grace time to die
-			sleep 3
-		# ... or else ask the user to decide
-		else
-			if ( ask "Do you really want to shut down the server?" ); then
-				srv_exec say "$MESSAGE"
-				if [ $GRACE_TIME -gt 0 ]; then
-					srv_exec say "You've got $GRACE_TIME seconds to log out"
-					sleep $GRACE_TIME
-				fi
-
-				# Stop the service
-				service stop
-			
-				# Give the process a little grace time to die
-				sleep 3
-			else
-				fail "Aborting..."
-			fi
-		fi
-	else
-		SERVER_RUNNING=false
-	fi
-}
-
-# Restart the server after it was shut down:
-# restart <force>
-restart() {
-	local FORCE=$1
-
-	if ( $SERVER_RUNNING ); then
-		if ( $FORCE ); then
-			service start
-		else
-			if ( ask "Restart the server now?" ); then
-	                        service start
-			fi
-		fi
-	fi
-}
-
-
 
 # Indicate failure when loading of shared library fails
 lib_fail() {
@@ -446,7 +375,7 @@ remove() {
 		access_server "$SERVER_NAME"
 
 		# Stop server if it is running
-		shutdown "Server is shutting down due to removal" 10 $FORCE
+		srv_status > /dev/null 2> /dev/null && fail "Server is still running"
 
 		# Change to parent folder
 		cd .. 2> /dev/null || fail "Cannot change to parent directory"
@@ -812,62 +741,17 @@ passwd() {
 backup() {
 	# Set current time and date as default backup name
 	local BACKUP_NAME="$SERVER_NAME-`date +%Y.%m.%d-%H.%M`"
-	local SECURE=false
-	local FORCE=false
-	local GRACE_TIME=10
-	local MESSAGE="Server is being shut down for backup"
-
-	local RETVAL=2
-	local SERVER_RUNNING=false
 	
-	# Set parameters as backup name if specified
+	if [ -n "$@" ]; then
+		BACKUP_NAME="$@"
+	fi
 	
-	while (( $# )); do
-		case $1 in
-			--secure|-s)		SECURE=true
-						shift
-			;;
-			--force|-f)		FORCE=true
-						shift
-			;;
-			--grace-time|-t)	GRACE_TIME=$2
-						shift 2
-			;;
-			--message|-m)		MESSAGE=$2
-						shift 2
-			;;
-			*)			BACKUP_NAME="$@"
-						break
-		esac
-	done
-
-	# Check if we want to do a secure
-	# bakup of an offline server
-	if ( $SECURE ); then
-		shutdown "$MESSAGE" $GRACE_TIME $FORCE
-	fi			
-
 	# Create the backup as a gzip compressed tar archive, but with the custom *.mcb suffix 
 	tar czf "$MC_HOME/backup/$BACKUP_NAME.mcb" * > /dev/null 2> /dev/null 
-
-	# Check return value of tar
-	RETVAL=$?
-	# The secure backup worked fine, iff tar returns 0
-	if ( $SECURE ); then 
-		if [ $RETVAL -ne 0 ]; then
-			fail "Secure backup failed: Backup file is inconsistent"
-		fi
-	# The backup worked fine, iff tar returns something smaller or equal 1
+	if [ $? -le 1 ]; then
+		return 0
 	else
-		if [ $RETVAL -gt 1 ]; then
-			fail "Could not create backup"
-		fi
-	fi
-
-	# If we were in secure mode and the server was running
-	# the user maybe wants to restart it now
-	if ( $SECURE ); then
-		restart $FORCE
+		fail "Could not create backup"
 	fi
 }
 
@@ -876,26 +760,14 @@ restore() {
 	# Assume latest backup shall be restored
 	local BACKUP_NAME="`ls -tl $MC_HOME/backup/$SERVER_NAME-* 2> /dev/null | head -n1 | awk '{print $9}'`"
 	local BACKUP=""
-	local SERVER_RUNNING=false
 
 	# We don't want to clean the server directory by default
 	local CLEAN=false
-	local FORCE=false
-	local GRACE_TIME=10
-	local MESSAGE="Server is being shut down for restore"
 	
 	# Switch options
 	while (( $# )); do
 		case $1 in
 			--clean|-c)		CLEAN=true
-			;;
-			--force|-f)		FORCE=true
-			;;
-			--grace-time|-t)	GRACE_TIME=$2
-						shift
-			;;
-			--message|-m)		MESSAGE=$2
-						shift
 			;;
 			*)			BACKUP_NAME="$@"
 						break
@@ -918,10 +790,8 @@ restore() {
 		fail "Specified backup file could not be found"
 	fi
 
-	# Shut down the server if it is running
-	if ( service status ); then
-		shutdown "$MESSAGE" $GRACE_TIME $FORCE
-	fi
+	# Check if server is still running
+	srv_status > /dev/null 2> /dev/null && fail "Server is still running"
 			
 	# Clean the server if wanted
 	if ( $CLEAN ); then
@@ -930,9 +800,6 @@ restore() {
 
 	# Perform restore
 	tar xzf "$BACKUP" > /dev/null 2> /dev/null && return 0 || fail "Could not restore backup"
-
-	# Restart the server if wanted
-	restart $FORCE
 }
 
 # Reset the server
@@ -962,8 +829,8 @@ reset() {
 		shift
 	done
 
-	# Server must be shut down
-	shutdown "$MESSAGE" $GRACE_TIME $FORCE
+	# Check if server is still running
+	srv_status > /dev/null 2> /dev/null && fail "Server is still running"
 
 	# If we want to keep the configuration, we create a temporal archive from them
 	# XXX: Do not mix this up with our server's main backup() function
@@ -986,9 +853,6 @@ reset() {
 		tar xzf $CFG_BACKUP 2> /dev/null || fail "Could not restore configuration"
 		rm $CFG_BACKUP 2> /dev/null
 	fi
-		
-	# Restart the server if wanted
-	restart $FORCE
 }
 
 # Check if updates for JAR files are available
@@ -1369,87 +1233,13 @@ player_count()  {
 # Init/Systemd control functions #
 ##################################
 
-# Perform operations on minectl's system service
-service() {
-	# Usage information
-        local USAGE="\033[1mUsage: `basename $0` <server_name> service <COMMAND> [COMMAND..]\033[0m
-
-\033[1mCOMMANDS\033[0m
-	\033[1enable\033[0m
-                Enable the server on system startup
-
-        \033[1mdisable\033[0m
-                Disable the server on system startup
-
-        \033[1mstart\033[0m
-                Start the server
-
-        \033[1mstop\033[0m
-                Stop the server
-
-        \033[1mstatus\033[0m
-                Print status of the server
-
-        \033[1mrestart\033[0m
-                Restart the server
-
-        \033[1mhelp\033[0m
-                Print this information
-"
-
-	# Enable a server for startup
-	enable() {
-		if [ -f "/lib/systemd/system/minecraft@.service" ]; then
-			su - -c "/usr/bin/systemctl enable minecraft@$SERVER_NAME.service"
-		else
-			su - -c "/bin/echo $SERVER_NAME >> /etc/minectl.servers 2> /dev/null" || fail "Could not enable server"
-		fi
-	}
-
-	# Disable a server for starup
-	disable() {
-		if [ -f "/lib/systemd/system/minecraft@.service" ]; then
-			su - -c "/usr/bin/systemctl disable minecraft@$SERVER_NAME.service"
-		else
-			su - -c "/bin/sed -i '/$SERVER_NAME/d' /etc/minectl.servers 2> /dev/null" || fail "Could not disable server"
-		fi
-	}
-
-	# Perform an execution on the respective init script
-	init() {
-		if [ "$1" == "status" ]; then
-			if [ -f "/lib/systemd/system/minecraft@.service" ]; then
-				/usr/bin/systemctl $1 minecraft@$SERVER_NAME.service
-			else
-				/etc/init.d/minecraft $1 "$SERVER_NAME" || fail "Could determine $1 of server $SERVER_NAME"
-			fi
-		else
-			if [ -f "/lib/systemd/system/minecraft@.service" ]; then
-				su - -c "/usr/bin/systemctl $1 minecraft@$SERVER_NAME.service"
-			else
-				su - -c "/etc/init.d/minecraft $1 $SERVER_NAME" || fail "Could not $1 server $SERVER_NAME"
-				return $?
-			fi
-		fi
-	}
-
-	case $1 in
-		enable)		enable
-		;;
-		disable)	disable
-		;;
-		start)		init start
-		;;
-		stop)		init stop
-		;;
-		restart)	init restart
-		;;
-		status)		init status
-		;;
-		--help|-h|help)	echo -e "$USAGE"
-		;;
-		*)		error "Unknown argument '$1'. Try:\n\t\$ $0 $CMD --help"
-	esac
+# Determine status of server
+srv_status() {
+	if [ -f "/lib/systemd/system/minecraft@.service" ]; then
+		/usr/bin/systemctl status minecraft@$SERVER_NAME.service
+	else
+		/etc/init.d/minecraft status "$SERVER_NAME" || fail "Could determine $1 of server $SERVER_NAME"
+	fi
 }
 
 ######################################################################################################################
@@ -1464,12 +1254,7 @@ shift
 
 # Check if we are a valid user
 if [ "$USER" != "$MC_USER" ]; then
-	if [ $EUID -ne 0 ]; then
-		fail "You need to be either $MC_USER or root to run this"
-	else
-		su - -c "$0 $CMD $*" minectl
-		exit $?
-	fi
+	fail "You need to be $MC_USER to run this"
 fi
 
 # Switch commands and execute appropriate functions
@@ -1529,7 +1314,7 @@ case $CMD in
 					;;
 					set-jar|jar)		setjar "$@"
 					;;
-					service)		service "$@"
+					status)			srv_status "$@"
 					;;
 					exec)			srv_exec "$@"
 					;;
