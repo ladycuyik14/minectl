@@ -83,8 +83,10 @@ CHANGED_VARS=
 SERVER_RUNNING=
 
 # Synopsis of usage for user information
-USAGE="Usage:	\033[1m`basename $0`\033[0m [\033[1mINDEPENDENT_COMMAND\033[0m],
+USAGE="Usage:	\033[1m`basename $0`\033[0m [\033[1mINDEPENDENT_COMMAND\033[0m]
+
    or:	\033[1m`basename $0`\033[0m \033[3mSERVER_NAME\033[0m [\033[1mSERVER_SPECIFIC_COMMAND\033[0m]
+
    or:	\033[1m`basename $0`\033[0m [\033[1mMETA_COMMAND\033[0m]
 
 \033[1mINDEPENDENT COMMANDS\033[0m
