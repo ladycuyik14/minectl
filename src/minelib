@@ -97,7 +97,7 @@ $@" > $TMP_EXEC
 		fi
 	fi
 	
-	rm $TMP_EXEC 2> /dev/null
+	rm -f $TMP_EXEC 2> /dev/null
 	return $RETVAL
 }
 

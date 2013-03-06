@@ -1122,30 +1122,37 @@ srv_exec() {
 # Return 0 iff there are players on the server
 # or 1 else
 list_players() {
-	local PLAYERS="`exec list | tail -n +1`"
+	local TMP_PLAYERS="`mktemp`"
+	local RETVAL=1
 
-	if [ -n "$PLAYERS" ]; then
-		echo "$PLAYERS"
-		return 0
+	exec list | tail -n +1 > $TMP_PLAYERS 2> /dev/null
+
+	if [ -n "`cat $TMP_PLAYERS`" ]; then
+		cat "$TMP_PLAYERS"
+		RETVAL=0
 	fi
-
+	
+	rm -f $TMP_PLAYERS 2> /dev/null 
 	echo "There are no players on the server"
-	return 1	
+	return $RETVAL	
 }
 
 # Display count of players logged in
 # Return 0 iff there are players on the server
 # or 1 else
 player_count()  {
-	local PLAYERS=`exec list | head -n 1 | awk '{ print $3 }' | cut -d "/" -f 1`
+	local TMP_PLAYERS="`mktemp`"
+	local RETVAL=1
 	
-	echo $PLAYERS
+	exec list | head -n 1 | awk '{ print $3 }' | cut -d "/" -f 1 > $TMP_PLAYERS 2> /dev/null
+	cat $TMP_PLAYERS
 
-	if [ $PLAYERS -gt 0 ]; then
-		return 0
+	if [ `cat $PLAYERS` -gt 0 ]; then
+		RETVAL= 0
 	fi
 
-	return 1
+	rm -f $TMP_PLAYERS 2> /dev/null
+	return $RETVAL
 }
 
 ##################################
