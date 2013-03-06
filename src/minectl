@@ -249,9 +249,9 @@ shutdown() {
 		SERVER_RUNNING=true
 		# If we force it, just shut it down ...
 		if ( $FORCE ); then
-			exec_srv say "$MESSAGE"
+			srv_exec say "$MESSAGE"
 			if [ $GRACE_TIME -gt 0 ]; then
-				exec_srv say "You've got $GRACE_TIME seconds to log out"
+				srv_exec say "You've got $GRACE_TIME seconds to log out"
 				sleep $GRACE_TIME
 			fi
 
@@ -259,9 +259,9 @@ shutdown() {
 		# ... or else ask the user to decide
 		else
 			if ( ask "Do you really want to shut down the server?" ); then
-				exec_srv say "$MESSAGE"
+				srv_exec say "$MESSAGE"
 				if [ $GRACE_TIME -gt 0 ]; then
-					exec_srv say "You've got $GRACE_TIME seconds to log out"
+					srv_exec say "You've got $GRACE_TIME seconds to log out"
 					sleep $GRACE_TIME
 				fi
 
