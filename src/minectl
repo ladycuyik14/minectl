@@ -71,11 +71,6 @@ REPO_LIST="$LIB_DIR/.repolist"
 
 # Set temporary repository for re-formatted repo list
 TMP_REPO_LIST="`mktemp`"
-	
-# List of changed variables that have
-# been altered by the config() or 
-# properties() function
-CHANGED_VARS=
 
 # Global status if the server is running
 # used to determine whether it should be 
@@ -127,7 +122,7 @@ USAGE="Usage:	\033[1m`basename $0`\033[0m [\033[1mINDEPENDENT_COMMAND\033[0m]
 
 		\033[1mconfigure\033[0m, \033[1mconfig\033[0m or \033[1mcfg\033[0m
 			Show the server's meta-configuration.
-		\033[1mconfigure\033[0m [\033[3mvariable\033[0m \033[4mvalue\033[0m]
+		\033[1mconfigure\033[0m \033[3mvariable\033[0m \033[4mvalue\033[0m
 			Set \033[3mvariable\033[0m to \033[4mvalue\033[0m in the server's meta-configuration file.
 		\033[1mconfigure\033[0m \033[1m--clear\033[0m, \033[1m--unset\033[0m \033[3mvariable\033[0m
 			Unset \033[3mvariable\033[0m in the server's meta-configuration file.
@@ -136,7 +131,7 @@ USAGE="Usage:	\033[1m`basename $0`\033[0m [\033[1mINDEPENDENT_COMMAND\033[0m]
 
 		\033[1mproperties\033[0m, \033[1mprops\033[0m or \033[1mpro\033[0m
 			Show the appropriate server.properties data.
-		\033[1mproperties\033[0m [\033[3mvariable\033[0m \033[4mvalue\033[0m]
+		\033[1mproperties\033[0m \033[3mvariable\033[0m \033[4mvalue\033[0m
 			Set \033[3mvariable\033[0m to \033[4mvalue\033[0m in the server's server.properties file.
 		\033[1mproperties\033[0m \033[1m--clear\033[0m, \033[1m--unset\033[0m \033[3mvariable\033[0m
 			Unset \033[3mvariable\033[0m in the server's server.properties file.
@@ -516,7 +511,7 @@ configure() {
 	local TMP_SERVER_CONFIG="`mktemp`"
 
 	# Print configuration of server, if no arguments are specified
-	if [ $# -eq 0 ]; then
+	if [ $# -le 1 ]; then
 		# Delete comments and empty lines from config file
 		grep -vE "^#|^$" $SERVER_CONFIG > $TMP_SERVER_CONFIG 2> /dev/null
 
@@ -526,43 +521,25 @@ configure() {
 		# Print configuration file content
                 # Check if variables have been altered
                 # and highlight such
-                if [ -n "$CHANGED_VARS" ]; then
-                        while read LINE; do
-                                for VAR in $CHANGED_VARS; do
-                                        if [ -n "`echo $LINE | grep ^"$VAR="`" ]; then
-                                                echo -e "	\033[1m$LINE\033[0m"
-                                                continue
-                                        fi
-
-                                        echo -e "	$LINE"
-                                done
-                        done < $TMP_SERVER_CONFIG
-
-			# Clear list of changed variables
-			CHANGED_VARS=
-                else
-                        while read LINE; do
-                                echo -e "	$LINE"
-                        done < $TMP_SERVER_CONFIG
-                fi
+                while read LINE; do
+	                if [ -n "`echo $LINE | grep ^"$1="`" ]; then
+	                        echo -e "	\033[1m$LINE\033[0m"
+	                        continue
+	                fi
+                done < $TMP_SERVER_CONFIG
 	else
-		# Switch arguments and set variables
-		while (( $# )); do
-			# Put var to upper case
-			declare -u VAR=$1
+		# Put var to upper case
+		declare -u VAR=$1
+		shift
 
-			# Add variable to altered variables
-			CHANGED_VARS="$CHANGED_VARS $VAR"
-
-			# Change variable
-			set_var $VAR $2 $SERVER_CONFIG
-			shift 2
-
-		done
+		# Change variable
+		set_var $VAR "$@" $SERVER_CONFIG
 
 		# Print new configuration after modifications
-		configure
+		configure $VAR
 	fi
+
+	rm -f $TMP_SERVER_CONFIG 2> /dev/null
 }
 
 # Configure a server's properties
@@ -571,49 +548,34 @@ properties() {
 	local TMP_SERVER_PROPERTIES="`mktemp`"
 
 	# Print server properties, if no arguments are specified
-	if [ $# -eq 0 ]; then
+	if [ $# -le 1 ]; then
 		# Delete comments and empty lines from config file
 		grep -vE "^#|^$" $SERVER_PROPERTIES > $TMP_SERVER_PROPERTIES 2> /dev/null
 
 		# Print properties file content
 		# Check if variables have been altered
 		# and highlight such
-		if [ -n "$CHANGED_VARS" ]; then
-			while read LINE; do
-				for VAR in $CHANGED_VARS; do
-					if [ -n "`echo $LINE | grep ^"$VAR="`" ]; then
-						echo -e "	\033[1m$LINE\033[0m"
-						continue
-					fi
-					
-					echo -e "	$LINE"
-				done
-			done < $TMP_SERVER_PROPERTIES
-
-			# Clear list of changed variables
-			CHANGED_VARS=
-		else
-			while read LINE; do
-				echo -e "	$LINE"
-			done < $TMP_SERVER_PROPERTIES
-		fi	
+		while read LINE; do
+			if [ -n "`echo $LINE | grep ^"$1="`" ]; then
+				echo -e "	\033[1m$LINE\033[0m"
+				continue
+			fi
+			
+			echo -e "	$LINE"
+		done < $TMP_SERVER_PROPERTIES
 	else
-		# Process variable / value pairs
-		while (( $# ));do
-			# Put var to lower case
-			declare -l VAR=$1
+		# Put var to lower case
+		declare -l VAR=$1
+		shift
 
-			# Add variable to altered variables
-			CHANGED_VARS="$CHANGED_VARS $VAR"
-
-			# Change variable
-			set_var $VAR "$2" $SERVER_PROPERTIES
-			shift 2
-		done
-
+		# Change variable
+		set_var $VAR "$@" $SERVER_PROPERTIES
+	
 		# Print new properties after modifications
 		properties
 	fi
+
+	rm -f $TMP_SERVER_PROPERTIES 2> /dev/null
 }
 	
 # Manage a server's users
@@ -1506,7 +1468,7 @@ if [ "$USER" != "$MC_USER" ]; then
 	if [ $EUID -ne 0 ]; then
 		fail "You need to be either $MC_USER or root to run this"
 	else
-		su - -c "$0 $CMD $*" minectl
+		su - -c "'$0 $CMD $*'" minectl
 		exit $?
 	fi
 fi
