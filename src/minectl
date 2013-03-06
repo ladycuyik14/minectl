@@ -1322,7 +1322,7 @@ case $CMD in
 					;;
 					# Assume that we want to run a command of the Java program
 					# iff nothing else applies
-					*)			srv_exec "$CMD $@"
+					*)			srv_exec "$CMD" "$@"
 				esac
 esac
 
