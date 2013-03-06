@@ -446,10 +446,7 @@ remove() {
 		access_server "$SERVER_NAME"
 
 		# Stop server if it is running
-		if ( service status > /dev/null 2> /dev/null ); then
-			echo "Stopping running server..."
-			service stop > /dev/null 2> /dev/null 
-		fi
+		shutdown "Server is shutting down due to removal" 10 $FORCE
 
 		# Change to parent folder
 		cd .. 2> /dev/null || fail "Cannot change to parent directory"
