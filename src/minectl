@@ -513,6 +513,13 @@ passwd() {
 	# Passwd functions #
 	####################
 
+	# Reload the whitelist
+	whitelist_reload() {
+		if ( service status > /dev/null 2> /dev/null ); then
+                        srv_exec whitelist reload > /dev/null 2> /dev/null
+                fi
+	}
+
 	# Check if we are given a valid user name
 	valid_user() {
 		# Fail if no user name has been given
@@ -553,11 +560,8 @@ passwd() {
 		else
 			err "User \033[1m$1\033[0m is \033[1malready\033[0m whitelisted on server \033[1m$SERVER_NAME\033[0m."
 		fi
-
-		# Reload altered white list
-		if ( service status > /dev/null 2> /dev/null ); then
-			srv_exec whitelist reload
-		fi
+		
+		whitelist_reload
 	}
 
 	# Remove user from the white list, iff he's in it
@@ -574,10 +578,7 @@ passwd() {
 			err "User \033[1m$1\033[0m is \033[1mnot whitelisted\033[0m on server \033[1m$SERVER_NAME\033[0m."
 		fi
 
-		# Reload altered white list
-		if ( service status > /dev/null 2> /dev/null ); then
-			srv_exec whitelist reload
-		fi
+		whitelist_reload
 	}
 
 	# Add a user to the operators list
@@ -588,7 +589,7 @@ passwd() {
 				if ( add_to "$1" "$OP_LIST" > /dev/null 2> /dev/null ); then
 					# Make the user an operator instantly iff the server is running
 					if ( service status > /dev/null 2> /dev/null ); then
-						srv_exec op "$1"
+						srv_exec op "$1" > /dev/null 2> /dev/null
 					fi
 
 					succ "User \033[1m$1\033[0m is \033[1mnow an operator\033[0m on server \033[1m$SERVER_NAME\033[0m."
@@ -610,7 +611,7 @@ passwd() {
 			if ( remove_from "$1" "$OP_LIST" > /dev/null 2> /dev/null ); then
 					# Deop the user iff the server is running
 					if ( service status > /dev/null 2> /dev/null ); then
-						srv_exec deop "$1"
+						srv_exec deop "$1" > /dev/null 2> /dev/null
 					fi
 
 				succ "User \033[1m$1\033[0m is \033[1mno longer an operator\033[0m on server \033[1m$SERVER_NAME\033[0m."
@@ -670,7 +671,9 @@ passwd() {
 
 	# Switch commands
 	while (( $# )); do
-		case $1 in
+		case "$1" in
+			reload)			whitelist_reload
+			;;
 			add|whitelist)		whitelist $2
 						shift
 			;;
