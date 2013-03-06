@@ -147,7 +147,7 @@ USAGE="\033[1mUsage:	`basename $0` [COMMAND]\033[0m,
 		Reset the server to default state (create a new server)
 		Use the --erase-config switch to also erase the server's configuration
 	
-	 \033[1mservice [SERVICE_COMMAND]\033[0m
+	\033[1mservice [SERVICE_COMMAND]\033[0m
                 Manage the respctive system service
                 See '`basename $0` --help service' for further information
 
@@ -1158,7 +1158,7 @@ service() {
         local USAGE="\033[1mUsage: `basename $0` <server_name> service <COMMAND> [COMMAND..]\033[0m
 
 \033[1mCOMMANDS\033[0m
-        \033[1enable\033[0m
+	\033[1enable\033[0m
                 Enable the server on system startup
 
         \033[1mdisable\033[0m
