@@ -23,7 +23,7 @@
 # Version information #
 #######################
 
-VERSION=5.2
+VERSION=5.6
 ARCH=noarch
 
 ####################
@@ -49,7 +49,7 @@ SERVERS_DIR="$MC_HOME/servers"
 JAR_DIR="$LIB_DIR/jar"
 
 # Define temporary directory
-TMP_DIR="/tmp"
+TMP_DIR="`mktemp -d`"
 
 # Define our configuration file name
 SERVER_CONFIG="./.mined.cfg"
@@ -70,7 +70,17 @@ MC_LIB="$LIB_DIR/minelib"
 REPO_LIST="$LIB_DIR/.repolist"
 
 # Set temporary repository for re-formatted repo list
-TMP_REPO_LIST=$TMP_DIR/repolist.tmp
+TMP_REPO_LIST="`mktemp`"
+	
+# List of changed variables that have
+# been altered by the config() or 
+# properties() function
+CHANGED_VARS=
+
+# Global status if the server is running
+# used to determine whether it should be 
+# rstarted after shutdown operations
+SERVER_RUNNING=
 
 # Synopsis of usage for user information
 USAGE="\033[1mUsage:	`basename $0` [COMMAND]\033[0m,
@@ -204,6 +214,63 @@ parse_repo() {
 	# Re-format repo file
 	grep -v ";" $REPO_LIST > $TMP_REPO_LIST 2> /dev/null || fail "Parsing repository file failed"
 }
+
+# Shut down the server displaying a message
+# after a short grace time
+# shutdown <message> <grace_time> <force>
+shutdown() {
+	local MESSAGE="$1"
+	local GRACE_TIME=$2
+	local FORCE=$3
+
+	# Check whether the server is running
+	if ( service status ); then
+		SERVER_RUNNING=true
+		# If we force it, just shut it down ...
+		if ( $FORCE ); then
+			exec_srv say "$MESSAGE"
+			if [ $GRACE_TIME -gt 0 ]; then
+				exec_srv say "You've got $GRACE_TIME seconds to log out"
+				sleep $GRACE_TIME
+			fi
+
+			service stop > /dev/null 2> /dev/null
+		# ... or else ask the user to decide
+		else
+			if ( ask "Do you really want to shut down the server?" ); then
+				exec_srv say "$MESSAGE"
+				if [ $GRACE_TIME -gt 0 ]; then
+					exec_srv say "You've got $GRACE_TIME seconds to log out"
+					sleep $GRACE_TIME
+				fi
+
+				service stop > /dev/null 2> /dev/null
+			else
+				fail "Aborting..."
+			fi
+		fi
+	else
+		SERVER_RUNNING=false
+	fi
+}
+
+# Restart the server after it was shut down:
+# restart <force>
+restart() {
+	local FORCE=$1
+
+	if ( $SERVER_RUNNING ); then
+		if ( $FORCE ); then
+			service start > /dev/null 2> /dev/null
+		else
+			if ( ask "Restart the server now?" ); then
+	                        service start > /dev/null 2> /dev/null
+			fi
+		fi
+	fi
+}
+
+
 
 # Indicate failure when loading of shared library fails
 lib_fail() {
@@ -354,6 +421,12 @@ remove() {
 		# Change to server's directory
 		access_server "$SERVER_NAME"
 
+		# Stop server if it is running
+		if ( service status > /dev/null 2> /dev/null ); then
+			echo "Stopping running server..."
+			service stop > /dev/null 2> /dev/null 
+		fi
+
 		# Change to parent folder
 		cd .. 2> /dev/null || fail "Cannot change to parent directory"
 
@@ -365,7 +438,7 @@ remove() {
 # List available servers
 list() {
 	# Define tamporary server list	
-	local SERVER_LIST=$TMP_DIR/mined-server-list.tmp
+	local SERVER_LIST="`mktemp`"
 
 	# Don't be verbose by default
 	local VERBOSE=false
@@ -411,7 +484,10 @@ list() {
 # Configure minecraft server installation and configuration
 configure() {
 	# Set temporary configuration file
-	local TMP_SERVER_CONFIG=$TMP_DIR/.mined.cfg.tmp
+	local TMP_SERVER_CONFIG="`mktemp`"
+
+	# Clear list of changed variables
+	CHANGED_VARS=
 
 	# Print configuration of server, if no arguments are specified
 	if [ $# -eq 0 ]; then
@@ -422,20 +498,39 @@ configure() {
 		echo -e "	JAR_FILE=`readlink minecraft_server.jar 2> /dev/null`"
 
 		# Print configuration file content
-		while read LINE; do
-			echo -e "	$LINE"
-		done < $TMP_SERVER_CONFIG
+                # Check if variables have been altered
+                # and highlight such
+                if [ -n "$CHANGED_VARS" ]; then
+                        while read LINE; do
+                                for VAR in $CHANGED_VARS; do
+                                        if [ -n "`echo $LINE | grep ^"$VAR="`" ]; then
+                                                echo -e "       \033[1m$LINE\033[0m"
+                                                continue
+                                        fi
+
+                                        echo -e "       $LINE"
+                                done
+                        done < $TMP_SERVER_CONFIG
+                else
+                        while read LINE; do
+                                echo -e "       $LINE"
+                        done < $TMP_SERVER_CONFIG
+                fi
 	else
 		# Switch arguments and set variables
 		while (( $# )); do
 			# Put var to upper case
 			declare -u VAR=$1
 
+			# Add variable to altered variables
+			CHANGED_VARS="$CHANGED_VARS $VAR"
+
 			# Change variable
 			set_var $VAR $2 $SERVER_CONFIG
 			shift 2
 
 		done
+
 		# Print new configuration after modifications
 		configure
 	fi
@@ -444,22 +539,43 @@ configure() {
 # Configure a server's properties
 properties() {
 	# Set temporary properties file
-	local TMP_SERVER_PROPERTIES=$TMP_DIR/server_properties.tmp
+	local TMP_SERVER_PROPERTIES="`mktemp`"
+
+	# Clear list of changed variables
+	CHANGED_VARS=
 
 	# Print server properties, if no arguments are specified
 	if [ $# -eq 0 ]; then
 		# Delete comments and empty lines from config file
 		grep -vE "^#|^$" $SERVER_PROPERTIES > $TMP_SERVER_PROPERTIES 2> /dev/null || fail "Properties file is missing"
 
-		# Print configuration file content
-		while read LINE; do
-			echo -e "	$LINE"
-		done < $TMP_SERVER_PROPERTIES
+		# Print properties file content
+		# Check if variables have been altered
+		# and highlight such
+		if [ -n "$CHANGED_VARS" ]; then
+			while read LINE; do
+				for VAR in $CHANGED_VARS; do
+					if [ -n "`echo $LINE | grep ^"$VAR="`" ]; then
+						echo -e "	\033[1m$LINE\033[0m"
+						continue
+					fi
+					
+					echo -e "	$LINE"
+				done
+			done < $TMP_SERVER_PROPERTIES
+		else
+			while read LINE; do
+				echo -e "	$LINE"
+			done < $TMP_SERVER_PROPERTIES
+		fi	
 	else
 		# Process variable / value pairs
 		while (( $# ));do
 			# Put var to lower case
 			declare -l VAR=$1
+
+			# Add variable to altered variables
+			CHANGED_VARS="$CHANGED_VARS $VAR"
 
 			# Change variable
 			set_var $VAR "$2" $SERVER_PROPERTIES
@@ -478,7 +594,7 @@ passwd() {
 	#################
 
 	# Set temporary file
-	local TMP=$TMP_DIR/`basename $0`-$CMD.tmp
+	local TMP="`mktemp`"
 
 	# Usage information
 	local USAGE="\033[1mUsage: `basename $0` <server_name> passwd <COMMAND [user_name]> [COMMAND [user_name]..]\033[0m
@@ -711,16 +827,63 @@ passwd() {
 backup() {
 	# Set current time and date as default backup name
 	local BACKUP_NAME="$SERVER_NAME-`date +%Y.%m.%d-%H.%M`"
+	local SECURE=false
+	local FORCE=false
+	local GRACE_TIME=10
+	local MESSAGE="Server is being shut down for backup"
+
+	local RETVAL=2
+	local SERVER_RUNNING=false
 	
 	# Set parameters as backup name if specified
-	if [ $# -gt 0 ]; then
-		BACKUP_NAME="$@"
-	fi
+	
+	while (( $# )); do
+		case $1 in
+			--secure|-s)		SECURE=true
+						shift
+			;;
+			--force|-f)		FORCE=true
+						shift
+			;;
+			--grace-time|-t)	GRACE_TIME=$2
+						shift 2
+			;;
+			--message|-m)		MESSAGE=$2
+						shift 2
+			;;
+			*)			BACKUP_NAME="$@"
+						break
+		esac
+	done
+
+	# Check if we want to do a secure
+	# bakup of an offline server
+	if ( $SECURE ); then
+		shutdown "$MESSAGE" $GRACE_TIME $FORCE
+	fi			
 
 	# Create the backup as a gzip compressed tar archive, but with the custom *.mcb suffix 
 	tar czf "$MC_HOME/backup/$BACKUP_NAME.mcb" * > /dev/null 2> /dev/null 
+
+	# Check return value of tar
+	RETVAL=$?
+	# The secure backup worked fine, iff tar returns 0
+	if ( $SECURE ); then 
+		if [ $RETVAL -ne 0 ]; then
+			fail "Secure backup failed: Backup file is inconsistent"
+		fi
 	# The backup worked fine, iff tar returns something smaller or equal 1
-	test $? -le 1 && return 0 || fail "Could not create backup"
+	else
+		if [ $RETVAL -gt 1 ]; then
+			fail "Could not create backup"
+		fi
+	fi
+
+	# If we were in secure mode and the server was running
+	# the user maybe wants to restart it now
+	if ( $SECURE ); then
+		restart $FORCE
+	fi
 }
 
 # Restore the server
@@ -728,14 +891,26 @@ restore() {
 	# Assume latest backup shall be restored
 	local BACKUP_NAME="`ls -tl $MC_HOME/backup/$SERVER_NAME-* 2> /dev/null | head -n1 | awk '{print $9}'`"
 	local BACKUP=""
+	local SERVER_RUNNING=false
 
 	# We don't want to clean the server directory by default
 	local CLEAN=false
+	local FORCE=false
+	local GRACE_TIME=10
+	local MESSAGE="Server is being shut down for restore"
 	
 	# Switch options
 	while (( $# )); do
-		case "$1" in
-			"--clean"|"-c")		CLEAN=true
+		case $1 in
+			--clean|-c)		CLEAN=true
+			;;
+			--force|-f)		FORCE=true
+			;;
+			--grace-time|-t)	GRACE_TIME=$2
+						shift
+			;;
+			--message|-m)		MESSAGE=$2
+						shift
 			;;
 			*)			BACKUP_NAME="$@"
 						break
@@ -758,6 +933,11 @@ restore() {
 		fail "Specified backup file could not be found"
 	fi
 
+	# Shut down the server if it is running
+	if ( service status ); then
+		shutdown "$MESSAGE" $GRACE_TIME $FORCE
+	fi
+			
 	# Clean the server if wanted
 	if ( $CLEAN ); then
 		clean "$SERVER_NAME"
@@ -766,25 +946,39 @@ restore() {
 	# Perform restore
 	tar xzf "$BACKUP" > /dev/null 2> /dev/null && return 0 || fail "Could not restore backup"
 
-	# The server must be restarted now
-	echo "Server must be restarted"
+	# Restart the server if wanted
+	restart $FORCE
 }
 
 # Reset the server
 reset() {
 	# As default we want to keep our configuration
 	local KEEP_CONFIG=false
-	local CFG_BACKUP=$TMP_DIR/minecraft-cfg-backup.tar.gz
+	local CFG_BACKUP="`mktemp`"
+	local FORCE=false
+	local GRACE_TIME=10
+	local MESSAGE="Server is being shut down for reset"
 
 	# Switch options
 	while (( $# )); do
 		case $1 in
 			--erase-config|-ec|-e)	KEEP_CONFIG=false
 			;;
+			--force|-f)		FORCE=true
+			;;
+			--grace-time|-t)	GRACE_TIME=$2
+						shift
+			;;
+			--message|-m)		MESSAGE=$2
+						shift
+			;;
 			*)			error "Unrecognized argument '$1'"
 		esac
 		shift
 	done
+
+	# Server must be shut down
+	shutdown "$MESSAGE" $GRACE_TIME $FORCE
 
 	# If we want to keep the configuration, we create a temporal archive from them
 	# XXX: Do not mix this up with our server's main backup() function
@@ -808,8 +1002,8 @@ reset() {
 		rm $CFG_BACKUP 2> /dev/null
 	fi
 		
-	# The server should be restarted now
-	echo "Server should be restarted"
+	# Restart the server if wanted
+	restart $FORCE
 }
 
 # Check if updates for JAR files are available
