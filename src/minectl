@@ -255,7 +255,7 @@ shutdown() {
 				sleep $GRACE_TIME
 			fi
 
-			service stop > /dev/null 2> /dev/null
+			service stop
 		# ... or else ask the user to decide
 		else
 			if ( ask "Do you really want to shut down the server?" ); then
@@ -265,7 +265,7 @@ shutdown() {
 					sleep $GRACE_TIME
 				fi
 
-				service stop > /dev/null 2> /dev/null
+				service stop
 			else
 				fail "Aborting..."
 			fi
@@ -282,10 +282,10 @@ restart() {
 
 	if ( $SERVER_RUNNING ); then
 		if ( $FORCE ); then
-			service start > /dev/null 2> /dev/null
+			service start
 		else
 			if ( ask "Restart the server now?" ); then
-	                        service start > /dev/null 2> /dev/null
+	                        service start
 			fi
 		fi
 	fi
