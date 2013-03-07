@@ -5,79 +5,85 @@
 # chkconfig: 234 90 10
 # description: Start and stop minecraft servers
 
-CMD="$1"
-SERVER_NAME="$2"
 MC_HOME="/home/minectl"
 SERVERS_DIR="$MC_HOME/servers"
 ENABLED_SERVERS="/etc/minectl.servers"
 ALL_SERVERS="/tmp/minectl.servers"
 
-minectl list > $ALL_SERVERS
+su - -c "/usr/local/bin/minectl list" minectl > $ALL_SERVERS
 
 start() {
+	local SERVER_NAME="$1"
+
 	if [ -z "$SERVER_NAME" ]; then
 		while read SERVER; do
-			$0 start "$SERVER"
+			start "$SERVER"
 		done < $ENABLED_SERVERS
 	else
 		if ( ! status "$SERVER_NAME" > /dev/null 2> /dev/null ); then
-			echo "Starting minecraft server $SERVER"
-			su - -c '/usr/local/bin/mcsrv "$SERVER" & echo $! > "$SERVERS_DIR/$SERVER.pid"' minecraft
+			echo "Starting minecraft server $SERVER_NAME"
+			su - -c "/usr/local/bin/mcsrv $SERVER & echo \$! > $SERVERS_DIR/$SERVER_NAME.pid" minectl
 		else
-			echo "Server $SERVER is already running"
+			echo "Server $SERVER_NAME is already running"
 		fi
 	fi
 }
 
 stop() {
+	local SERVER_NAME="$1"
+
 	if [ -z "$SERVER_NAME" ]; then
                 while read SERVER; do
                         $0 stop "$SERVER"
                 done < $ALL_SERVERS
         else
                 if ( status "$SERVER_NAME" > /dev/null 2> /dev/null ); then
-                        echo "Stopping minecraft server $SERVER"
-                        su - -c 'kill $(cat "$SERVERS_DIR/$SERVER.pid")' minecraft
-			rm "$SERVERS_DIR/$SERVER.pid"
+                        echo "Stopping minecraft server $SERVER_NAME"
+                        su - -c 'kill $(cat "$SERVERS_DIR/$SERVER_NAME.pid")' minecraft
+			rm "$SERVERS_DIR/$SERVER_NAME.pid"
                 else
-                        echo "Server $SERVER is not running"
+                        echo "Server $SERVER_NAME is not running"
                 fi
         fi
 }
 
 status() {
+	local SERVER_NAME="$1"
+
 	if [ -z "$SERVER_NAME" ]; then
                 while read SERVER; do
                         $0 status "$SERVER"
                 done < $ALL_SERVERS
         else
-		if [ -f "$SERVERS_DIR/$SERVER.pid" ]; then
-			local PID="`cat "$SERVERS_DIR/$SERVER.pid"`"
+		if [ -f "$SERVERS_DIR/$SERVER_NAME.pid" ]; then
+			local PID=`cat "$SERVERS_DIR/$SERVER_NAME.pid"`
 			if ( ps -p $PID > /dev/null 2> /dev/null ); then
-				echo "Server is running"
+				echo "Server $SERVER_NAME is running"
 				return 0
 			else
-				echo "Server seems to have died" 1>&2
+				echo "Server $SERVER_NAME seems to have died" 1>&2
 				return 2
 			fi
 		else
-			echo "Server is not running"
+			echo "Server $SERVER_NAME is not running"
 			return 1
 		fi
 	fi
 }
 	
+CMD=$1
+shift
 
-case $1 in
-	start)		start
+case $CMD in
+	start)		start $@
 	;;
-	stop)		stop
+	stop)		stop $@
 	;;
-	restart)	stop
+	restart)	stop $@
 			sleep 3
-			start
+			start $@
 	;;
-	status)		status
+	status)		status $@
 	;;
-	*)		echo "Usage: `basename $0` {start,stop,restart,status} [server_name]
+	*)		echo "Usage: `basename $0` {start,stop,restart,status} [server_name]"
 esac
