@@ -5,21 +5,33 @@
 # chkconfig: 234 90 10
 # description: Start and stop minecraft servers
 
+# The home og mienctl
 MC_HOME="/home/minectl"
-SERVERS_DIR="$MC_HOME/servers"
-ENABLED_SERVERS="/etc/minectl.servers"
-ALL_SERVERS="/tmp/minectl.servers"
 
+# The directory for the servers
+SERVERS_DIR="$MC_HOME/servers"
+
+# A list of enabled servers
+ENABLED_SERVERS="/etc/minectl.servers"
+# Make sure it at least exists
+touch $ENABLED_SERVERS
+
+# A list of all servers
+ALL_SERVERS="/tmp/minectl.servers"
+# Create list of all servers
 su - -c "/usr/local/bin/minectl list" minectl > $ALL_SERVERS
 
+# Start server(s)
 start() {
 	local SERVER_NAME="$1"
 
+	# Start all servers marked as active
 	if [ -z "$SERVER_NAME" ]; then
 		while read SERVER; do
 			start "$SERVER"
 		done < $ENABLED_SERVERS
 	else
+		# Start selected server
 		if ( ! status "$SERVER_NAME" > /dev/null 2> /dev/null ); then
 			echo "Starting minecraft server $SERVER_NAME"
 			su - -c "/usr/local/bin/mcsrv $SERVER & echo \$! > $SERVERS_DIR/$SERVER_NAME.pid" minectl
@@ -29,14 +41,17 @@ start() {
 	fi
 }
 
+# Stop server(s)
 stop() {
 	local SERVER_NAME="$1"
 
+	# Stop all servers
 	if [ -z "$SERVER_NAME" ]; then
                 while read SERVER; do
                         $0 stop "$SERVER"
                 done < $ALL_SERVERS
         else
+		# Stop selected server
                 if ( status "$SERVER_NAME" > /dev/null 2> /dev/null ); then
                         echo "Stopping minecraft server $SERVER_NAME"
                         su - -c 'kill $(cat "$SERVERS_DIR/$SERVER_NAME.pid")' minecraft
@@ -47,14 +62,17 @@ stop() {
         fi
 }
 
+# Determine status of server(s)
 status() {
 	local SERVER_NAME="$1"
 
+	# Determine status of all servers
 	if [ -z "$SERVER_NAME" ]; then
                 while read SERVER; do
                         $0 status "$SERVER"
                 done < $ALL_SERVERS
         else
+		# Determine status of selected server
 		if [ -f "$SERVERS_DIR/$SERVER_NAME.pid" ]; then
 			local PID=`cat "$SERVERS_DIR/$SERVER_NAME.pid"`
 			if ( ps -p $PID > /dev/null 2> /dev/null ); then
@@ -70,7 +88,48 @@ status() {
 		fi
 	fi
 }
+
+# Set a server as active (start on boot)
+enable() {
+	local SERVER_NAME="$1"
 	
+	if ( `grep ^"$SERVER_NAME"$ "$ALL_SERVERS" > /dev/null 2> /dev/null` ); then
+		if ( `grep ^"$SERVER_NAME"$ "$ENABLED_SERVERS" > /dev/null 2> /dev/null` ); then
+			echo "Server $SERVER_NAME is already enabled"
+			return 0
+		else
+			echo "Enabling server $SERVER_NAME"
+			echo "$SERVER_NAME" >> "$ENABLED_SERVERS"
+			return 0
+		fi
+	else
+		echo "Server $SERVER_NAME does not exist"
+		return 1
+	fi
+}
+
+# Set a server as inactive (do not start on boot)
+disable() {
+	local SERVER_NAME="$1"
+	
+	if ( `grep ^"$SERVER_NAME"$ "$ALL_SERVERS" > /dev/null 2> /dev/null` ); then
+		if ( `grep ^"$SERVER_NAME"$ "$ENABLED_SERVERS" > /dev/null 2> /dev/null` ); then
+			echo "Disabling server $SERVER_NAME"
+			local TMP_ENABLED_SERVERS="`mktemp`"
+			grep -v ^"$SERVER_NAME"$ "$ENABLED_SERVERS" > $TMP_ENABLED_SERVERS 2> /dev/null
+			mv "$TMP_ENABLED_SERVERS" "$ENABLED_SERVERS"
+			return 0
+		else
+			echo "Server $SERVER_NAME is not enabled"
+			return 0
+		fi
+	else
+		echo "Server $SERVER_NAME does not exist"
+		return 1
+	fi
+}
+
+
 CMD=$1
 shift
 
@@ -85,5 +144,9 @@ case $CMD in
 	;;
 	status)		status $@
 	;;
-	*)		echo "Usage: `basename $0` {start,stop,restart,status} [server_name]"
+	enable)		enable $@
+	;;
+	disable)	disable $@
+	;;
+	*)		echo "Usage: `basename $0` {start,stop,restart,status} [server_name]}\n\t`basename $0` {enable,disable} <server_name>"
 esac
