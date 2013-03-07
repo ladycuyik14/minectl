@@ -1203,10 +1203,11 @@ list_players() {
 	if [ -n "`cat $TMP_PLAYERS`" ]; then
 		cat "$TMP_PLAYERS"
 		RETVAL=0
+	else
+		echo "There are no players on the server"
 	fi
 	
 	rm -f $TMP_PLAYERS 2> /dev/null 
-	echo "There are no players on the server"
 	return $RETVAL	
 }
 
