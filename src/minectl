@@ -455,14 +455,11 @@ configure() {
 				local CONTINUE=false
 
 				for VAR in "$@"; do
-					shopt -s nocasematch
-					if [[ "$VAR" == "$LINE" ]]; then
-						shopt -u nocasematch
+					if [ "$VAR" == "$LINE" ]; then
 					        echo -e "	\033[1m$LINE\033[0m"
 					        CONTINUE=true
 						continue
 					fi
-					shopt -u nocasematch
 				done
 
 				$CONTINUE && continue
@@ -479,16 +476,18 @@ configure() {
 	if [ $# -eq 0 ]; then
 		print_cfg
 	else
+		local ALTERED_VARS=
+
 		while (( $# )); do
 			local VARIABLE="$1"
 			shift
 
 			# Change variable
-			set_var -u "$VARIABLE" "$SERVER_CONFIG"
+			ALTERED_VARS="$ALTERED_VARS `set_var -u "$VARIABLE" "$SERVER_CONFIG"`"
 		done
 
 		# Print new configuration after modifications
-		print_cfg "$@"
+		print_cfg "$ALTERED_VARS"
 	fi
 }
 
@@ -513,16 +512,11 @@ properties() {
 				local CONTINUE=false
 
 				for VAR in "$@"; do
-					echo "$LINE"
-					echo "$VAR"
-					shopt -s nocasematch
-					if [[ "$VAR" == "$LINE" ]]; then
-						shopt -u nocasematch
+					if [ "$VAR" == "$LINE" ]; then
 					        echo -e "	\033[1m$LINE\033[0m"
 						CONTINUE=true
 					        continue
 					fi
-					shopt -u nocasematch
 				done
 
 				$CONTINUE && continue
@@ -544,15 +538,13 @@ properties() {
 			local VARIABLE="$1"
 			shift
 
-			# Change variable
-			set_var -l "$VARIABLE" "$SERVER_PROPERTIES"
-			
-			# Mark variable as altered
-			ALTERED_VARS="$ALTERED_VARS $VARIABLE"
+			# Change variable and			
+			# mark it as altered
+			ALTERED_VARS="$ALTERED_VARS `set_var -l "$VARIABLE" "$SERVER_PROPERTIES"`"
 		done
 
 		# Print new properties after modifications
-		print_pro "$@"
+		print_pro "$ALTERED_VARS"
 	fi
 }
 	
