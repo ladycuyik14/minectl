@@ -452,15 +452,21 @@ configure() {
 		        done < $TMP_SERVER_CONFIG
 		else
 		        while read LINE; do
+				local CONTINUE=false
+
 				for VAR in "$@"; do
 					shopt -s nocasematch
 					if [[ "$VAR" == "$LINE" ]]; then
 						shopt -u nocasematch
 					        echo -e "	\033[1m$LINE\033[0m"
-					        continue
+					        CONTINUE=true
+						continue
 					fi
 					shopt -u nocasematch
-			
+				done
+
+				$CONTINUE && continue
+
 				echo -e "	$LINE"
 		        done < $TMP_SERVER_CONFIG
 		fi
@@ -504,14 +510,20 @@ properties() {
 		        done < $TMP_SERVER_PROPERTIES
 		else
 		        while read LINE; do
+				local CONTINUE=false
+
 				for VAR in "$@"; do
 					shopt -s nocasematch
 					if [[ "$VAR" == "$LINE" ]]; then
 						shopt -u nocasematch
 					        echo -e "	\033[1m$LINE\033[0m"
+						CONTINUE=true
 					        continue
 					fi
 					shopt -u nocasematch
+				done
+
+				$CONTINUE && continue
 			
 				echo -e "	$LINE"
 		        done < $TMP_SERVER_PROPERTIES
