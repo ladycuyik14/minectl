@@ -66,12 +66,6 @@ OP_LIST="./ops.txt"
 # Define shared library
 MC_LIB="$LIB_DIR/minelib"
 
-# Define repository list
-REPO_LIST="$LIB_DIR/.repolist"
-
-# Set temporary repository for re-formatted repo list
-TMP_REPO_LIST="`mktemp`"
-
 # Synopsis of usage for user information
 USAGE="Usage:	\033[1m`basename $0`\033[0m [\033[1mINDEPENDENT_COMMAND\033[0m]
 
@@ -210,15 +204,6 @@ clean() {
 
 	# Remove server directory's content
 	rm -R * > /dev/null 2> /dev/null || fail "Server \"$SERVER_NAME\" could not be cleaned up"
-}
-
-# Parse the repository list
-parse_repo() {
-	# Check whehter the repository list exists
-	test -f $REPO_LIST 2> /dev/null || fail "Checking for repository list failed"
-
-	# Re-format repo file
-	grep -v ";" $REPO_LIST > $TMP_REPO_LIST 2> /dev/null || fail "Parsing repository file failed"
 }
 
 # Indicate failure when loading of shared library fails
@@ -429,40 +414,18 @@ list() {
 
 # Configure minecraft server installation and configuration
 configure() {
-	print_cfg() {		
+	print_configuration() {		
 		# Set temporary configuration file
 		local TMP_SERVER_CONFIG="`mktemp`"
 
 		# Delete comments and empty lines from config file
-		grep -vE "^#|^$" $SERVER_CONFIG > $TMP_SERVER_CONFIG 2> /dev/null
+		extract_data $SERVER_CONFIG > $TMP_SERVER_CONFIG 2> /dev/null
 
 		# Print used JAR file	
-		echo -e "	JAR_FILE=`readlink minecraft_server.jar 2> /dev/null`"
+		echo -e " JAR_FILE=`readlink minecraft_server.jar 2> /dev/null`"
 
 		# Print configuration file content
-                # Check if variables have been altered
-                # and highlight such
-		if [ $# -eq 0 ]; then
-		        while read LINE; do
-				echo -e "	$LINE"
-		        done < $TMP_SERVER_CONFIG
-		else
-		        while read LINE; do
-				local CONTINUE=false
-
-				while read VAR; do
-					if [ "$VAR" == "$LINE" ]; then
-					        echo -e "	\033[1m$LINE\033[0m"
-					        CONTINUE=true
-						continue
-					fi
-				done < "$1"
-
-				$CONTINUE && continue
-
-				echo -e "	$LINE"
-		        done < $TMP_SERVER_CONFIG
-		fi
+                print_file -o " " "$TMP_SERVER_CONFIG" "$1"
 
 		# Remove temp file
 		rm -f $TMP_SERVER_CONFIG 2> /dev/null
@@ -470,7 +433,7 @@ configure() {
 
 	# Print configuration of server, if no arguments are specified
 	if [ $# -eq 0 ]; then
-		print_cfg
+		print_configuration
 	else
 		local ALTERED_VARS="`mktemp`"
 
@@ -483,7 +446,7 @@ configure() {
 		done
 
 		# Print new configuration after modifications
-		print_cfg "$ALTERED_VARS"
+		print_configuration "$ALTERED_VARS"
 
 		rm -f "$ALTERED_VARS" 2> /dev/null
 	fi
@@ -491,44 +454,22 @@ configure() {
 
 # Configure a server's properties
 properties() {
-	print_pro() {		
+	print_properties() {		
 		# Set temporary properties file
 		local TMP_SERVER_PROPERTIES="`mktemp`"
 
 		# Delete comments and empty lines from config file
-		grep -vE "^#|^$" $SERVER_PROPERTIES > $TMP_SERVER_PROPERTIES 2> /dev/null
+		extract_data $SERVER_PROPERTIES > $TMP_SERVER_PROPERTIES 2> /dev/null
 
 		# Print properties file content
-                # Check if variables have been altered
-                # and highlight such
-		if [ $# -eq 0 ]; then
-		        while read LINE; do
-				echo -e "	$LINE"
-		        done < $TMP_SERVER_PROPERTIES
-		else
-		        while read LINE; do
-				local CONTINUE=false
-
-				while read VAR; do
-					if [ "$VAR" == "$LINE" ]; then
-					        echo -e "	\033[1m$LINE\033[0m"
-						CONTINUE=true
-					        continue
-					fi
-				done < "$1"
-
-				$CONTINUE && continue
-			
-				echo -e "	$LINE"
-		        done < $TMP_SERVER_PROPERTIES
-		fi
+                print_file -o " " "$TMP_SERVER_PROPERTIES" "$1"
 
 		# Remove temp file
 		rm -f $TMP_SERVER_PROPERTIES 2> /dev/null
 	}
 
 	if [ $# -eq 0 ]; then
-		print_pro
+		print_properties
 	else
 		local ALTERED_VARS="`mktemp`"
 
@@ -542,7 +483,7 @@ properties() {
 		done
 
 		# Print new properties after modifications
-		print_pro "$ALTERED_VARS"
+		print_properties "$ALTERED_VARS"
 		rm -f "$ALTERED_VARS" 2> /dev/null
 	fi
 }
@@ -608,7 +549,7 @@ passwd() {
 	# Check whether a certain user is white-listed
 	is_whitelisted() {
 		valid_user "$1"
-		if ( is_in "$1" "$WHITE_LIST" ); then
+		if ( file_contains -f -i "$1" "$WHITE_LIST" ); then
 			succ "User \033[1m$1\033[0m is \033[1mwhitelisted\033[0m on server \033[1m$SERVER_NAME\033[0m"
 		else
 			err "User \033[1m$1\033[0m is \033[1mnot whitelisted\033[0m on server \033[1m$SERVER_NAME\033[0m"
@@ -618,7 +559,7 @@ passwd() {
 	# Check whether a certain user is an operator
 	is_op() {
 		valid_user "$1"
-		if ( is_in "$1" "$OP_LIST" ); then
+		if ( file_contains -f -i "$1" "$OP_LIST" ); then
 			succ "User \033[1m$1\033[0m is \033[1man operator\033[0m on server \033[1m$SERVER_NAME\033[0m."
 		else
 			err "User \033[1m$1\033[0m is \033[1mnot an operator\033[0m on server \033[1m$SERVER_NAME\033[0m."
@@ -629,7 +570,7 @@ passwd() {
 	whitelist() {
 		valid_user "$1"
 		if ( ! is_whitelisted "$1" > /dev/null 2> /dev/null ); then
-			if ( add_to "$1" "$WHITE_LIST" > /dev/null 2> /dev/null ); then
+			if ( file_add "$1" "$WHITE_LIST" > /dev/null 2> /dev/null ); then
 				succ "User \033[1m$1 whitelisted\033[0m on server \033[1m$SERVER_NAME\033[0m."
 			else
 				err "\033[1mFailed whitelisting $1\033[0m on server \033[1m$SERVER_NAME\033[0m'.\nCheck your configuration."
@@ -646,7 +587,7 @@ passwd() {
 		valid_user "$1"
 		if ( is_whitelisted "$1" > /dev/null 2> /dev/null ); then
 			deop "$1" 2> /dev/null
-			if ( remove_from "$1" "$WHITE_LIST" > /dev/null 2> /dev/null ); then
+			if ( file_remove -f -i "$1" "$WHITE_LIST" > /dev/null 2> /dev/null ); then
 				succ "User \033[1m$1 removed\033[0m on server \033[1m$SERVER_NAME\033[0m."
 			else
 				err "\033[1mFailed removing $1\033[0m on server \033[1m$SERVER_NAME\033[0m.\nCheck your configuration."
@@ -663,7 +604,7 @@ passwd() {
 		valid_user "$1"
 		if ( is_whitelisted "$1" > /dev/null 2> /dev/null ); then
 			if ( ! is_op "$1" > /dev/null 2> /dev/null ); then		
-				if ( add_to "$1" "$OP_LIST" > /dev/null 2> /dev/null ); then
+				if ( file_add "$1" "$OP_LIST" > /dev/null 2> /dev/null ); then
 					# Make the user an operator instantly 
 					# on the running server
 					srv_exec op "$1" > /dev/null 2> /dev/null
@@ -684,7 +625,7 @@ passwd() {
 	deop() {
 		valid_user "$1"
 		if ( is_op "$1" > /dev/null 2> /dev/null ); then
-			if ( remove_from "$1" "$OP_LIST" > /dev/null 2> /dev/null ); then
+			if ( file_remove -f -i "$1" "$OP_LIST" > /dev/null 2> /dev/null ); then
 				# Deop the user on running server
 				srv_exec deop "$1" > /dev/null 2> /dev/null
 
@@ -709,7 +650,7 @@ passwd() {
 	print() {
 		# Determine mode
 		echo -en "Server \033[1m$SERVER_NAME\033[0m is configured as "
-		if [ "`grep "online-mode" "$SERVER_PROPERTIES" 2> /dev/null | cut -d "=" -f 2 2> /dev/null`" == "true" ]; then
+		if ( file_contains -f -i "online-mode=true" "$SERVER_PROPERTIES" > /dev/null 2> /dev/null ); then
 			echo -en "\033[1monline\033[0m"
 		else
 			echo -en "\033[1moffline\033[0m"
@@ -717,7 +658,7 @@ passwd() {
 
 		# Determine whether white-list is enabled
 		echo -n ", its white-list is "
-		if [ "`grep "white-list" "$SERVER_PROPERTIES" 2> /dev/null | cut -d "=" -f 2 2> /dev/null`" == "true" ]; then
+		if ( file_contains -f -i "white-list=true" "$SERVER_PROPERTIES" > /dev/null 2> /dev/null ); then
 			echo -e "\033[1menabled\033[0m."
 		else
 			echo -e "\033[1mdisabled\033[0m."
@@ -733,14 +674,14 @@ passwd() {
 
 	# Lock the server by putting it into online mode and enabling the white-list
 	lock() {
-		remove_any_from "online-mode" "$SERVER_PROPERTIES" && remove_any_from "white-list" "$SERVER_PROPERTIES" && echo "online-mode=true" >> "$SERVER_PROPERTIES" && echo "white-list=true" >> "$SERVER_PROPERTIES" && succ "Server locked." || err "Server locking failed."
+		properties online-mode=true white-list=true && succ "Server locked." || fail "Server locking failed."
 	}
 
 	# Unlock the server by putting it into offline mode and disabling the white-list
 	# XXX: This is not recommended. We anyway want to offer this feature for there 
 	# might be user that want to run an open game server e.g. on networking parties
 	unlock() {
-		remove_any_from "online-mode" "$SERVER_PROPERTIES" && remove_any_from "white-list" "$SERVER_PROPERTIES" && echo "online-mode=false" >> "$SERVER_PROPERTIES" && echo "white-list=false" >> "$SERVER_PROPERTIES" && succ "Server unlocked." || err "Server unlocking failed." 
+		properties online-mode=false white-list=false && succ "Server unlocked." || fail "Server unlocking failed." 
 	}
 
 	# Switch commands
@@ -896,120 +837,14 @@ reset() {
 	fi
 }
 
-# Check if updates for JAR files are available
-check_update() {
-	# Change to temoprary directory
-	cd $TMP_DIR > /dev/null 2> /dev/null || fail "Could not change to temporary directory"
-
-	# Update counter
-	local UPDATES=0
-
-	# Parse our repo list
-	parse_repo
-
-	# Iterate over each repository entry in the repository list
-	while read REPO; do
-		# Skip empty lines
-		if [ -z "$REPO" ]; then
-			continue
-		fi
-
-		# The URL to the jar file
-		local REPO_URL="`echo "$REPO" | cut -d "#" -f 1`"
-		# A descriptive name of the JAR file
-		local REPO_NAME="`echo "$REPO" | cut -d "#" -f 2`"
-		# The name of the file we want to store
-		local REPO_FILE=`basename $REPO_URL`
-
-		# Make sure the repo file does not exist yet
-		# TODO: This is no nice way to do that
-		rm -f $REPO_FILE 2> /dev/null
-
-		# Download the JAR file
-		tell "Retrieving \"$REPO_NAME\"\t"
-		wget -q "$REPO_URL" -O $REPO_FILE 2> /dev/null || fail
-		
-		# If the file exists...
-		if [ -f $JAR_DIR/$REPO_FILE ]; then
-			# ...and it is the same, we don't need to update it
-			if ( cmp $JAR_DIR/$REPO_FILE $REPO_FILE > /dev/null 2> /dev/null ); then
-				succ "[ up 2 date ]"
-			else
-				succ "[ outdated  ]"
-
-				# Increment update counter
-				UPDATES=$(($UPDATES+1))
-			fi
-		else
-			succ "[ available ]"
-
-			# Increment update counter
-			UPDATES=$(($UPDATES+1))
-		fi
-
-	done < $TMP_REPO_LIST
-
-	# Return value is number of updates
-	return $UPDATES
-}
-
-# Update Minecraft's JAR files
-update() {
-	# Change to temoprary directory
-	cd $TMP_DIR > /dev/null 2> /dev/null || fail "Could not change to temporary directory"
-
-	# Indicator if something was updated
-	local UPDATED=false
-
-	# Parse our repo list
-	parse_repo
-
-	# Iterate over each repository entry in the repository list
-	while read REPO; do
-		# Skip empty lines
-		if [ -z "$REPO" ]; then
-			continue
-		fi
-
-		# The URL to the jar file
-		local REPO_URL="`echo "$REPO" | cut -d "#" -f 1`"
-		# A descriptive name of the JAR file
-		local REPO_NAME="`echo "$REPO" | cut -d "#" -f 2`"
-		# The name of the file we want to store
-		local REPO_FILE=`basename $REPO_URL`
-
-		# Make sure the repo file does not exist yet
-		# TODO: This is no nice way to do that
-		rm -f $REPO_FILE 2> /dev/null
-
-		# Download the JAR file
-		tell "Retrieving \"$REPO_NAME\"\t"
-		wget -q "$REPO_URL" -O $REPO_FILE 2> /dev/null || fail
-		
-		# If the file exists...
-		if [ -f $JAR_DIR/$REPO_FILE ]; then
-			# ...and it is the same, we don't need to update it
-			if ( cmp $JAR_DIR/$REPO_FILE $REPO_FILE > /dev/null 2> /dev/null ); then
-				succ "[ up 2 date ]"
-				continue
-			fi
-		fi
-
-		# Move the temporary file to it's targeted location
-		mv $REPO_FILE $JAR_DIR/ 2> /dev/null && succ "[  updated  ]" || err
-
-		# Mark that something has been updated
-		UPDATED=true
-	done < $TMP_REPO_LIST
-
-	if ( $UPDATED ); then		
-		# The servers using the updated JAR files should be restarted now
-		echo -e "Updates have been installed\nAppropriate servers should be restarted"
-	fi
-}
-
 # Manage the repository
-repo() {
+jar() {
+	# Define repository list
+	REPO_LIST="$LIB_DIR/.repolist"
+
+	# Set temporary repository for re-formatted repo list
+	TMP_REPO_LIST="`mktemp`"
+
 	# Usage information
 	USAGE="Usage: \033[1m`basename $0`\033[0m \033[1mrepo\033[0m [\033[3mCOMMAND\033[0m]
 
@@ -1028,8 +863,17 @@ repo() {
 	# Repo functions #
 	##################
 
+	# Parse the repository list
+	parse_repo() {
+		# Check whether the repository list exists
+		test -f $REPO_LIST 2> /dev/null || fail "Checking for repository list failed"
+
+		# Re-format repo file
+		extract_data $REPO_LIST > $TMP_REPO_LIST 2> /dev/null || fail "Parsing repository file failed"
+	}
+
 	# List available repositories
-	ls_repo() {
+	show_repository() {
 		# Parse our repo list
 		parse_repo
 
@@ -1056,7 +900,7 @@ repo() {
 	}
 
 	# Add an entry to the repository
-	add_repo() {
+	add_repository() {
 		# Clear variables
 		local REPO_URL="$1"
 		local REPO_NAME="$2"
@@ -1077,7 +921,7 @@ repo() {
 	}
 
 	# Remove an entry from the repository list
-	rm_repo() {
+	remove_repository() {
 		# Only argument: The Repo's name
 		local REPO_NAME="$1"
 
@@ -1088,25 +932,138 @@ repo() {
 		fi
 
 		# Remove repo from the list if it is inside
-		if [ -n "`grep "#$REPO_NAME"$ $REPO_LIST 2> /dev/null`" ]; then
-			grep -v "#$REPO_NAME"$ $REPO_LIST > $REPO_LIST.tmp 2> /dev/null && mv $REPO_LIST.tmp $REPO_LIST 2> /dev/null || fail "Could not remove repository"
-		else
-			err "Specified repository is not in the reposotories' file"
+		file_remove -e "#$REPO_NAME" "$REPO_LIST" 2> /dev/null
+	}
+
+	# Check if updates for JAR files are available
+	update_files() {
+		# Change to temoprary directory
+		cd $TMP_DIR > /dev/null 2> /dev/null || fail "Could not change to temporary directory"
+
+		# Update counter
+		local UPDATES=0
+
+		# Parse our repo list
+		parse_repo
+
+		# Iterate over each repository entry in the repository list
+		while read REPO; do
+			# Skip empty lines
+			if [ -z "$REPO" ]; then
+				continue
+			fi
+
+			# The URL to the jar file
+			local REPO_URL="`echo "$REPO" | cut -d "#" -f 1`"
+			# A descriptive name of the JAR file
+			local REPO_NAME="`echo "$REPO" | cut -d "#" -f 2`"
+			# The name of the file we want to store
+			local REPO_FILE=`basename $REPO_URL`
+
+			# Make sure the repo file does not exist yet
+			# TODO: This is no nice way to do that
+			rm -f $REPO_FILE 2> /dev/null
+
+			# Download the JAR file
+			tell "Retrieving \"$REPO_NAME\"\t"
+			wget -q "$REPO_URL" -O $REPO_FILE 2> /dev/null || fail
+		
+			# If the file exists...
+			if [ -f $JAR_DIR/$REPO_FILE ]; then
+				# ...and it is the same, we don't need to update it
+				if ( cmp $JAR_DIR/$REPO_FILE $REPO_FILE > /dev/null 2> /dev/null ); then
+					succ "[ up 2 date ]"
+				else
+					succ "[ outdated  ]"
+
+					# Increment update counter
+					UPDATES=$(($UPDATES+1))
+				fi
+			else
+				succ "[ available ]"
+
+				# Increment update counter
+				UPDATES=$(($UPDATES+1))
+			fi
+
+		done < $TMP_REPO_LIST
+
+		# Return value is number of updates
+		return $UPDATES
+	}
+
+	# Upgrade Minecraft's JAR files
+	upgrade_files() {
+		# Change to temoprary directory
+		cd $TMP_DIR > /dev/null 2> /dev/null || fail "Could not change to temporary directory"
+
+		# Indicator if something was updated
+		local UPDATED=false
+
+		# Parse our repo list
+		parse_repo
+
+		# Iterate over each repository entry in the repository list
+		while read REPO; do
+			# Skip empty lines
+			if [ -z "$REPO" ]; then
+				continue
+			fi
+
+			# The URL to the jar file
+			local REPO_URL="`echo "$REPO" | cut -d "#" -f 1`"
+			# A descriptive name of the JAR file
+			local REPO_NAME="`echo "$REPO" | cut -d "#" -f 2`"
+			# The name of the file we want to store
+			local REPO_FILE=`basename $REPO_URL`
+
+			# Make sure the repo file does not exist yet
+			# TODO: This is no nice way to do that
+			rm -f $REPO_FILE 2> /dev/null
+
+			# Download the JAR file
+			tell "Retrieving \"$REPO_NAME\"\t"
+			wget -q "$REPO_URL" -O $REPO_FILE 2> /dev/null || fail
+		
+			# If the file exists...
+			if [ -f $JAR_DIR/$REPO_FILE ]; then
+				# ...and it is the same, we don't need to update it
+				if ( cmp $JAR_DIR/$REPO_FILE $REPO_FILE > /dev/null 2> /dev/null ); then
+					succ "[ up 2 date ]"
+					continue
+				fi
+			fi
+
+			# Move the temporary file to it's targeted location
+			mv $REPO_FILE $JAR_DIR/ 2> /dev/null && succ "[  updated  ]" || err
+
+			# Mark that something has been updated
+			UPDATED=true
+		done < $TMP_REPO_LIST
+
+		if ( $UPDATED ); then		
+			# The servers using the updated JAR files should be restarted now
+			echo -e "Updates have been installed\nAppropriate servers should be restarted"
 		fi
 	}
+
 
 	CMD=$1
 	shift
 	
 	# Switch commands
 	case $CMD in
-		""|list)		ls_repo "$@"
+		show-repo)		show_repository "$@"
 		;;
-		add)			add_repo "$@"
+		add-repo)		add_repository "$@"
 		;;
-		remove)			rm_repo "$@"
+		remove-repo|rm-repo)	remove_repository "$@"
 		;;
-		--help|-h|help)		echo -e "$USAGE" | /usr/bin/less -r
+		update)			update_files "$@"
+		;;
+		upgrade)		upgrade_files "$@"
+		;;
+		--help|-h|help|"")	echo -e "$USAGE" | /usr/bin/less -r
 					exit 0
 		;;
 		*)			error "Unknown command '$CMD'\nTry --help for help"

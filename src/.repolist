@@ -1,17 +1,17 @@
-; Repository list for minecraft jar file updates
-;
-; Lines containing a semicolon (";") are being ignored, so use them for comments only
-; The file's parser expects the following file structure:
-; Each repo has it's own single line and contains
-; <URL_to_repo_file>#<repo_name>
-; So avoid using hash signs ("#") in URLs or repo names as well.
-;
-; Both following entries provide updates for the CraftBukkit plugin container
-; and the original minecraft server.
-; if you do not want to use one of them, just comment the appropriate one out,
-; or delete the appropriate one.
-;
-; CraftBukkit plugin container repository
+# Repository list for minecraft jar file updates
+#
+# Lines containing a hash sign ("#") are being ignored, so use them for comments only
+# The file's parser expects the following file structure:
+# Each repo has it's own single line and contains
+# <URL_to_repo_file>#<repo_name>
+# So DO NOT use hash signs ("#") in URLs or repo names.
+#
+# Both following entries provide updates for the CraftBukkit plugin container
+# and the original minecraft server.
+# if you do not want to use one of them, just comment the appropriate one out,
+# or delete the appropriate one.
+#
+# CraftBukkit plugin container repository
 http://dl.bukkit.org/latest-rb/craftbukkit.jar#CraftBukkit (container)
-; Original minecraft server repository
+# Original minecraft server repository
 https://s3.amazonaws.com/MinecraftDownload/launcher/minecraft_server.jar#Minecraft (original)

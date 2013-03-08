@@ -64,9 +64,110 @@ fail() {
         exit 1
 }
 
+# List (just) directories in the current folder (without sub directories)
+ls_dir() {
+	find ./ -type d 2> /dev/null | grep -E ^"./.[^/]*"$ | sed 's:./::g'
+}
+
+# Add a string to a file
+file_add() {
+	echo "$1" >> "$2"
+	return $?
+}
+
+# Check if a certain string is contained in a file
+file_contains() {
+	local GREP=grep
+	local PATTERN=
+	local FILE=
+	local IGNORE_CASE=true
+	local BEGINS_WITH=true
+	local ENDS_WITH=true
+
+	while (( $# ));do
+		case $1 in
+			--ignore-case|-i)	IGNORE_CASE=true
+			;;
+			--full-match|-f)	BEGINS_WITH=true
+						ENDS_WITH=true
+			;;
+			--begins-with|-b)	BEGINS_WITH=true
+			;;
+			--ends-with|-e)		ENDS_WITH=true
+			;;
+			*)			PATTERN="$1"
+						FILE="$2"
+						break
+		esac
+		shift
+	done
+	
+	if ( $IGNORE_CASE ); then
+		GREP="$GREP -i"
+	fi
+
+	if ( $BEGINS_WITH && $ENDS_WITH ); then
+		$GREP -E "^$PATTERN[[:blank:]]*$" "$FILE" 2> /dev/null
+	elif ( $BEGINS_WITH ); then
+		$GREP ^"$PATTERN" "$FILE" 2> /dev/null
+	elif ( $ENDS_WITH ); then
+		$GREP -E "$PATTERN[[:blank:]]*$" "$FILE" 2> /dev/null
+	else
+		$GREP "$PATTERN" "$FILE" 2> /dev/null	
+	fi
+
+	return $?
+}
+
+# Remove a string that is in the beginning of a file from this file
+file_remove() {
+	local ARGS="$@"
+	local GREP=grep
+	local TMP="`mktemp`"
+	local PATTERN=
+	local FILE=
+	local IGNORE_CASE=true
+	local BEGINS_WITH=true
+	local ENDS_WITH=true
+
+	while (( $# ));do
+		case $1 in
+			--ignore-case|-i)	IGNORE_CASE=true
+			;;
+			--full-match|-f)	BEGINS_WITH=true
+						ENDS_WITH=true
+			;;
+			--begins-with|-b)	BEGINS_WITH=true
+			;;
+			--ends-with|-e)		ENDS_WITH=true
+			;;
+			*)			PATTERN="$1"
+						FILE="$2"
+						break
+		esac
+		shift
+	done
+	
+	if ( $IGNORE_CASE ); then
+		GREP="$GREP -i"
+	fi
+
+	file_contains "$ARGS" > "$TMP"
+	
+	while read MATCH; do		
+		sed -i "/$MATCH/d" "$FILE" 2> /dev/null
+	done < "$TMP"
+	
+	rm -f "$TMP" 2> /dev/null
+}
+
+# Extract data from a file removing comments and empty lines
+extract_data() {
+	grep -vE "^[[:blank:]]*$|^[[:blank:]]*#" $SERVER_PROPERTIES 2> /dev/null
+}
+
 # Ask a question and return 0 on 'yes' or 1 otherwise
 ask() {
-
 	USAGE="\
 	Usage: ask [The yes / no question]\nReturns 0 on \"y\" or 1 on \"n\" where \"n\" is default."
 
@@ -118,7 +219,7 @@ set_var() {
 			if ( is_start_in "$VARIABLE=" "$FILE" ); then
 				sed -i "s/$VAR_LINE/$VARIABLE=$VALUE/" "$FILE" 2> /dev/null
 			else
-				add_to "$VARIABLE=$VALUE" "$FILE"
+				file_add "$VARIABLE=$VALUE" "$FILE"
 			fi
 
 			echo "$VARIABLE=$VALUE"
@@ -137,43 +238,8 @@ set_var() {
 	return 0
 }
 
-# List (just) directories in the current folder (without sub directories)
-ls_dir() {
-	find ./ -type d 2> /dev/null | grep -E ^"./.[^/]*"$ | sed 's:./::g'
-}
-
-# Add a string to a file
-add_to() {
-	echo "$1" >> "$2"
-	return $?
-}
-
-# Check whether a string is content of a file's line
-is_in() {
-	grep -i ^"$1"$ "$2" > /dev/null 2> /dev/null
-	return $?
-}
-
-# Check whether a lineof a file's begins with a string
-is_start_in() {
-	grep -i ^"$1" "$2" > /dev/null 2> /dev/null
-	return $?
-}
-
-# Remove a string that is in the beginning of a file from this file
-remove_from() {
-	grep -vi ^"$1"$ "$2" > "$TMP"
-	mv "$TMP" "$2"
-}
-
-# Remove any occurance of a string from a file
-remove_any_from() {
-	grep -vi "$1" "$2" > "$TMP"
-	mv "$TMP" "$2"
-}
-
 # Check, whether we are a certain user
-user_is() {
+is_user() {
 	local TARGET_USER="$1"
 
 	if [ "$USER" == "$TARGET_USER" -o "$EUID" == "$TARGET_USER" ]; then
@@ -181,6 +247,41 @@ user_is() {
 	fi
 	
 	return 1
+}
+
+# Print out a file and highlight changes. Usage:
+# print_file [--offset, -o <offset>] <file_name> [change_log]
+print_file() {
+	local OFFSET=""
+
+	# Check if we specified an offset
+	case $1 in
+		--offset|-o)	OFFSET="$2"
+				shift 2
+	esac
+
+	local FILE="$1"
+	local CHANGE_LOG="$2"
+
+        while read LINE; do
+		local CONTINUE=false
+
+		if [ -f "$CHANGE_LOG" ]; then
+			while read CHANGE; do
+				if [ "$CHANGE" == "$LINE" ]; then
+					echo -e "$OFFSET\033[1m$LINE\033[0m"
+					CONTINUE=true
+					continue
+				fi
+			done < "$CHANGE_LOG"
+		fi
+
+		# Skip the output of the line if
+		# it has already been highlighted
+		$CONTINUE && continue
+
+		echo -e "$OFFSET$LINE"
+        done < $FILE
 }
 
 # Access a server's directory securely
