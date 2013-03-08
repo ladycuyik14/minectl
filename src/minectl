@@ -119,18 +119,14 @@ USAGE="Usage:	\033[1m`basename $0`\033[0m [\033[1mINDEPENDENT_COMMAND\033[0m]
 			Show the server's meta-configuration.
 		\033[1mconfigure\033[0m [\033[3mvariable\033[0m=\033[4mvalue\033[0m]
 			Set \033[3mvariable\033[0m to \033[4mvalue\033[0m in the server's meta-configuration file.
-		\033[1mconfigure\033[0m \033[1m--clear\033[0m, \033[1m--unset\033[0m \033[3mvariable\033[0m
-			Unset \033[3mvariable\033[0m in the server's meta-configuration file.
-		\033[1mconfigure\033[0m \033[1m--remove\033[0m, \033[1m--delete\033[0m \033[3mvariable\033[0m
+		\033[1mconfigure\033[0m -\033[3mvariable\033[0m
 			Delete \033[3mvariable\033[0m from the server's meta-configuration file.
 
 		\033[1mproperties\033[0m, \033[1mprops\033[0m or \033[1mpro\033[0m
 			Show the appropriate server.properties data.
 		\033[1mproperties\033[0m [\033[3mvariable\033[0m=\033[4mvalue\033[0m]
 			Set \033[3mvariable\033[0m to \033[4mvalue\033[0m in the server's server.properties file.
-		\033[1mproperties\033[0m \033[1m--clear\033[0m, \033[1m--unset\033[0m \033[3mvariable\033[0m
-			Unset \033[3mvariable\033[0m in the server's server.properties file.
-		\033[1mproperties\033[0m \033[1m--remove\033[0m, \033[1m--delete\033[0m \033[3mvariable\033[0m
+		\033[1mproperties\033[0m -\033[3mvariable\033[0m
 			Delete \033[3mvariable\033[0m from the server's server.properties file.
 
 		\033[1mset-jar\033[0m \033[3mJAR_file\033[0m
@@ -488,6 +484,8 @@ configure() {
 
 		# Print new configuration after modifications
 		print_cfg "$ALTERED_VARS"
+
+		rm -f "$ALTERED_VARS" 2> /dev/null
 	fi
 }
 
@@ -545,6 +543,7 @@ properties() {
 
 		# Print new properties after modifications
 		print_pro "$ALTERED_VARS"
+		rm -f "$ALTERED_VARS" 2> /dev/null
 	fi
 }
 	
