@@ -454,13 +454,13 @@ configure() {
 		        while read LINE; do
 				local CONTINUE=false
 
-				for VAR in "$@"; do
+				while read VAR; do
 					if [ "$VAR" == "$LINE" ]; then
 					        echo -e "	\033[1m$LINE\033[0m"
 					        CONTINUE=true
 						continue
 					fi
-				done
+				done < "$1"
 
 				$CONTINUE && continue
 
@@ -476,14 +476,14 @@ configure() {
 	if [ $# -eq 0 ]; then
 		print_cfg
 	else
-		local ALTERED_VARS=
+		local ALTERED_VARS="`mktemp`"
 
 		while (( $# )); do
 			local VARIABLE="$1"
 			shift
 
 			# Change variable
-			ALTERED_VARS="$ALTERED_VARS `set_var -u "$VARIABLE" "$SERVER_CONFIG"`"
+			set_var -u "$VARIABLE" "$SERVER_CONFIG" >> "$ALTERED_VARS"
 		done
 
 		# Print new configuration after modifications
@@ -511,13 +511,13 @@ properties() {
 		        while read LINE; do
 				local CONTINUE=false
 
-				for VAR in "$@"; do
+				while read VAR; do
 					if [ "$VAR" == "$LINE" ]; then
 					        echo -e "	\033[1m$LINE\033[0m"
 						CONTINUE=true
 					        continue
 					fi
-				done
+				done < "$1"
 
 				$CONTINUE && continue
 			
@@ -532,7 +532,7 @@ properties() {
 	if [ $# -eq 0 ]; then
 		print_pro
 	else
-		local ALTERED_VARS=
+		local ALTERED_VARS="`mktemp`"
 
 		while (( $# )); do
 			local VARIABLE="$1"
@@ -540,7 +540,7 @@ properties() {
 
 			# Change variable and			
 			# mark it as altered
-			ALTERED_VARS="$ALTERED_VARS `set_var -l "$VARIABLE" "$SERVER_PROPERTIES"`"
+			set_var -l "$VARIABLE" "$SERVER_PROPERTIES" >> "$ALTERED_VARS"
 		done
 
 		# Print new properties after modifications
