@@ -216,6 +216,8 @@ set_var() {
 			local VAR_LINE="`grep ^"$VARIABLE=" "$FILE" 2> /dev/null`"
 
 			# If the variable is in the file, replace it with its new value
+			echo "$VARIABLE"
+			echo "$FILE"
 			if ( file_contains -b "$VARIABLE=" "$FILE" ); then
 				sed -i "s/$VAR_LINE/$VARIABLE=$VALUE/" "$FILE" 2> /dev/null
 			else
