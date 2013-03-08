@@ -102,6 +102,10 @@ file_contains() {
 		esac
 		shift
 	done
+
+	echo "PATTERN $PATTERN"
+	echo "FILE $FILE"
+	echo "BEGINS_WITH $BEGINS_WITH"
 	
 	if ( $IGNORE_CASE ); then
 		GREP="$GREP -i"
