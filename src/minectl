@@ -513,6 +513,8 @@ properties() {
 				local CONTINUE=false
 
 				for VAR in "$@"; do
+					echo "$LINE"
+					echo "$VAR"
 					shopt -s nocasematch
 					if [[ "$VAR" == "$LINE" ]]; then
 						shopt -u nocasematch
@@ -536,12 +538,17 @@ properties() {
 	if [ $# -eq 0 ]; then
 		print_pro
 	else
+		local ALTERED_VARS=
+
 		while (( $# )); do
 			local VARIABLE="$1"
 			shift
 
 			# Change variable
 			set_var -l "$VARIABLE" "$SERVER_PROPERTIES"
+			
+			# Mark variable as altered
+			ALTERED_VARS="$ALTERED_VARS $VARIABLE"
 		done
 
 		# Print new properties after modifications
