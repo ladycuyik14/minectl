@@ -109,6 +109,7 @@ file_contains() {
 	if ( $BEGINS_WITH && $ENDS_WITH ); then
 		$GREP -E "^$PATTERN[[:blank:]]*$" "$FILE" 2> /dev/null
 	elif ( $BEGINS_WITH ); then
+		echo "PATTERN $PATTERN"
 		$GREP ^"$PATTERN" "$FILE" 2> /dev/null
 	elif ( $ENDS_WITH ); then
 		$GREP -E "$PATTERN[[:blank:]]*$" "$FILE" 2> /dev/null
