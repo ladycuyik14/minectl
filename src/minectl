@@ -541,7 +541,7 @@ properties() {
 			shift
 
 			# Change variable
-			set_var -l "$VARIABLE" "$SERVER_CONFIG"
+			set_var -l "$VARIABLE" "$SERVER_PROPERTIES"
 		done
 
 		# Print new properties after modifications
