@@ -77,13 +77,12 @@ file_add() {
 
 # Check if a certain string is contained in a file
 file_contains() {
-	echo "$@"
 	local GREP=grep
 	local PATTERN=
 	local FILE=
-	local IGNORE_CASE=true
-	local BEGINS_WITH=true
-	local ENDS_WITH=true
+	local IGNORE_CASE=false
+	local BEGINS_WITH=false
+	local ENDS_WITH=false
 
 	while (( $# ));do
 		case $1 in
@@ -102,10 +101,6 @@ file_contains() {
 		esac
 		shift
 	done
-
-	echo "PATTERN $PATTERN"
-	echo "FILE $FILE"
-	echo "BEGINS_WITH $BEGINS_WITH"
 	
 	if ( $IGNORE_CASE ); then
 		GREP="$GREP -i"
@@ -114,7 +109,6 @@ file_contains() {
 	if ( $BEGINS_WITH && $ENDS_WITH ); then
 		$GREP -E "^$PATTERN[[:blank:]]*$" "$FILE" 2> /dev/null
 	elif ( $BEGINS_WITH ); then
-		echo "PATTERN $PATTERN"
 		$GREP ^"$PATTERN" "$FILE" 2> /dev/null
 	elif ( $ENDS_WITH ); then
 		$GREP -E "$PATTERN[[:blank:]]*$" "$FILE" 2> /dev/null
@@ -132,9 +126,9 @@ file_remove() {
 	local TMP="`mktemp`"
 	local PATTERN=
 	local FILE=
-	local IGNORE_CASE=true
-	local BEGINS_WITH=true
-	local ENDS_WITH=true
+	local IGNORE_CASE=false
+	local BEGINS_WITH=false
+	local ENDS_WITH=false
 
 	while (( $# ));do
 		case $1 in
@@ -222,8 +216,6 @@ set_var() {
 			local VAR_LINE="`grep ^"$VARIABLE=" "$FILE" 2> /dev/null`"
 
 			# If the variable is in the file, replace it with its new value
-			echo "$VARIABLE"
-			echo "$FILE"
 			if ( file_contains -b "$VARIABLE=" "$FILE" ); then
 				sed -i "s/$VAR_LINE/$VARIABLE=$VALUE/" "$FILE" 2> /dev/null
 			else

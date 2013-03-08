@@ -479,8 +479,7 @@ properties() {
 
 			# Change variable and			
 			# mark it as altered
-#			set_var -l "$VARIABLE" "$SERVER_PROPERTIES" >> "$ALTERED_VARS"
-			set_var -l "$VARIABLE" "$SERVER_PROPERTIES" | tee -a "$ALTERED_VARS"
+			set_var -l "$VARIABLE" "$SERVER_PROPERTIES" >> "$ALTERED_VARS"
 		done
 
 		# Print new properties after modifications
