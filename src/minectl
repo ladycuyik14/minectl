@@ -674,14 +674,14 @@ passwd() {
 
 	# Lock the server by putting it into online mode and enabling the white-list
 	lock() {
-		properties online-mode=true white-list=true && succ "Server locked." > /dev/null || fail "Server locking failed."
+		properties online-mode=true white-list=true > /dev/null && succ "Server locked." || fail "Server locking failed."
 	}
 
 	# Unlock the server by putting it into offline mode and disabling the white-list
 	# XXX: This is not recommended. We anyway want to offer this feature for there 
 	# might be user that want to run an open game server e.g. on networking parties
 	unlock() {
-		properties online-mode=false white-list=false && succ "Server unlocked." > /dev/null || fail "Server unlocking failed." 
+		properties online-mode=false white-list=false > /dev/null && succ "Server unlocked." || fail "Server unlocking failed." 
 	}
 
 	# Switch commands
