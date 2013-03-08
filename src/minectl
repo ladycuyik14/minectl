@@ -117,7 +117,7 @@ USAGE="Usage:	\033[1m`basename $0`\033[0m [\033[1mINDEPENDENT_COMMAND\033[0m]
 
 		\033[1mconfigure\033[0m, \033[1mconfig\033[0m or \033[1mcfg\033[0m
 			Show the server's meta-configuration.
-		\033[1mconfigure\033[0m \033[3mvariable\033[0m \033[4mvalue\033[0m
+		\033[1mconfigure\033[0m [\033[3mvariable\033[0m=\033[4mvalue\033[0m]
 			Set \033[3mvariable\033[0m to \033[4mvalue\033[0m in the server's meta-configuration file.
 		\033[1mconfigure\033[0m \033[1m--clear\033[0m, \033[1m--unset\033[0m \033[3mvariable\033[0m
 			Unset \033[3mvariable\033[0m in the server's meta-configuration file.
@@ -126,7 +126,7 @@ USAGE="Usage:	\033[1m`basename $0`\033[0m [\033[1mINDEPENDENT_COMMAND\033[0m]
 
 		\033[1mproperties\033[0m, \033[1mprops\033[0m or \033[1mpro\033[0m
 			Show the appropriate server.properties data.
-		\033[1mproperties\033[0m \033[3mvariable\033[0m \033[4mvalue\033[0m
+		\033[1mproperties\033[0m [\033[3mvariable\033[0m=\033[4mvalue\033[0m]
 			Set \033[3mvariable\033[0m to \033[4mvalue\033[0m in the server's server.properties file.
 		\033[1mproperties\033[0m \033[1m--clear\033[0m, \033[1m--unset\033[0m \033[3mvariable\033[0m
 			Unset \033[3mvariable\033[0m in the server's server.properties file.
@@ -433,11 +433,10 @@ list() {
 
 # Configure minecraft server installation and configuration
 configure() {
-	# Set temporary configuration file
-	local TMP_SERVER_CONFIG="`mktemp`"
+	print_cfg() {		
+		# Set temporary configuration file
+		local TMP_SERVER_CONFIG="`mktemp`"
 
-	# Print configuration of server, if no arguments are specified
-	if [ $# -le 1 ]; then
 		# Delete comments and empty lines from config file
 		grep -vE "^#|^$" $SERVER_CONFIG > $TMP_SERVER_CONFIG 2> /dev/null
 
@@ -447,63 +446,95 @@ configure() {
 		# Print configuration file content
                 # Check if variables have been altered
                 # and highlight such
-                while read LINE; do
-	                if [ -n "`echo $LINE | grep ^"$1="`" ]; then
-	                        echo -e "	\033[1m$LINE\033[0m"
-	                        continue
-	                fi
+		if [ $# -eq 0 ]; then
+		        while read LINE; do
+				echo -e "	$LINE"
+		        done < $TMP_SERVER_CONFIG
+		else
+		        while read LINE; do
+				for VAR in "$@"; do
+					shopt -s nocasematch
+					if [[ "$VAR" == "$LINE" ]]; then
+						shopt -u nocasematch
+					        echo -e "	\033[1m$LINE\033[0m"
+					        continue
+					fi
+					shopt -u nocasematch
 			
-			echo -e "	$LINE"
-                done < $TMP_SERVER_CONFIG
-	else
-		# Put var to upper case
-		declare -u VAR=$1
-		shift
+				echo -e "	$LINE"
+		        done < $TMP_SERVER_CONFIG
+		fi
 
-		# Change variable
-		set_var "$VAR" "$*" "$SERVER_CONFIG"
+		# Remove temp file
+		rm -f $TMP_SERVER_CONFIG 2> /dev/null
+	}
+
+	# Print configuration of server, if no arguments are specified
+	if [ $# -eq 0 ]; then
+		print_cfg
+	else
+		while (( $# )); do
+			local VARIABLE="$1"
+			shift
+
+			# Change variable
+			set_var -u "$VARIABLE" "$SERVER_CONFIG"
+		done
 
 		# Print new configuration after modifications
-		configure "$VAR"
+		print_cfg "$@"
 	fi
-
-	rm -f $TMP_SERVER_CONFIG 2> /dev/null
 }
 
 # Configure a server's properties
 properties() {
-	# Set temporary properties file
-	local TMP_SERVER_PROPERTIES="`mktemp`"
+	print_pro() {		
+		# Set temporary properties file
+		local TMP_SERVER_PROPERTIES="`mktemp`"
 
-	# Print server properties, if no arguments are specified
-	if [ $# -le 1 ]; then
 		# Delete comments and empty lines from config file
 		grep -vE "^#|^$" $SERVER_PROPERTIES > $TMP_SERVER_PROPERTIES 2> /dev/null
 
 		# Print properties file content
-		# Check if variables have been altered
-		# and highlight such
-		while read LINE; do
-			if [ -n "`echo $LINE | grep ^"$1="`" ]; then
-				echo -e "	\033[1m$LINE\033[0m"
-				continue
-			fi
+                # Check if variables have been altered
+                # and highlight such
+		if [ $# -eq 0 ]; then
+		        while read LINE; do
+				echo -e "	$LINE"
+		        done < $TMP_SERVER_PROPERTIES
+		else
+		        while read LINE; do
+				for VAR in "$@"; do
+					shopt -s nocasematch
+					if [[ "$VAR" == "$LINE" ]]; then
+						shopt -u nocasematch
+					        echo -e "	\033[1m$LINE\033[0m"
+					        continue
+					fi
+					shopt -u nocasematch
 			
-			echo -e "	$LINE"
-		done < $TMP_SERVER_PROPERTIES
+				echo -e "	$LINE"
+		        done < $TMP_SERVER_PROPERTIES
+		fi
+
+		# Remove temp file
+		rm -f $TMP_SERVER_PROPERTIES 2> /dev/null
+	}
+
+	if [ $# -eq 0 ]; then
+		print_pro
 	else
-		# Put var to lower case
-		declare -l VAR="$1"
-		shift
+		while (( $# )); do
+			local VARIABLE="$1"
+			shift
 
-		# Change variable
-		set_var "$VAR" "$*" "$SERVER_PROPERTIES"
-	
+			# Change variable
+			set_var -l "$VARIABLE" "$SERVER_CONFIG"
+		done
+
 		# Print new properties after modifications
-		properties "$VAR"
+		print_pro "$@"
 	fi
-
-	rm -f $TMP_SERVER_PROPERTIES 2> /dev/null
 }
 	
 # Manage a server's users
