@@ -106,7 +106,7 @@ set_var() {
 	if [ -n "$VARIABLE" ]; then
 		# If the variable name preceeds a "-", that means
 		# we want the variable removed from the file
-		if [ -n "`echo "$VARIABLE" | grep ^-` 2> /dev/null" ]; then
+		if [ -n "`echo "$VARIABLE" | grep ^"-" 2> /dev/null`" ]; then
 			VARIABLE="`echo "$VARIABLE" | cut -d "-" -f 2`"
 			sed -i "/^$VARIABLE=/d" "$FILE"
 		else
