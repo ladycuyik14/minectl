@@ -424,8 +424,11 @@ configure() {
 		# Delete comments and empty lines from config file
 		extract_data $SERVER_CONFIG > $TMP_SERVER_CONFIG 2> /dev/null
 
-		# Print used JAR file	
-		echo -e " JAR_FILE=`readlink minecraft_server.jar 2> /dev/null`"
+		# Print used JAR file
+		if ( fileop -b contains "JAR_FILE=" "$1" > /dev/null 2> /dev/null); then
+			echo -en "\033[1m"
+		fi
+		echo -e " JAR_FILE=`readlink minecraft_server.jar 2> /dev/null`\033[0m"
 
 		# Print configuration file content
                 print_file -o " " "$TMP_SERVER_CONFIG" "$1"
@@ -476,6 +479,7 @@ configure() {
 			# Check if we want to change the JAR file
 			if [ "$VAR_NAME" == "JAR_FILE" ]; then
 				set_jar "$VAR_VAL"
+				echo "JAR_FILE=$VAR_VAL" >> "$ALTERED_VARS"
 			else
 				# Change variable
 				set_var -u "$VARIABLE" "$SERVER_CONFIG" >> "$ALTERED_VARS"
@@ -1054,19 +1058,6 @@ jar() {
 
 		# Iterate over each repository entry in the repository list
 		while read REPO; do
-			# Check if we specified aonly a selection 
-			# of repos and skip unwanted ones
-			for WANTED_REPO in "$@"; do
-				CONTINUE=true
-
-				if [ "$REPO" == "$WANTED_REPO" ]; then
-					CONTINUE=false
-					break
-				fi		
-			done
-
-			$CONTINUE && continue
-
 			# The URL to the jar file
 			local REPO_URL="`echo "$REPO" | cut -d "#" -f 1`"
 			# A descriptive name of the JAR file
@@ -1075,6 +1066,19 @@ jar() {
 			local REPO_FILE="$JAR_REPO/`date +%s`-`basename $REPO_URL`"
 			# The latest file of the repo
 			local LATEST_FILE="$JAR_REPO/`basename $REPO_URL`.latest"
+
+			# Check if we specified aonly a selection 
+			# of repos and skip unwanted ones
+			for WANTED_REPO in "$@"; do
+				CONTINUE=true
+
+				if [ "$REPO_NAME" == "$WANTED_REPO" ]; then
+					CONTINUE=false
+					break
+				fi		
+			done
+
+			$CONTINUE && continue
 
 			# Download the JAR file
 			tell "Retrieving \033[1m$REPO_NAME\033[0m\t"
@@ -1118,19 +1122,6 @@ jar() {
 
 		# Iterate over each repository entry in the repository list
 		while read REPO; do
-			# Check if we specified aonly a selection 
-			# of repos and skip unwanted ones
-			for WANTED_REPO in "$@"; do
-				CONTINUE=true
-
-				if [ "$REPO" == "$WANTED_REPO" ]; then
-					CONTINUE=false
-					break
-				fi		
-			done
-
-			$CONTINUE && continue
-
 			# The URL to the jar file
 			local REPO_URL="`echo "$REPO" | cut -d "#" -f 1`"
 			# A descriptive name of the JAR file
@@ -1139,6 +1130,19 @@ jar() {
 			local LATEST_FILE="$JAR_REPO/`basename $REPO_URL`.latest"
 			# The latest file of the repo
 			local CURRENT_FILE="$JAR_DIR/`basename $REPO_URL`"
+			# Check if we specified aonly a selection 
+			# of repos and skip unwanted ones
+
+			for WANTED_REPO in "$@"; do
+				CONTINUE=true
+
+				if [ "$REPO_NAME" == "$WANTED_REPO" ]; then
+					CONTINUE=false
+					break
+				fi		
+			done
+
+			$CONTINUE && continue
 		
 			tell "JAR file from repo \033[1m$REPO_NAME\033[0m "
 			# If the file exists...

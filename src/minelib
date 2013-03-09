@@ -210,7 +210,7 @@ set_var() {
 
 			# If the variable is in the file, replace it with its new value
 			if ( fileop -b contains "$VARIABLE=" "$FILE" > /dev/null 2> /dev/null ); then #/dev/null 2> /dev/null ); then
-				sed -i "s/$VAR_LINE/$VARIABLE=$VALUE/" "$FILE" 2> /dev/null
+				sed -i "s|$VAR_LINE|$VARIABLE=$VALUE|" "$FILE" 2> /dev/null
 			else
 				fileop add "$VARIABLE=$VALUE" "$FILE"
 			fi
