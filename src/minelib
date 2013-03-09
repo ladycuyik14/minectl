@@ -121,7 +121,6 @@ fileop() {
 	}
 
 	while (( $# ));do
-		echo "$1" >> /tmp/test0
 		case $1 in
 			--ignore-case|-i)	IGNORE_CASE=true
 			;;
