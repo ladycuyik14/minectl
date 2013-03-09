@@ -236,6 +236,17 @@ is_user() {
 	return 1
 }
 
+# Check if for valid users
+valid_users() {
+	for VALID_USER in "$@"; do
+		if ( is_user "$VALID_USER" ); then
+			return 0
+		fi
+	done
+	
+	return 1
+}
+
 # Print out a file and highlight changes. Usage:
 # print_file [--offset, -o <offset>] <file_name> [change_log]
 print_file() {
