@@ -93,6 +93,9 @@ USAGE="Usage:	\033[1m`basename $0`\033[0m [\033[1mINDEPENDENT_COMMAND\033[0m]
 
 \033[1mSERVER SPECIFIC COMMANDS\033[0m
 	\033[1mremove\033[0m [\033[1m--force\033[0m]
+		Rename a server.
+
+	\033[1mrename\033[0m [\033[3mnew_name\033[0m]
 		Entirely remove a server from the disk.
 		You can avoid querying by using the \033[1m--force\033[0m switch.
 
@@ -114,9 +117,6 @@ USAGE="Usage:	\033[1m`basename $0`\033[0m [\033[1mINDEPENDENT_COMMAND\033[0m]
 			Set \033[3mvariable\033[0m to \033[4mvalue\033[0m in the server's server.properties file.
 		\033[1mproperties\033[0m [-\033[3mvariable\033[0m]
 			Delete \033[3mvariable\033[0m from the server's server.properties file.
-
-		\033[1mset-jar\033[0m \033[3mJAR_file\033[0m
-			Set \033[3mJAR_file\033[0m as the active JAR file for the server.
 
 	\033[1m\033[3mBackup, Restore and Reset\033[0m
 		For \033[1mbackup\033[0m, \033[1mrestore\033[0m and \033[1mreset\033[0m you can use the
@@ -413,6 +413,18 @@ list() {
 	done < "$SERVER_LIST"
 
 	return $RETVAL
+}
+
+# Rename a server
+rename() {
+	local NEW_NAME="$@"
+
+	if ( srv_status > /dev/null 2>/dev/null ) {
+		fail "Server is still running"
+	else
+		cd ..
+		mv "$SERVER_NAME" "$NEW_NAME" 2> /dev/null || fail "Could not rename server"
+	fi
 }
 
 # Configure minecraft server installation and configuration
@@ -1363,8 +1375,9 @@ case $CMD in
 				shift
 
 				case $CMD in
-
 					remove)			remove "$@"
+					;;
+					rename)			rename "$@"
 					;;
 					passwd)			passwd "$@"
 					;;
