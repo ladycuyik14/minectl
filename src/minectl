@@ -886,7 +886,7 @@ jar() {
 	local USAGE="Usage: \033[1m`basename $0`\033[0m \033[1mjar\033[0m [\033[3mCOMMAND\033[0m]
 
 \033[1mCOMMANDS\033[0m
-	\033[1mlist\033[0m or \033[1mls\033[0m
+	\033[1mlist\033[0m or \033[1mls\033[0m [\033[1m--all\033[0m]
 		List available JAR files
  
 	\033[1mupdate\033[0m
@@ -922,8 +922,8 @@ jar() {
 		local USAGE="Usage: \033[1m`basename $0`\033[0m \033[1mjar\033[0m \033[1mrepository\033[0m [\033[3mCOMMAND\033[0m]
 
 \033[1mCOMMANDS\033[0m
-	\033[1mlist\033[0m or \033[1mls\033[0m
-		List available JAR files
+	\033[1mlist\033[0m or \033[1mls\033[0m [\033[1m--verbose\033[0m]
+		List active repositories
 
 	\033[1madd\033[0m \033[3mURL\033[0m \033[3mname\033[0m
 		Add a repository
