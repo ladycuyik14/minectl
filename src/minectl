@@ -1034,7 +1034,7 @@ jar() {
 		case $1 in
 			-a|--all)	ls --color=auto -alF
 			;;
-			*)		ls --color=auto *.jar 2> /dev/null || fail "No jar files in the JARs' directory.\nTry\n\t$0 upgrade"
+			*)		ls --color=auto *.jar 2> /dev/null || fail "No jar files in the JARs' directory.\nTry\n\t$0 jar upgrade"
 		esac
 	}
 
