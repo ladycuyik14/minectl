@@ -12,6 +12,6 @@
 # or delete the appropriate one.
 #
 # CraftBukkit plugin container repository
-http://dl.bukkit.org/latest-rb/craftbukkit.jar#CraftBukkit
+http://dl.bukkit.org/latest-rb/craftbukkit.jar#CraftBukkit (container)
 # Original minecraft server repository
-https://s3.amazonaws.com/MinecraftDownload/launcher/minecraft_server.jar#Minecraft
+https://s3.amazonaws.com/MinecraftDownload/launcher/minecraft_server.jar#Minecraft (original)

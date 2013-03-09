@@ -1013,6 +1013,7 @@ jar() {
 			fi
 
 			# Remove repo from the list if it is inside
+			fileop -e contains  "#$REPO_NAME" "$REPO_LIST" 2> /dev/null
 			fileop -e remove  "#$REPO_NAME" "$REPO_LIST" 2> /dev/null
 			
 		}

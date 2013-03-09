@@ -111,10 +111,8 @@ fileop() {
 
 	# Remove a string that is in the beginning of a file from this file
 	fileop_remove() {
-		while read MATCH; do
-			local TMP="`mktemp`"		
-			grep -v "$MATCH" "$FILE" > "$TMP" 2> /dev/null
-			mv "$TMP" "$FILE"
+		while read MATCH; do		
+			sed -i "/$MATCH/d" "$FILE" 2> /dev/null
 		done < "$1"
 	
 		rm -f "$1" 2> /dev/null
