@@ -765,7 +765,7 @@ backup() {
 	# Set current time and date as default backup name
 	local BACKUP_NAME="$SERVER_NAME-`date +%Y.%m.%d-%H.%M`"
 	
-	if [ -n "$@" ]; then
+	if [ $# -gt 0 ]; then
 		BACKUP_NAME="$@"
 	fi
 	
