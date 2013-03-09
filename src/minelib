@@ -81,21 +81,16 @@ fileop() {
 	local IGNORE_CASE=false
 	local BEGINS_WITH=false
 	local ENDS_WITH=false
-	local FILE=""
-	local MATCH=""
+	local CMD=
 
 	# Add a string to a file
 	fileop_add() {
-		echo "$MATCH" >> "$FILE"
+		echo "$PATTERN" >> "$FILE"
 		return $?
 	}
 
 	# Check if a certain string is contained in a file
 	fileop_contains() {
-		if ( $IGNORE_CASE ); then
-			GREP="$GREP -i"
-		fi
-
 		if ( $BEGINS_WITH && $ENDS_WITH ); then
 			$GREP -E "^$PATTERN[[:blank:]]*$" "$FILE" 2> /dev/null
 		elif ( $BEGINS_WITH ); then
@@ -140,11 +135,11 @@ fileop() {
 		GREP="$GREP -i"
 	fi
 
-	local CMD="$1"
+	CMD="$1"
 	local PATTERN="$2"
 	local FILE="$3"
 
-	case $1 in
+	case $CMD in
 		contains)	fileop_contains
 		;;
 		remove)		local TMP_FILE="`mktemp`"
@@ -214,7 +209,7 @@ set_var() {
 			local VAR_LINE="`grep ^"$VARIABLE=" "$FILE" 2> /dev/null`"
 
 			# If the variable is in the file, replace it with its new value
-			if ( fileop -b contains "$VARIABLE=" "$FILE" > /dev/null 2> /dev/null ); then
+			if ( fileop -b contains "$VARIABLE=" "$FILE" > /dev/null 2> /dev/null ); then #/dev/null 2> /dev/null ); then
 				sed -i "s/$VAR_LINE/$VARIABLE=$VALUE/" "$FILE" 2> /dev/null
 			else
 				fileop add "$VARIABLE=$VALUE" "$FILE"
