@@ -1,7 +1,10 @@
-# mined's coniguration file
+#############################
+# mcsrv's coniguration file #
+#############################
 
-# Miscellaneous
-
+##############
+# Scheduling #
+##############
 # CPU affinity list for advanced scheduling
 # XXX: Use taskset syntax, as mined is using 'taskset -c' on this option
 CPU_AFFINITY=
@@ -9,9 +12,9 @@ CPU_AFFINITY=
 # Nice value for the java process
 NICENESS=
 
-
-# Java
-
+########
+# Java #
+########
 # Minumum JVM heap size
 XMS=1024M
 
@@ -20,9 +23,6 @@ XMX=1536M
 
 # Enable the incremental garbage collector 
 CUSTOM_JAVA_ARGS=-Xincgc
-
-
-# Minecraft JAR file
 
 # Do not try to lauch the GUI, for we probably run this from the console
 JAR_FILE_ARGS=nogui	

@@ -34,7 +34,7 @@ LIB_DIR="/usr/local/libexec/minectl"
 MC_LIB="$LIB_DIR/minelib"
 
 # The meta-config file's name
-CFG_FILE=./.mcsrv.cfg
+CFG_FILE=./.mined.cfg
 
 # The name of the server
 SERVER_NAME=$1

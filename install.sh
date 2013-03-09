@@ -24,7 +24,7 @@ mkdir -p /usr/local/bin
 cd src
 install -o minectl -g minectl -m 775 -d /home/minectl/backup
 install -o minectl -g minectl -m 775 -d /home/minectl/servers
-install -o minectl -g minectl -m 775 -t /home/minectl/servers .mined.cfg 
+install -o minectl -g minectl -m 775 -t /home/minectl/servers .mcsrv.cfg 
 install -o minectl -g minectl -m 775 -d /usr/local/libexec/minectl
 install -o minectl -g minectl -m 775 -d /usr/local/libexec/minectl/jar
 install -o minectl -g minectl -m 775 -d /usr/local/libexec/minectl/jar-repo

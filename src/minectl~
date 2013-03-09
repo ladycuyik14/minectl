@@ -55,7 +55,7 @@ JAR_REPO="$LIB_DIR/jar-repo"
 TMP_DIR="`mktemp -d`"
 
 # Define our configuration file name
-SERVER_CONFIG="./.mcsrv.cfg"
+SERVER_CONFIG="./.mined.cfg"
 
 # The server's properties file
 SERVER_PROPERTIES="./server.properties"
