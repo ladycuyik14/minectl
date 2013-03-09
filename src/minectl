@@ -87,20 +87,9 @@ USAGE="Usage:	\033[1m`basename $0`\033[0m [\033[1mINDEPENDENT_COMMAND\033[0m]
 		Add a new server. 
 		You can specify a jar file to be used or select it interactively.
 
-	\033[1mcheck-update\033[0m
-		Check for updates for the JAR files.
-		Return number of available updates.
-
-	\033[1mupdate\033[0m
-		Update the JAR files.
-
-	\033[1mrepo\033[0m [\033[1mREPO_COMMAND\033[0m]
-		Manage the JAR files repository.
-		See \033[1m`basename $0` --help repo\033[0m for further information.
-
-	\033[1mlsjar\033[0m [\033[1m--all\033[0m]
-		List available JAR files.
-		Or list all files in the JARs' folder by using the \033[1m--all\033[0m switch.
+	\033[1mjar\033[0m [\033[1mREPO_COMMAND\033[0m]
+		Manage the JAR files and repository.
+		See \033[1m`basename $0` jar --help\033[0m for further information.
 
 \033[1mSERVER SPECIFIC COMMANDS\033[0m
 	\033[1mremove\033[0m [\033[1m--force\033[0m]
@@ -1384,8 +1373,6 @@ case $CMD in
 					restore)		restore "$@"
 					;;
 					reset)			reset "$@"
-					;;
-					set-jar)		setjar "$@"
 					;;
 					status)			srv_status "$@"
 					;;
