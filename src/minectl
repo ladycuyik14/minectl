@@ -419,7 +419,7 @@ list() {
 rename() {
 	local NEW_NAME="$@"
 
-	if ( srv_status > /dev/null 2>/dev/null ) {
+	if ( srv_status > /dev/null 2>/dev/null ); then
 		fail "Server is still running"
 	else
 		cd ..
