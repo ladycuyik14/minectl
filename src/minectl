@@ -95,7 +95,7 @@ USAGE="Usage:	\033[1m`basename $0`\033[0m [\033[1mINDEPENDENT_COMMAND\033[0m]
 	\033[1mremove\033[0m [\033[1m--force\033[0m]
 		Rename a server.
 
-	\033[1mrename\033[0m [\033[3mnew_name\033[0m]
+	\033[1mrename\033[0m \033[3mnew_name\033[0m
 		Entirely remove a server from the disk.
 		You can avoid querying by using the \033[1m--force\033[0m switch.
 
