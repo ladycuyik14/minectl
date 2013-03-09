@@ -202,7 +202,6 @@ set_var() {
 	local VARIABLE_PURE="`echo "$VAR_DEC" | cut -d "=" -f 1`"
 	local $DECLARE_ARGS VARIABLE="$VARIABLE_PURE"
 	local VALUE="`echo "$VAR_DEC" | cut -d "=" -f 2`"
-	local OVERHEAD="`echo "$VAR_DEC" | cut -d "=" -f 3-`"
 
 	# Check if variable is not empty
 	if [ -n "$VARIABLE_PURE" ]; then
@@ -210,7 +209,7 @@ set_var() {
 		# we want the variable removed from the file
 		if [ -n "`echo "$VARIABLE_PURE" | grep ^"-" 2> /dev/null`" ]; then
 			VARIABLE_PURE="`echo "$VARIABLE_PURE" | cut -d "-" -f 2`"
-			sed -i "/^$VARIABLE_PURE=/d" "$FILE" 2> /dev/null
+			fileop -b remove "$VARIABLE_PURE" "$FILE" 2> /dev/null
 		else
 			# Search for variable inside the file	
 			local VAR_LINE="`grep ^"$VARIABLE=" "$FILE" 2> /dev/null`"
@@ -227,12 +226,6 @@ set_var() {
 	else
 		error "No variable specified"
 		return 2
-	fi
-
-	# Check if we had invalid overhead
-	if [ -n "$OVERHEAD" ]; then
-		err "Ignoring invalid overhead '$OVERHEAD'"
-		return 1
 	fi
 	
 	return 0
