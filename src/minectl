@@ -51,9 +51,6 @@ JAR_DIR="$LIB_DIR/jar"
 # JARs' repository
 JAR_REPO="$LIB_DIR/jar-repo"
 
-# Define temporary directory
-TMP_DIR="`mktemp -d`"
-
 # Define our configuration file name
 SERVER_CONFIG="./.mcsrv.cfg"
 
@@ -160,6 +157,10 @@ USAGE="Usage:	\033[1m`basename $0`\033[0m [\033[1mINDEPENDENT_COMMAND\033[0m]
 			\033[1m--wait-time\033[0m, \033[1m-w\033[0m \033[3mseconds\033[0m
 				Specify waiting time in seconds
 				to wait for the pipe to close again.
+			\033[1m--no-clean\033[0m, \033[1m-n\033[0m \033[3mseconds\033[0m
+				Do not clean up the input and 
+				output queue before executing a
+				command.
 
 		\033[1mplayers\033[0m
 		        List players logged in to the server
@@ -1214,6 +1215,7 @@ srv_exec() {
 	local VERBOSE=false
 	local SHOW_TAIL=false
 	local WAIT_TIME=0.1
+	local CLEAN=true
 
 	# Switch options
 	while (( $# )); do
@@ -1225,6 +1227,9 @@ srv_exec() {
 					shift
 			;;
 			--wait-time|-w)	WAIT_TIME=$2
+					shift 2
+			;;
+			--no-clean|-n)	CLEAN=false
 					shift 2
 			;;
 			*)		break
@@ -1269,6 +1274,14 @@ srv_exec() {
 		fi
 	}
 
+	# If cleaning is enabled, perform an empty 
+	# query first and discard the output
+	if ( $CLEAN ); then
+		exec_cmd " " > /dev/null 2> /dev/null
+	fi
+
+	# If verbose information is wanted, also
+	# do not cut off timestamps and info fields
 	if ( $VERBOSE ); then
 		exec_cmd $@
 	else 
