@@ -154,13 +154,13 @@ USAGE="Usage:	\033[1m`basename $0`\033[0m [\033[1mINDEPENDENT_COMMAND\033[0m]
 			\033[1m--show-tail\033[0m, \033[1m-s\033[0m
 				Show the tail of the pipe and
 				not only the command's results.
-			\033[1m--wait-time\033[0m, \033[1m-w\033[0m \033[3mseconds\033[0m
-				Specify waiting time in seconds
-				to wait for the pipe to close again.
-			\033[1m--no-clean\033[0m, \033[1m-n\033[0m \033[3mseconds\033[0m
+			\033[1m--no-clean\033[0m, \033[1m-n\033[0m
 				Do not clean up the input and 
 				output queue before executing a
 				command.
+			\033[1m--wait-time\033[0m, \033[1m-w\033[0m \033[3mseconds\033[0m
+				Specify waiting time in seconds
+				to wait for the pipe to close again.
 
 		\033[1mplayers\033[0m
 		        List players logged in to the server
