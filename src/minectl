@@ -168,9 +168,10 @@ USAGE="Usage:	\033[1m`basename $0`\033[0m [\033[1mINDEPENDENT_COMMAND\033[0m]
 		\033[1mplayer-count\033[0m
 		        List count of players logged in to the server.
 
-		\033[3mMINECRAFT_JAVA_COMMAND\033[0m [\033[3mARGS\033[0m]
+		\033[3mMINECRAFT_SERVER_COMMAND\033[0m [\033[3mARGS\033[0m]
 		        If none of the aforementioned commands apply, minectl will
-		        interpret the command as command for the Java program.
+		        interpret the command as command for the minecraft 
+			server's Java program.
 
 \033[1mMETA COMMANDS\033[0m
 	\033[1m--help\033[0m
