@@ -236,6 +236,7 @@ init() {
 		else
 			# Ask the user to update the system
 			if ( ask "Do you want to run an update now?" ); then
+				jar update
 				jar upgrade
 				jar list
 				echo -en "Which one of the listed JAR files do you want to use for your first server?\nJAR file: "
@@ -1176,7 +1177,7 @@ jar() {
 
 				echo "has been upgraded"
 			else
-				fail "Please run '`basename $0` jar update' first"
+				fail "failed. Please run '`basename $0` jar update' first"
 			fi
 		done < $TMP_REPO_LIST
 
