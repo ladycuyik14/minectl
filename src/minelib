@@ -45,7 +45,7 @@ notify() {
 
 # New function for displaying errors
 err() {
-	if [ -n "$1" ] then
+	if [ -n "$1" ]; then
 		local -u MSG_TYPE="$1"
 		local MSG_VAR="ERR_$MSG_TYPE"
 		local CODE_VAR="CODE_$MSG_TYPE"
@@ -75,7 +75,7 @@ err() {
 
 # New function for displaying fails
 fail() {
-	if [ -n "$1" ] then
+	if [ -n "$1" ]; then
 		err "$@"
 		exit $?
 	else
