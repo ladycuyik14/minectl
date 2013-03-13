@@ -30,7 +30,7 @@ tell() {
 
 # New function for displaying errors
 notify() {
-	if [ -n "$1" ] then
+	if [ -n "$1" ]; then
 		local -u MSG_TYPE="$1"
 		local MSG_VAR="NOTIFY_$MSG_TYPE"
 		local MSG=${!MSG_VAR}
