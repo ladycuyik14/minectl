@@ -36,7 +36,8 @@ notify() {
 		local MSG=${!MSG_VAR}
 
 		if [ -n "$MSG" ]; then
-			echo -e "$MSG"
+			shift
+			echo -e "$MSG $@"
 		else
 			echo "$1"
 		fi
@@ -54,7 +55,8 @@ err() {
 
 		if [ -n "$MSG" ]; then
 			if [ -n "$CODE" ]; then
-				echo -e "$MSG" 1>&2
+				shift
+				echo -e "$MSG $@"  1>&2
 				return $CODE
 			else
 				return -1
@@ -198,7 +200,8 @@ ask() {
 	local MSG=${!MSG_VAR}
 
 	if [ -n "$MSG" ]; then
-		echo -en "$MSG"
+		shift
+		echo -en "$MSG $@"
 	else
 		echo -n "$@ "
 	fi
