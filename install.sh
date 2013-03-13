@@ -9,6 +9,8 @@ if [ $EUID -ne 0 ]; then
 	exit 1
 fi
 
+DIR_NAME="$(dirname $(realpath $0))"
+
 # Add minectl user
 add_user() {
 	# Create new minectl user
@@ -27,7 +29,7 @@ remove_user() {
 # Install necessary files
 install_files() {
 	# Change to source directory
-	cd `dirname $0`/src
+	cd $DIR_NAME/src
 
 	# Install appropriate files
 	mkdir -p /usr/local/bin
@@ -42,7 +44,7 @@ install_files() {
 	install -o minectl -g minectl -m 775 -d /usr/local/libexec/minectl/jar-repo
 
 	# Install language files
-	cd `dirname $0`/lang
+	cd $DIR_NAME/lang
 	install -o minectl -g minectl -m 775 -d /usr/local/libexec/minectl/lang
 	install -o minectl -g minectl -m 775 -t /usr/local/libexec/minectl/lang *.lang
 
@@ -56,7 +58,7 @@ install_files() {
 	fi
 
 	# Install system services
-	cd `dirname $0`/service
+	cd $DIR_NAME/service
 	if [ -d /lib/systemd/system ]; then
 		cp "minecraft@.service" /lib/systemd/system/
 		echo "Systemd service template '/lib/systemd/system/minecraft@.service' installed"
