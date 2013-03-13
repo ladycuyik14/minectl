@@ -27,20 +27,28 @@ remove_user() {
 # Install necessary files
 install_files() {
 	# Change to source directory
-	cd `dirname $0`
+	cd `dirname $0`/src
 
 	# Install appropriate files
 	mkdir -p /usr/local/bin
 
-	cd src
+	install -o minectl -g minectl -m 775 -t /usr/local/bin mcpasswd mcsrv minectl
 	install -o minectl -g minectl -m 775 -d /home/minectl/backup
 	install -o minectl -g minectl -m 775 -d /home/minectl/servers
 	install -o minectl -g minectl -m 775 -t /home/minectl/servers .mcsrv.cfg 
 	install -o minectl -g minectl -m 775 -d /usr/local/libexec/minectl
+	install -o minectl -g minectl -m 775 -t /usr/local/libexec/minectl minelib .repolist errcodes
 	install -o minectl -g minectl -m 775 -d /usr/local/libexec/minectl/jar
 	install -o minectl -g minectl -m 775 -d /usr/local/libexec/minectl/jar-repo
-	install -o minectl -g minectl -m 775 -t /usr/local/libexec/minectl minelib .repolist
-	install -o minectl -g minectl -m 775 -t /usr/local/bin mcpasswd mcsrv minectl
+
+	# Install language files
+	cd `dirname $0`/lang
+	install -o minectl -g minectl -m 775 -d /usr/local/libexec/minectl/lang
+	install -o minectl -g minectl -m 775 -t /usr/local/libexec/minectl/lang *.lang
+
+	# Set EN_us as default language
+	cd /usr/local/libexec/minectl/lang
+	ln -s EN_us.lang default.lang
 
 	# Add binaries' path to the users's PATH variable
 	if [ -z "`grep "PATH=.*/usr/local/bin" /home/minectl/.bashrc`" ]; then
@@ -48,7 +56,7 @@ install_files() {
 	fi
 
 	# Install system services
-	cd ../service
+	cd `dirname $0`/service
 	if [ -d /lib/systemd/system ]; then
 		cp "minecraft@.service" /lib/systemd/system/
 		echo "Systemd service template '/lib/systemd/system/minecraft@.service' installed"
