@@ -206,6 +206,12 @@ lib_fail() {
 	exit 1
 }
 
+###################################
+# Import messages and error codes #
+###################################
+source `dirname $0`/lang/default.lang 2> /dev/null || fail "Language files could not be loaded from `dirname $0`/default.lang"
+source `dirname $0`/errcodes 2> /dev/null || fail "Error codes could not be loaded from `dirname $0`/errcodes"
+
 #########################
 # Source shared library #
 #########################
