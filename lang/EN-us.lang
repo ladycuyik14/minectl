@@ -1,0 +1,81 @@
+#! /bin/bash
+
+### Notification messages ###
+NOTIFY_UPDATE_MANUALLY="Please run an update manually and try again."
+NOTIFY_INIT_NOT_REQUIRED="There are already servers.\nNo initialization required."
+NOTIFY_SRV_REMOVED="Server removed"
+NOTIFY_SRV_RESTART="Server should be restarted"
+NOTIFY_JAR_UPDATE="Please run a JAR update first"
+NOTIFY_HELP="Try --help for help"
+NOTIFY_NO_JAR_FILES="No jar files in the JARs' directory."
+NOTIFY_JAR_UPGRADE="Run a JAR upgrade"
+NOTIFY_NO_PLAYERS="There are no players on the server"
+NOTIFY_SRV_LOCKED="Server locked."
+NOTIFY_SRV_UNLOCKED="Server unlocked."
+
+### Query messages ###
+ASK_SRV_NAME="Please specify the server's name: "
+ASK_SELECT_JAR_FILE="Please specify the jar file that you want to use: "
+ASK_JAR_UPDATE="Do you want to run an update now? [y/N]: "
+ASK_REMOVE_SRV="Do you really want to remove the server? [y/N]: "
+ASK_SPEC_REPO_URL="Please enter the repository's URL: "
+ASK_SPEC_REPO_NAME="Please enter the repository's name: "
+
+### Error messages ###
+# Server access stuff
+ERR_NO_SRV_NAME="No server name specified."
+ERR_SRV_NOT_EXISTANT="Server does not exist"
+ERR_ACCESS_SRV_DIR_FAILED="Cannot access server's directory"
+ERR_INSIDE_SRV_DIR="We are somehow in the servers' directory"
+
+# File and directory issues
+ERR_FILE_BLOCKING_PIPE="An eponymous file is blocking a pipe"
+ERR_FILE_EXISTS="An eponymous file already exists\nPlease remove it."
+ERR_ACCESS_HOME_DIR_FAILED="Cannot access home directory"
+ERR_ACCESS_PARENT_DIR_FAILED="Cannot change to parent directory"
+ERR_REMOVE_CAT_PID_FAILED="Could not remove cat.pid"
+
+# Parameter issues
+ERR_UNKNOWN_PARAM="Unknown parameter: "
+
+# Program operations
+ERR_SLEEP_FAILED="Could not sleep"
+ERR_KILL_CAT_FAILED="Could not kill cat"
+ERR_EXEC_CMD_FAILED="Could not execute command "
+ERR_DETERMINE_STATUS_FAILED="Could determine status of server"
+
+# Server management issues
+ERR_SRV_EXISTS="Server already exists"
+ERR_NO_SRV_NAME_SPEC="No server name specified"
+ERR_CREATE_SRV_DIR_FAILED="Could not create server's directory"
+ERR_COPY_SKEL_CFG_FAILED="Could not copy skeleton server configuration"
+ERR_CREATE_CFG_FILES_FAILED="Could not create basic config files"
+ERR_SRV_RUNNING="Server is still running"
+ERR_SRV_REMOVE_FAILED="Failed to remove server "
+ERR_SRV_CLEAN_FAILED="Server could not be cleaned up"
+ERR_SRV_RENAME_FAILED="Could not rename server"
+ERR_SRV_NOT_RUNNING="Server is not running"
+
+# JAR file issues
+ERR_NO_JAR_SPEC="No JAR file specified"
+ERR_JAR_FILE_NOT_FOUND="Specified JAR file could not be found"
+ERR_SET_JAR_FAILED="Could not set new JAR file"
+
+# Backup and restore issues
+ERR_BACKUP_FAILED="Could not create backup"
+ERR_BACKUP_NOT_FOUND="Specified backup file could not be found"
+ERR_RESTORE_FAILED="Could not restore backup"
+ERR_CONFIG_BACKUP_FAILED="Saving of configuration failed"
+ERR_RESET_JAR_FAILED="Resetting JAR file failed"
+ERR_RESTORE_CONFIG_FAILED="Could not restore configuration"
+
+# Repository issues
+ERR_CHECK_REPO_FAILED="Checking for repository list failed"
+ERR_PARSING_REPO_FAILED="Parsing repository file failed"
+ERR_REPO_SAVE_FAILED="New repository could not be saved"
+ERR_ACCESS_REPO_DIR_FAILED="Could not access JAR repository directory"
+
+# Passwd issues
+ERR_NO_USER_NAME="No user name given"
+ERR_SRV_LOCKING_FAILED="Server locking failed."
+ERR_SRV_UNLOCKING_FAILED="Server unlocking failed."

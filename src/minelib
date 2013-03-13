@@ -28,41 +28,62 @@ tell() {
         echo -en "$@"
 }
 
-# Echo state and indicate success
-succ() {
-        if [ -z "$1" ]; then
-                echo -e "[   done    ]"
-        else
-                echo -e "$1"
-        fi
-        return 0
+# New function for displaying errors
+notify {
+	if [ -n "$1" ] then
+		local -u MSG_TYPE="$1"
+		local MSG_VAR="NOTIFY_$MSG_TYPE"
+		local MSG=${!MSG_VAR}
+
+		if [ -n "$MSG" ]; then
+			echo -e "$MSG"
+		else
+			echo "$1"
+		fi
+	fi
 }
 
-# Echo state and indicate an error
-err() {
-        if [ -z "$1" ]; then
-                echo -e "[   error   ]" 1>&2
-        else
-                echo -e "$1" 1>&2
-        fi
-        return 1
+# New function for displaying errors
+err {
+	if [ -n "$1" ] then
+		local -u MSG_TYPE="$1"
+		local MSG_VAR="ERR_$MSG_TYPE"
+		local CODE_VAR="CODE_$MSG_TYPE"
+		local MSG=${!MSG_VAR}
+		local CODE=${!CODE_VAR}
+
+		if [ -n "$MSG" ]; then
+			if [ -n "$CODE" ]; then
+				echo -e "$MSG" 1>&2
+				return $CODE
+			else
+				return -1
+			fi
+		else
+			echo "$1"
+			if [ -n "$2" ]; then
+				return $2
+			else
+				return 1
+			fi
+		fi
+	else
+		echo -e "[   error   ]" 1>&2
+		return 1
+	fi
 }
 
-# Print out an error message to stderr
-error() {
-	echo -e "ERROR: $@" 1>&2
-	return 1
+# New function for displaying fails
+fail {
+	if [ -n "$1" ] then
+		err "$@"
+		exit $?
+	else
+		echo -e "[   error   ]" 1>&2
+		exit 1
+	fi
 }
-
-# Echo state and indicate faliure and exit
-fail() {
-        if [ -z "$1" ]; then
-                echo -e "[  failed   ]" 1>&2
-        else
-                echo -e "$1" 1>&2
-        fi
-        exit 1
-}
+		
 
 # List (just) directories in the current folder (without sub directories)
 ls_dir() {
@@ -160,23 +181,41 @@ extract_data() {
 
 # Ask a question and return 0 on 'yes' or 1 otherwise
 ask() {
-	USAGE="\
-	Usage: ask [The yes / no question]\nReturns 0 on \"y\" or 1 on \"n\" where \"n\" is default."
+	local USAGE="\
+	Usage: ask [The question]\nReturns 0 on \"y\" or 1 else."
 
 	if [ $# -lt 1 ]; then
 		echo -e $USAGE
 		return 2
 	fi
 
-	echo -n "$@ [y/N]: " 
+	local QUESTION="$@"
+	local ANSWER=
+	local RETVAL=1
+
+	local -u MSG_TYPE="$1"
+	local MSG_VAR="ASK_$MSG_TYPE"
+	local MSG=${!MSG_VAR}
+
+	if [ -n "$MSG" ]; then
+		echo -en "$MSG"
+	else
+		echo -n "$@ "
+	fi
+
+	# Read and print answer 
 	read ANSWER
+	echo "$ANSWER"
+
+	# Check if the answer was 'yes'
 	shopt -s nocasematch
 	case "$ANSWER" in
-		j|y|ja|yes)
-			return 0;;
-		*)	return 1;;
+		y|yes)
+			RETVAL=0
 	esac
 	shopt -u nocasematch
+
+	return $RETVAL
 }
 
 # Change the value of an existing variable inside a file
@@ -271,16 +310,16 @@ access_server() {
 	SERVER_NAME=$1
 	
 	# Check is server name is not empty
-	test -n "$SERVER_NAME" 2> /dev/null || fail "No server name specified."
+	test -n "$SERVER_NAME" 2> /dev/null || fail no_srv_name
 
 	# Check whether server's directory is accessible
-	test -d "$SERVERS_DIR/$SERVER_NAME" 2> /dev/null || fail "Server '$SERVER_NAME' does not exist"
+	test -d "$SERVERS_DIR/$SERVER_NAME" 2> /dev/null || fail srv_not_existant
 
 	# Check whether server's directory is accessible
-	cd "$SERVERS_DIR/$SERVER_NAME" 2> /dev/null || fail "Cannot access_server server's directory"
+	cd "$SERVERS_DIR/$SERVER_NAME" 2> /dev/null || fail access_srv_dir_failed
 
 	# Check if we did really change to a subfolder of $MC_HOME/servers
-	test "`dirname $PWD`" == "$SERVERS_DIR" 2> /dev/null || fail "We are somehow in the '$SERVERS_DIR' directory"
+	test "`dirname $PWD`" == "$SERVERS_DIR" 2> /dev/null || fail inside_srv_dir
 }
 
 # Create named pipes
@@ -288,7 +327,7 @@ mk_fifos() {
         for FIFO in stdin stdout stderr; do
                 if [ -e $FIFO ]; then
                         if [ ! -p $FIFO ]; then
-                                fail "File $FIFO is blocking eponymous pipe"
+                                fail file_blocking_pipe
                         fi
                 else
                         mkfifo $FIFO
@@ -297,7 +336,7 @@ mk_fifos() {
 }
  
 ###################################
-# Import error codes and messages #
+# Import messages and error codes #
 ###################################
-# TODO: Implement later
-#. `dirname $0`/errcodes || err "Error codes could not be loaded from `dirname $0`/errcodes"
+. `dirname $0`/lang/default.lang 2> /dev/null || fail "Language files could not be loaded from `dirname $0`/default.lang"
+. `dirname $0`/errcodes 2> /dev/null || fail "Error codes could not be loaded from `dirname $0`/errcodes"

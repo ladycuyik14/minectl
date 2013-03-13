@@ -194,10 +194,10 @@ clean() {
 	shift
 
 	# Change to server's directory
-	access_server "$SERVER_NAME" || fail # XXX: Just to be sure!
+	access_server "$SERVER_NAME"
 
 	# Remove server directory's content
-	rm -R * > /dev/null 2> /dev/null || fail "Server \"$SERVER_NAME\" could not be cleaned up"
+	rm -R * > /dev/null 2> /dev/null || fail srv_clean_failed
 }
 
 # Indicate failure when loading of shared library fails
@@ -221,28 +221,25 @@ lib_fail() {
 # This should be done interactively
 init() {
 	# Change to home directory
-	cd $MC_HOME 2> /dev/null || fail "Cannot change to home directory"
+	cd $MC_HOME 2> /dev/null || fail access_home_dir_failed
 
 	# Check if no servers are configured yet
 	if ( ! list ); then
-		echo -en "What name shall your first server have?\nServer name: "
-		read SERVER_NAME
+		SERVER_NAME="`ask srv_name`"
 
 		# Check if we already have some JAR files at hand (although this should not be the case)
 		if ( jar list ); then
 			# Ask the user which jar file shall be used
-			echo -en "Which one of the listed JAR files do you want to use for your first server?\nJAR file: "
-			read JAR_FILE
+			JAR_FILE="`ask select_jar_file`"
 		else
 			# Ask the user to update the system
-			if ( ask "Do you want to run an update now?" ); then
+			if ( ask jar_update ); then
 				jar update
 				jar upgrade
 				jar list
-				echo -en "Which one of the listed JAR files do you want to use for your first server?\nJAR file: "
-				read JAR_FILE
+				JAR_FILE="`ask select_jar_file`"
 			else
-				echo "Please run an update manually and try again."
+				notify update_manually
 				exit 1
 			fi
 		fi
@@ -252,7 +249,7 @@ init() {
 
 	# If we already have servers, don't initialize
 	else
-		succ "There are already servers.\nNo initialization required."
+		notify init_not_required
 	fi		
 }
 
@@ -271,13 +268,13 @@ add() {
 			--jar)	JAR_FILE=$2
 				shift
 			;;
-			*)	error "Unknown parameter '$1'"
+			*)	err unknown_param
 		esac
 		shift
 	done
 
 	# Change to servers directory
-	cd $SERVERS_DIR 2> /dev/null || fail "Could not change to server directory"
+	cd $SERVERS_DIR 2> /dev/null || fail access_srv_dir_failed
 
 	# Check if we specified a server name
 	if [ -n "$SERVER_NAME" ]; then
@@ -285,16 +282,15 @@ add() {
 		if [ -e "$SERVER_NAME" ]; then
 			# If there's already such a directory, we assume that the server already exists
 			if [ -d "$SERVER_NAME" ]; then
-				succ "Server $SERVER_NAME already exists"
-				exit 0
+				fail srv_exists
 			# If the thing with the server's name is not a directory, we give up :-(
 			else
-				fail "A file named $SERVER_NAME already exists\nPlease remove it."
+				fail file_exists
 			fi				
 		else
 			# Create the server
-			mkdir "$SERVER_NAME" 2> /dev/null || fail "Could not create server's directory"
-			cp "$SERVER_CONFIG" "$SERVER_NAME" 2> /dev/null || fail "Could not copy skeleton server configuration"
+			mkdir "$SERVER_NAME" 2> /dev/null || fail create_srv_dir_failed
+			cp "$SERVER_CONFIG" "$SERVER_NAME" 2> /dev/null || fail copy_skel_cfg_failed
 
 			# Change to new server
 			access_server "$SERVER_NAME"
@@ -302,8 +298,7 @@ add() {
 			# If JAR file was not specified, let the user select one iteractively
 			if [ -z "$JAR_FILE" ]; then
 				if ( jar list ); then
-					echo -en "Please specify the jar file that you want to use.\nJAR file: "
-					read JAR_FILE
+					JAR_FILE="`ask select_jar_file`"
 				# ...and exit if we don't have any
 				else
 					exit 1
@@ -313,14 +308,14 @@ add() {
 			configure "JAR_FILE=$JAR_FILE"
 
 			# Create basic minecraft-specific files
-			touch server.properties ops.txt white-list.txt 2> /dev/null || err "Could not create basic config files"
+			touch server.properties ops.txt white-list.txt 2> /dev/null || fail create_cfg_files_failed
 
 			# Create named pipes for the server
 			mk_fifos
 		fi
 	# If no name was specified, we cannot create a server
 	else
-		fail "No server name specified"
+		fail no_server_name
 	fi		
 }
 
@@ -334,7 +329,7 @@ remove() {
 		case $1 in
 			--force)	FORCE=true
 			;;
-			*)		error "Unknown parameter '$1'"
+			*)		err unknown_param
 		esac
 		shift
 	done
@@ -347,7 +342,7 @@ remove() {
 		REMOVE=true
 	else
 		# Ask the user if they really wants to remove the server
-		ask "Do you really want to remove the server '$SERVER_NAME'?" && REMOVE=true
+		ask remove_srv && REMOVE=true
 	fi
 
 	# If we finally want to remove the server
@@ -356,13 +351,13 @@ remove() {
 		access_server "$SERVER_NAME"
 
 		# Stop server if it is running
-		srv_status > /dev/null 2> /dev/null && fail "Server is still running"
+		srv_status > /dev/null 2> /dev/null && fail srv_running
 
 		# Change to parent folder
-		cd .. 2> /dev/null || fail "Cannot change to parent directory"
+		cd .. 2> /dev/null || fail access_parent_dir_failed
 
 		# Remove stuff
-		rm -R "$SERVER_NAME" && succ "Server \"$SERVER_NAME\" removed" || fail "Failed to remove server\"$SERVER_NAME\""
+		rm -R "$SERVER_NAME" && notify srv_removed || fail srv_remove_failed
 	fi
 }
 
@@ -387,10 +382,12 @@ list() {
 			--very-verbose|-vv)	VERBOSE=true
 						VERY_VERBOSE=true
 			;;
-			*)			error "Unknown parameter '$1'"
+			*)			err unknown_param 
 		esac
 		shift
 	done
+
+### TODO: Continue changing to lang file codes
 
 	# Iterate over all servers in the list
 	while read SERVER_NAME; do
@@ -401,7 +398,7 @@ list() {
 		# Bold if verbose
 		$VERBOSE && echo -en "\033[1m"
 		echo -en "$SERVER_NAME"
-		$VERBOSE && echo -e "\033[0m" || echo ""
+		$VERBOSE && echo -e "\033[0m"
 
 		# Print some more information in verbose mode
 		if ( $VERBOSE ); then
@@ -423,10 +420,10 @@ rename() {
 	local NEW_NAME="$@"
 
 	if ( srv_status > /dev/null 2>/dev/null ); then
-		fail "Server is still running"
+		fail srv_running
 	else
 		cd ..
-		mv "$SERVER_NAME" "$NEW_NAME" 2> /dev/null || fail "Could not rename server"
+		mv "$SERVER_NAME" "$NEW_NAME" 2> /dev/null || fail srv_rename_failed
 	fi
 }
 
@@ -460,7 +457,7 @@ configure() {
 
 		# Read JAR file interactively if not specified via a parameter
 		if [ -z "$JAR_FILE_NAME" ]; then
-			fail "No JAR file specified"
+			fail no_jar_spec
 		fi
 
 		# Check if JAR file is present
@@ -471,11 +468,11 @@ configure() {
 		elif [ -f $JAR_DIR/$JAR_FILE_NAME.jar ]; then
 			JAR_FILE=$JAR_DIR/$JAR_FILE_NAME.jar
 		else
-			fail "Specified JAR file could not be found"		
+			fail jar_file_not_found
 		fi
 
 		# Link to new JAR file
-		unlink minecraft_server.jar 2> /dev/null; ln -sf $JAR_FILE minecraft_server.jar 2> /dev/null &&	echo "Server should be restarted" || fail "Could not set new JAR file"
+		unlink minecraft_server.jar 2> /dev/null; ln -sf $JAR_FILE minecraft_server.jar 2> /dev/null &&	notify srv_restart || fail set_jar_failed
 	}
 
 	# Print configuration of server, if no arguments are specified
@@ -598,7 +595,7 @@ passwd() {
 	valid_user() {
 		# Fail if no user name has been given
 		if [ -z "$1" ]; then
-			fail "No user name given"
+			fail no_user_name
 		fi
 	}
 
@@ -606,7 +603,7 @@ passwd() {
 	is_whitelisted() {
 		valid_user "$1"
 		if ( fileop -f -i contains "$1" "$WHITE_LIST" ); then
-			succ "User \033[1m$1\033[0m is \033[1mwhitelisted\033[0m on server \033[1m$SERVER_NAME\033[0m"
+			notify "User \033[1m$1\033[0m is \033[1mwhitelisted\033[0m on server \033[1m$SERVER_NAME\033[0m"
 		else
 			err "User \033[1m$1\033[0m is \033[1mnot whitelisted\033[0m on server \033[1m$SERVER_NAME\033[0m"
 		fi
@@ -616,7 +613,7 @@ passwd() {
 	is_op() {
 		valid_user "$1"
 		if ( fileop -f -i contains "$1" "$OP_LIST" ); then
-			succ "User \033[1m$1\033[0m is \033[1man operator\033[0m on server \033[1m$SERVER_NAME\033[0m."
+			notify "User \033[1m$1\033[0m is \033[1man operator\033[0m on server \033[1m$SERVER_NAME\033[0m."
 		else
 			err "User \033[1m$1\033[0m is \033[1mnot an operator\033[0m on server \033[1m$SERVER_NAME\033[0m."
 		fi
@@ -627,7 +624,7 @@ passwd() {
 		valid_user "$1"
 		if ( ! is_whitelisted "$1" > /dev/null 2> /dev/null ); then
 			if ( fileop add "$1" "$WHITE_LIST" > /dev/null 2> /dev/null ); then
-				succ "User \033[1m$1 whitelisted\033[0m on server \033[1m$SERVER_NAME\033[0m."
+				notify "User \033[1m$1 whitelisted\033[0m on server \033[1m$SERVER_NAME\033[0m."
 			else
 				err "\033[1mFailed whitelisting $1\033[0m on server \033[1m$SERVER_NAME\033[0m'.\nCheck your configuration."
 			fi
@@ -644,7 +641,7 @@ passwd() {
 		if ( is_whitelisted "$1" > /dev/null 2> /dev/null ); then
 			deop "$1" 2> /dev/null
 			if ( fileop -f -i remove "$1" "$WHITE_LIST" > /dev/null 2> /dev/null ); then
-				succ "User \033[1m$1 removed\033[0m on server \033[1m$SERVER_NAME\033[0m."
+				notify "User \033[1m$1 removed\033[0m on server \033[1m$SERVER_NAME\033[0m."
 			else
 				err "\033[1mFailed removing $1\033[0m on server \033[1m$SERVER_NAME\033[0m.\nCheck your configuration."
 			fi
@@ -665,7 +662,7 @@ passwd() {
 					# on the running server
 					srv_exec op "$1" > /dev/null 2> /dev/null
 
-					succ "User \033[1m$1\033[0m is \033[1mnow an operator\033[0m on server \033[1m$SERVER_NAME\033[0m."
+					notify "User \033[1m$1\033[0m is \033[1mnow an operator\033[0m on server \033[1m$SERVER_NAME\033[0m."
 				else
 					err "\033[1mFailed opping $1\033[0m on server \033[1m$SERVER_NAME\033[0m.\nCheck your configuration."
 				fi
@@ -685,7 +682,7 @@ passwd() {
 				# Deop the user on running server
 				srv_exec deop "$1" > /dev/null 2> /dev/null
 
-				succ "User \033[1m$1\033[0m is \033[1mno longer an operator\033[0m on server \033[1m$SERVER_NAME\033[0m."
+				notify "User \033[1m$1\033[0m is \033[1mno longer an operator\033[0m on server \033[1m$SERVER_NAME\033[0m."
 			else
 				err "\033[1mFailed de-opping $1\033[0m on server \033[1m$SERVER_NAME\033[0m.\nCheck your configuration."
 			fi
@@ -730,14 +727,14 @@ passwd() {
 
 	# Lock the server by putting it into online mode and enabling the white-list
 	lock() {
-		properties "online-mode=true" "white-list=true" > /dev/null && succ "Server locked." || fail "Server locking failed."
+		properties "online-mode=true" "white-list=true" > /dev/null && notify srv_locked || fail srv_locking_failed
 	}
 
 	# Unlock the server by putting it into offline mode and disabling the white-list
 	# XXX: This is not recommended. We anyway want to offer this feature for there 
 	# might be user that want to run an open game server e.g. on networking parties
 	unlock() {
-		properties "online-mode=false" "white-list=false" > /dev/null && succ "Server unlocked." || fail "Server unlocking failed." 
+		properties "online-mode=false" "white-list=false" > /dev/null && notify srv_unlocked || fail srv_unlocking_failed
 	}
 
 	# Switch commands
@@ -769,7 +766,7 @@ passwd() {
 			-h|--help|help)		echo -e "$USAGE" | /usr/bin/less -r
 						exit 0
 			;;
-			*)			fail "Unknown argument '$1'. Try:\n\t\$ $0 $CMD --help"
+			*)			fail unknown_param $1
 		esac
 		shift
 	done
@@ -789,7 +786,7 @@ backup() {
 	if [ $? -le 1 ]; then
 		return 0
 	else
-		fail "Could not create backup"
+		fail backup_failed
 	fi
 }
 
@@ -825,7 +822,7 @@ restore() {
 		BACKUP="$MC_HOME/backup/$BACKUP_NAME.mcb"
 	# Fail otherwise
 	else
-		fail "Specified backup file could not be found"
+		fail backup_not_found
 	fi
 
 	# Check if server is still running
@@ -837,32 +834,20 @@ restore() {
 	fi
 
 	# Perform restore
-	tar xzf "$BACKUP" > /dev/null 2> /dev/null && return 0 || fail "Could not restore backup"
+	tar xzf "$BACKUP" > /dev/null 2> /dev/null && return 0 || fail restore_failed
 }
 
 # Reset the server
 reset() {
 	# As default we want to keep our configuration
 	local KEEP_CONFIG=false
-	local CFG_BACKUP="`mktemp`"
-	local FORCE=false
-	local GRACE_TIME=10
-	local MESSAGE="Server is being shut down for reset"
 
 	# Switch options
 	while (( $# )); do
 		case $1 in
 			--erase-config|-ec|-e)	KEEP_CONFIG=false
 			;;
-			--force|-f)		FORCE=true
-			;;
-			--grace-time|-t)	GRACE_TIME=$2
-						shift
-			;;
-			--message|-m)		MESSAGE=$2
-						shift
-			;;
-			*)			error "Unrecognized argument '$1'"
+			*)			err unknown_param $1
 		esac
 		shift
 	done
@@ -873,7 +858,7 @@ reset() {
 	# If we want to keep the configuration, we create a temporal archive from them
 	# XXX: Do not mix this up with our server's main backup() function
 	if ( $KEEP_CONFIG ); then
-		tar czf $CFG_BACKUP banned-ips.txt banned-players.txt ops.txt server.properties white-list.txt 2> /dev/null || fail "Saving of configuration failed"
+		tar czf $CFG_BACKUP banned-ips.txt banned-players.txt ops.txt server.properties white-list.txt 2> /dev/null || fail config_backup_failed
 	fi
 
 	# Remember used jar file
@@ -883,12 +868,11 @@ reset() {
 	clean "$SERVER_NAME" || fail
 
 	# Link back to the active minecraft_server.jar
-	ln -s $JAR_FILE minecraft_server.jar || err "Resetting JAR file failed"
+	ln -s $JAR_FILE minecraft_server.jar || err reset_jar_failed
 	
 	# If we wanted to keep our configuration, we now restore its backup	
 	if ( $KEEP_CONFIG ); then
-		tell "Restoring configuration\t\t\t"
-		tar xzf $CFG_BACKUP 2> /dev/null || fail "Could not restore configuration"
+		tar xzf $CFG_BACKUP 2> /dev/null || fail restore_config_failed
 		rm $CFG_BACKUP 2> /dev/null
 	fi
 }
@@ -929,10 +913,10 @@ jar() {
 	# Parse the repository list
 	parse_repository() {
 		# Check whether the repository list exists
-		test -f "$REPO_LIST" 2> /dev/null || fail "Checking for repository list failed"
+		test -f "$REPO_LIST" 2> /dev/null || fail check_repo_failed
 
 		# Re-format repo file
-		extract_data "$REPO_LIST" > "$TMP_REPO_LIST" 2> /dev/null || fail "Parsing repository file failed"
+		extract_data "$REPO_LIST" > "$TMP_REPO_LIST" 2> /dev/null || fail parsing_repo_failed
 	}
 
 	# Operate on the repository
@@ -996,17 +980,15 @@ jar() {
 
 			# If nothing has been specified via the parameters, go to interactive mode
 			if [ -z "$REPO_URL" ]; then
-				echo -en "Please enter the repository's URL\nURL: "
-				read REPO_URL
+				REPO_URL="`ask spec_repo_url`"
 			fi
 
 			if [ -z "$REPO_NAME" ]; then
-				echo -en "Please enter the repository's name\nName: "
-				read REPO_NAME
+				REPO_NAME="`ask spec_repo_name`"
 			fi
 
 			# Store new repository in file
-			echo "$REPO_URL#$REPO_NAME" >> $REPO_LIST 2> /dev/null || fail "New repository could not be saved"
+			echo "$REPO_URL#$REPO_NAME" >> $REPO_LIST 2> /dev/null || fail repo_save_failed
 		}
 
 		# Remove an entry from the repository list
@@ -1016,8 +998,7 @@ jar() {
 
 			# If nothing has been specified via the parameters, go to interactive mode
 			if [ -z "$REPO_NAME" ]; then
-				tell "Please enter the repository's name\nName: "
-				read REPO_NAME
+				REPO_NAME="`ask spec_repo_name`"
 			fi
 
 			# Remove repo from the list if it is inside
@@ -1039,8 +1020,7 @@ jar() {
 			--help|-h|help)		echo -e "$USAGE" | /usr/bin/less -r
 						exit 0
 			;;
-			*)			error "Unknown command '$CMD'\nTry --help for help"
-						exit 1
+			*)			fail unknown_param $CMD
 		esac
 	}
 
@@ -1053,14 +1033,17 @@ jar() {
 		case $1 in
 			-a|--all)	ls --color=auto -alF
 			;;
-			*)		ls --color=auto *.jar 2> /dev/null || fail "No jar files in the JARs' directory.\nTry\n\t$0 jar upgrade"
+			*)		if ( ! ls --color=auto *.jar 2> /dev/null ); then
+						notify no_jar_files
+						return 1
+					fi
 		esac
 	}
 
 	# Check if updates for JAR files are available
 	update_jars() {
 		# Change to temoprary directory
-		cd "$JAR_REPO" > /dev/null 2> /dev/null || fail "Could not change to JAR repository directory"
+		cd "$JAR_REPO" > /dev/null 2> /dev/null || fail access_repo_dir_failed
 
 		# Update counter
 		local UPDATES=0
@@ -1104,7 +1087,7 @@ jar() {
 				# ...and it is the same, we don't need to update it
 				if ( cmp "$LATEST_FILE" "$REPO_FILE" > /dev/null 2> /dev/null ); then
 					rm -f "$REPO_FILE" 2> /dev/null
-					succ "[ up 2 date ]"
+					notify "[ up 2 date ]"
 					continue
 				fi
 			fi
@@ -1114,7 +1097,7 @@ jar() {
 			# Increment update counter
 			UPDATES=$(($UPDATES+1))
 
-			succ "[  updated  ]"
+			notify "[  updated  ]"
 		done < $TMP_REPO_LIST
 
 		# Return value is number of updates
@@ -1124,7 +1107,7 @@ jar() {
 	# Upgrade Minecraft's JAR files
 	upgrade_jars() {
 		# Change to temoprary directory
-		cd "$JAR_REPO" > /dev/null 2> /dev/null || fail "Could not change to temporary directory"
+		cd "$JAR_REPO" > /dev/null 2> /dev/null || fail access_repo_dir_failed
 
 		# Upgrade counter
 		local UPGRADES=0
@@ -1175,9 +1158,10 @@ jar() {
 				# Increment update counter
 				UPGRADES=$(($UPGRADES+1))
 
-				echo "has been upgraded"
+				notify "has been upgraded"
 			else
-				fail "failed. Please run '`basename $0` jar update' first"
+				notify jar_update
+				exit 1
 			fi
 		done < $TMP_REPO_LIST
 
@@ -1202,7 +1186,7 @@ jar() {
 		--help|-h|help)		echo -e "$USAGE" | /usr/bin/less -r
 					exit 0
 		;;
-		*)			error "Unknown command '$CMD'\nTry --help for help"
+		*)			err unknown_param $1
 					exit 1
 	esac
 }
@@ -1252,11 +1236,11 @@ srv_exec() {
 					cat stderr 2> /dev/null& echo $! > $CAT_PID 2> /dev/null
 				) > /dev/null 2> /dev/null
 				# Wait a short time
-				sleep $WAIT_TIME 2> /dev/null || err "Could not sleep"
+				sleep $WAIT_TIME 2> /dev/null || err sleep_failed
 				# Close the sterr fifo
-				kill `cat $CAT_PID` 2> /dev/null || err "Could not kill cat"
+				kill `cat $CAT_PID` 2> /dev/null || err kill_cat_failed
 				# Remove PID file
-				rm -f $CAT_PID 2> /dev/null || err "Could not remove cat.pid"
+				rm -f $CAT_PID 2> /dev/null || err remove_cat_pid_failed
 			fi
 
 			# Open stderr fifo for reading
@@ -1264,15 +1248,15 @@ srv_exec() {
 				cat stderr 2> /dev/null& echo $! > $CAT_PID 2> /dev/null
 			) 2> /dev/null
 			# Echo command into stdin fifo
-			echo $@ > stdin 2> /dev/null || fail "Could not execute command \"$@\""
+			echo $@ > stdin 2> /dev/null || fail exec_cmd_failed
 			# Wait a short time
-			sleep $WAIT_TIME 2> /dev/null || err "Could not sleep"
+			sleep $WAIT_TIME 2> /dev/null || err sleep_failed
 			# Close the sterr fifo
-			kill `cat $CAT_PID` 2> /dev/null || err "Could not kill cat"
+			kill `cat $CAT_PID` 2> /dev/null || err kill_cat_failed
 			# Remove PID file
-			rm -f $CAT_PID 2> /dev/null || err "Could not remove cat.pid"
+			rm -f $CAT_PID 2> /dev/null || err remove_cat_pid_failed
 		else
-			err "Server is not running"
+			fail srv_not_running
 		fi
 	}
 
@@ -1304,7 +1288,7 @@ list_players() {
 		cat "$TMP_PLAYERS"
 		RETVAL=0
 	else
-		echo "There are no players on the server"
+		notify no_players
 	fi
 	
 	rm -f $TMP_PLAYERS 2> /dev/null 
@@ -1339,7 +1323,7 @@ srv_status() {
 	if [ -f "/lib/systemd/system/minecraft@.service" ]; then
 		/usr/bin/systemctl status minecraft@$SERVER_NAME.service
 	else
-		/etc/init.d/minecraft status "$SERVER_NAME" || fail "Could determine $1 of server $SERVER_NAME"
+		/etc/init.d/minecraft status "$SERVER_NAME" || fail determine_status_failed
 	fi
 }
 
