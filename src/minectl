@@ -404,7 +404,7 @@ list() {
 		# Bold if verbose
 		$VERBOSE && echo -en "\033[1m"
 		echo -en "$SERVER_NAME"
-		$VERBOSE && echo -e "\033[0m"
+		$VERBOSE && echo -e "\033[0m" || echo ""
 
 		# Print some more information in verbose mode
 		if ( $VERBOSE ); then
