@@ -29,7 +29,7 @@ tell() {
 }
 
 # New function for displaying errors
-notify {
+notify() {
 	if [ -n "$1" ] then
 		local -u MSG_TYPE="$1"
 		local MSG_VAR="NOTIFY_$MSG_TYPE"
@@ -44,7 +44,7 @@ notify {
 }
 
 # New function for displaying errors
-err {
+err() {
 	if [ -n "$1" ] then
 		local -u MSG_TYPE="$1"
 		local MSG_VAR="ERR_$MSG_TYPE"
@@ -74,7 +74,7 @@ err {
 }
 
 # New function for displaying fails
-fail {
+fail() {
 	if [ -n "$1" ] then
 		err "$@"
 		exit $?
