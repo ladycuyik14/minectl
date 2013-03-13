@@ -78,7 +78,7 @@ case $1 in
 			uninstall_files
 			remove_user
 	;;
-	-- purge)	disable_services
+	--purge)	disable_services
 			uninstall_files
 			remove_user -rf
 	;;
