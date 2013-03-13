@@ -968,7 +968,7 @@ jar() {
 				# A descriptive name of the JAR file
 				local REPO_NAME="`echo "$REPO" | cut -d "#" -f 2`"
 				# The name of the file we want to store
-				local REPO_FILE="$JAR_DIR/`basename $REPO_URL`"
+				local REPO_FILE="$JAR_DIR/$REPO_NAME.jar"
 
 				echo -e "\033[1m$REPO_NAME\033[0m"
 				if ( $VERBOSE ); then
@@ -1067,9 +1067,9 @@ jar() {
 			# A descriptive name of the JAR file
 			local REPO_NAME="`echo "$REPO" | cut -d "#" -f 2`"
 			# The name of the file we want to store
-			local REPO_FILE="$JAR_REPO/`date +%s`-$REPO_NAME"
+			local REPO_FILE="$JAR_REPO/`date +%s`-$REPO_NAME.jar"
 			# The latest file of the repo
-			local LATEST_FILE="$JAR_REPO/$REPO_NAME.latest"
+			local LATEST_FILE="$JAR_REPO/$REPO_NAME.latest.jar"
 
 			# Check if we specified aonly a selection 
 			# of repos and skip unwanted ones
@@ -1131,9 +1131,9 @@ jar() {
 			# A descriptive name of the JAR file
 			local REPO_NAME="`echo "$REPO" | cut -d "#" -f 2`"
 			# The latest file of the repo
-			local LATEST_FILE="$JAR_REPO/$REPO_NAME.latest"
+			local LATEST_FILE="$JAR_REPO/$REPO_NAME.latest.jar"
 			# The current file of the repo
-			local CURRENT_FILE="$JAR_DIR/$REPO_NAME"
+			local CURRENT_FILE="$JAR_DIR/$REPO_NAME.jar"
 			# Check if we specified aonly a selection 
 			# of repos and skip unwanted ones
 
