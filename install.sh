@@ -5,10 +5,11 @@
 
 # Test if we are root
 if [ $EUID -ne 0 ]; then
-	echo "You need to be root to install minectl" 1>&2
+	echo "You need to be root to run `basename $0`" 1>&2
 	exit 1
 fi
 
+# Add minectl user
 add_user() {
 	# Create new minectl user
 	if [ `grep -c ^"minectl:" /etc/passwd` == "0" ]; then
@@ -18,10 +19,12 @@ add_user() {
 	fi
 }
 
+# Remove minectl user
 remove_user() {
 	userdel $@ minectl
 }
 
+# Install necessary files
 install_files() {
 	# Change to source directory
 	cd `dirname $0`
@@ -55,6 +58,7 @@ install_files() {
 	fi
 }
 
+# Uninstall minectl's files and directories
 uninstall_files() {
 	rm -f /usr/local/bin{mcpasswd,mcsrv,minectl}
 	rm -Rf /usr/local/libexec/minectl
@@ -62,14 +66,23 @@ uninstall_files() {
 	rm -f "/lib/systemd/system/minecraft@.service"
 }
 
-disable_services() {
-	cd /etc/systemd/system/multi-user.target.wants/
-	for SERVICE in minecraft@*; do
-		systemctl disable $SERVICE
-		systemctl stop $SERVICE
-	done
+# Disable and stop minectl's services
+remove_services() {
+	# Uninstall system services
+	if [ -d /lib/systemd/system ]; then
+		cd /etc/systemd/system/multi-user.target.wants/
+		for SERVICE in minecraft@*; do
+			systemctl disable $SERVICE
+			systemctl stop $SERVICE
+		done
+		echo "Systemd services uninstalled"
+	else
+		chkconfig minecraft off
+		echo "Init service uninstalled"
+	fi
 }
 
+# Switch commands
 case $1 in
 	""|--install)	add_user
 			install_files
