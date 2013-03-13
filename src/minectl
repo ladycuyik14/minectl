@@ -274,7 +274,7 @@ add() {
 			--jar)	JAR_FILE=$2
 				shift
 			;;
-			*)	err unknown_param
+			*)	err unknown_param $1
 		esac
 		shift
 	done
@@ -335,7 +335,7 @@ remove() {
 		case $1 in
 			--force)	FORCE=true
 			;;
-			*)		err unknown_param
+			*)		err unknown_param $1
 		esac
 		shift
 	done
@@ -388,7 +388,7 @@ list() {
 			--very-verbose|-vv)	VERBOSE=true
 						VERY_VERBOSE=true
 			;;
-			*)			err unknown_param 
+			*)			err unknown_param  $1
 		esac
 		shift
 	done
