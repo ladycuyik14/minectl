@@ -81,7 +81,7 @@ fail() {
 		err "$@"
 		exit $?
 	else
-		echo -e "[   error   ]" 1>&2
+		echo -e "[  failed   ]" 1>&2
 		exit 1
 	fi
 }
