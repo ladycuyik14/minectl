@@ -1404,7 +1404,7 @@ case $CMD in
 					;;
 					player-count)		player_count "$@"
 					;;
-					"")			err "No command entered\nType\n\t$0 --help\nfor information about usage"
+					""|help|--help|-h)	echo -e "$USAGE" | /usr/bin/less -r
 					;;
 					# Assume that we want to run a command of the Java program
 					# iff nothing else applies

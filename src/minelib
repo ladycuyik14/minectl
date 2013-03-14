@@ -221,18 +221,22 @@ ask() {
 	return $RETVAL
 }
 
-# Change the value of an existing variable inside a file
+# Change the value of a variable inside a file
 set_var() {
+	# Arguments for variable name declaration
 	local DECLARE_ARGS=
 
-	echo "$@"
-
+	# Check if we want to force the variable name to upper or lower case
 	case $1 in
 		-u|-l)	DECLARE_ARGS="$1"
 		shift
 	esac
 	
+	# First argument is the variable declaration 
+	# in the shape of <variable>=<value>
 	local VAR_DEC="$1"
+
+	# The second argument is the file to operate on
 	local FILE="$2"
 
 	local VARIABLE_PURE="`echo "$VAR_DEC" | cut -d "=" -f 1`"
@@ -242,7 +246,7 @@ set_var() {
 	# Check if variable is not empty
 	if [ -n "$VARIABLE_PURE" ]; then
 		# If the variable name preceeds a "-", that means
-		# we want the variable removed from the file
+		# we want the variable to be removed from the file
 		if [ -n "`echo "$VARIABLE_PURE" | grep ^"-" 2> /dev/null`" ]; then
 			VARIABLE_PURE="`echo "$VARIABLE_PURE" | cut -d "-" -f 2`"
 			fileop -b remove "$VARIABLE_PURE" "$FILE" 2> /dev/null
@@ -257,6 +261,7 @@ set_var() {
 				fileop add "$VARIABLE=$VALUE" "$FILE"
 			fi
 
+			# Print out the new variable assignment
 			echo "$VARIABLE=$VALUE"
 		fi
 	else
@@ -310,12 +315,12 @@ print_file() {
 access_server() {
 	# First parameter is the server name
 	# XXX: This variable needs to be global!
-	SERVER_NAME=$1
+	SERVER_NAME="$1"
 	
 	# Check is server name is not empty
 	test -n "$SERVER_NAME" 2> /dev/null || fail no_srv_name
 
-	# Check whether server's directory is accessible
+	# Check whether server's directory exists
 	test -d "$SERVERS_DIR/$SERVER_NAME" 2> /dev/null || fail srv_not_existant
 
 	# Check whether server's directory is accessible
