@@ -56,7 +56,7 @@ stop() {
 		# Stop selected server
                 if ( status "$SERVER_NAME" > /dev/null 2> /dev/null ); then
                         echo "Stopping minecraft server $SERVER_NAME"
-                        su - -c 'kill $(cat "$SERVERS_DIR/$SERVER_NAME.pid")' $MC_USER
+                        kill $(cat "$SERVERS_DIR/$SERVER_NAME.pid")
 			rm "$SERVERS_DIR/$SERVER_NAME.pid"
                 else
                         echo "Server $SERVER_NAME is not running"
