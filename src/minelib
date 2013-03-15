@@ -24,8 +24,17 @@
 ###########################
 
 # Inform user about operations being executed
-tell() {
-        echo -en "$@"
+prompt() {
+        local -u MSG_TYPE="$1"
+	local MSG_VAR="ASK_$MSG_TYPE"
+	local MSG=${!MSG_VAR}
+
+	if [ -n "$MSG" ]; then
+		shift
+		echo -en "$MSG $@"
+	else
+		echo -en "$@ "
+	fi
 }
 
 # New function for displaying errors
@@ -202,12 +211,11 @@ ask() {
 		shift
 		echo -en "$MSG $@"
 	else
-		echo -n "$@ "
+		echo -en "$@ "
 	fi
 
 	# Read and print answer 
 	read ANSWER
-	echo "$ANSWER"
 
 	# Check if the answer was 'yes'
 	shopt -s nocasematch
