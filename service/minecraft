@@ -157,5 +157,7 @@ case $CMD in
 	;;
 	disable)	disable $@
 	;;
-	*)		echo "Usage: `basename $0` {start, stop, restart, status, list} [server_name]}\n\t`basename $0` {enable,disable} <server_name>"
+	list)		list "$@"
+	;;
+	*)		echo "Usage: `basename $0` {start, stop, restart, status} [server_name]}\n\t`basename $0` {enable, disable, list} <server_name>"
 esac
