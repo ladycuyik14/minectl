@@ -77,7 +77,7 @@ USAGE="Usage:	\033[1m`basename $0`\033[0m [\033[1mINDEPENDENT_COMMAND\033[0m]
 	\033[1minit\033[0m
 		Initialize the server manager.
 
-	\033[1mlist\033[0m [\033[1m--verbose\033[0m, \033[1m--very-verbose\033[0m]
+	\033[1mlist\033[0m, \033[1mls\033[0m [\033[1m--verbose\033[0m, \033[1m--very-verbose\033[0m]
 		List available servers.
 
 	\033[1madd\033[0m \033[3mserver_name\033[0m [\033[1m--jar\033[0m \033[3mjar_file\033[0m]
@@ -898,10 +898,10 @@ jar() {
 	\033[1mlist\033[0m or \033[1mls\033[0m [\033[1m--all\033[0m]
 		List available JAR files
  
-	\033[1mupdate\033[0m
+	\033[1mupdate\033[0m [\033[3mREPOSITORY\033[0m]
 		Update JAR file repository
  
-	\033[1mupgrade\033[0m
+	\033[1mupgrade\033[0m [\033[3mREPOSITORY\033[0m]
 		Upgrade used JAR files to the latest ones
 
 	\033[1mrepository\033[0m or \033[1mrepo\033[0m
@@ -1328,8 +1328,10 @@ player_count()  {
 srv_status() {
 	if [ -f "/lib/systemd/system/minecraft@.service" ]; then
 		/usr/bin/systemctl status minecraft@$SERVER_NAME.service
+	elif [ -f "/etc/init.d/minecraft" ]; then
+		/etc/init.d/minecraft status "$SERVER_NAME" 
 	else
-		/etc/init.d/minecraft status "$SERVER_NAME" || fail determine_status_failed
+		fail determine_status_failed
 	fi
 }
 
@@ -1352,7 +1354,7 @@ fi
 case $CMD in
 	init)			init "$@"
 	;;
-	list)			list "$@"
+	list|ls)		list "$@"
 	;;
 	add)			add "$@"
 	;;
