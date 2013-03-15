@@ -70,7 +70,7 @@ install_files() {
 
 # Uninstall minectl's files and directories
 uninstall_files() {
-	rm -f /usr/local/bin{mcpasswd,mcsrv,minectl}
+	rm -f /usr/local/bin/{mcpasswd,mcsrv,minectl}
 	rm -Rf /usr/local/libexec/minectl
 	rm -f /etc/init.d/minecraft
 	rm -f "/lib/systemd/system/minecraft@.service"
