@@ -77,7 +77,7 @@ uninstall_files() {
 }
 
 # Disable and stop minectl's services
-remove_services() {
+disable_services() {
 	# Uninstall system services
 	if [ -d /lib/systemd/system ]; then
 		cd /etc/systemd/system/multi-user.target.wants/
