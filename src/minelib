@@ -191,7 +191,6 @@ ask() {
 		return 2
 	fi
 
-	local QUESTION="$@"
 	local ANSWER=
 	local RETVAL=1
 
@@ -213,8 +212,7 @@ ask() {
 	# Check if the answer was 'yes'
 	shopt -s nocasematch
 	case "$ANSWER" in
-		y|yes)
-			RETVAL=0
+		y|yes)	RETVAL=0
 	esac
 	shopt -u nocasematch
 
