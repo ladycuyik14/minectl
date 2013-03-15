@@ -239,7 +239,7 @@ init() {
 			JAR_FILE="`ask select_jar_file`"
 		else
 			# Ask the user to update the system
-			if ( ask jar_update ); then
+			if ( ask jar_update > /dev/null ); then
 				jar update
 				jar upgrade
 				jar list
@@ -321,7 +321,7 @@ add() {
 		fi
 	# If no name was specified, we cannot create a server
 	else
-		fail no_server_name
+		fail no_srv_name
 	fi		
 }
 
@@ -348,7 +348,7 @@ remove() {
 		REMOVE=true
 	else
 		# Ask the user if they really wants to remove the server
-		ask remove_srv && REMOVE=true
+		ask remove_srv > /dev/null && REMOVE=true
 	fi
 
 	# If we finally want to remove the server
