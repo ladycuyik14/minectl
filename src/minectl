@@ -1266,10 +1266,15 @@ srv_exec() {
 		fi
 	}
 
-	# If cleaning is enabled, perform an empty 
-	# query first and discard the output
+	# If cleaning is enabled, perform an empty query first
 	if ( $CLEAN ); then
-		exec_cmd " " > /dev/null 2> /dev/null
+		# If SHOW_TAIL is enabled, print the recent output
+		if ( $SHOW_TAIL ); then
+			exec_cmd " "
+		# Else, discard the output
+		else
+			exec_cmd " " > /dev/null 2> /dev/null
+		fi
 	fi
 
 	# If verbose information is wanted, also
