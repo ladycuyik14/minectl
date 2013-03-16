@@ -1,0 +1,78 @@
+.TH "minectl" "1" "5.7" "Richard Neumann" "Minecraft (TM) server manager"
+.SH "NAME"
+minectl \- a Minecraft (TM) server management suite
+.SH "SYNOPSIS"
+\fBminectl\fR [\fBinit\fR | \fBlist\fR [\fI\-\-verbose\fR, \fI\-\-very\-verbose\fR] | \fBadd\fR \fIserver_name\fR [\fB\-\-jar\fR \fIjar_file\fR]]
+
+\fBminectl\fR \fBjar\fR [list | update | upgrade]]
+
+\fBminectl\fR \fBjar\fR \fBrepository\fR [list | add \fIURL\fR \fIname\fR | remove \fIname\fR]
+
+\fBminectl\fR \fIserver_name\fR [\fBremove\fR | \fBrename\fR \fInew_name\fR]
+
+\fBminectl\fR \fIserver_name\fR \fBpasswd\fR [\fBlist\fR | \fBlock\fR | \fBunlock\fR | [\fBwhitelist\fR | \fBblacklist\fR | \fBop\fR | \fBdeop\fR | \fBstatus\fR] \fIuser_name\fR]
+
+\fBminectl\fR \fIserver_name\fR [\fBconfigure\fR | \fBproperties\fR] [\fIvariable\fR=\fIvalue\fR | \-\fIvariable\fR]
+
+\fBminectl\fR \fIserver_name\fR [\fBbackup\fR [\fIbackup_name\fR] | \fBrestore\fR [\fB\-\-clean\fR] [\fIbackup_name\fR] | \fBreset\fR [\fB\-\-erase\-config\fR]]
+
+\fBminectl\fR \fIserver_name\fR \fBstatus\fR 
+
+\fBminectl\fR \fIserver_name\fR [\fBexec\fR \fIjava_program_command\fR | \fBplayers\fR | \fBplayer\-count\fR]
+
+\fBminectl\fR \fIserver_name\fR \fIjava_program_command\fR
+
+\fBminectl\fR [\fB\-\-version\fR | \fB\-\-help\fR]
+.SH "DESCRIPTION"
+\fBminectl\fR is the main program of the minectl server management suite. It can be used to create, modify and delete servers, manage the properties and configuration of the servers and control the accessibility of those.
+.SH "EXAMPLES"
+.TP 
+\fBminectl\fR \fIinit\fR
+Initialize minectl interactively. Download *.jar files and create a first server.
+
+.TP 
+\fBminectl\fR \fIlist\fR
+List all available servers.
+
+.TP 
+\fBminectl\fR \fIfoo\fR \fIpasswd\fR \fIlock\fR
+Put server \fBfoo\fR into online\-mode and enable its whitelist.
+
+.TP 
+\fBminectl\fR \fIfoo\fR \fIproperties\fR \fImotd="Hello world!"\fR
+Set the message of the day of server \fBfoo\fR to \fBHello world!\fR.
+
+.TP 
+\fBminectl\fR \fIfoo\fR \fIbackup\fR
+Create a backup of server \fBfoo\fR.
+
+.TP 
+\fBminectl\fR \fIfoo\fR \fIrestore\fR
+Restore latest backup of server \fBfoo\fR.
+.SH "OVERVIEW"
+
+.SH "DEFAULTS"
+
+.SH "OPTIONS"
+\fBminectl\fR differs inbetween general and server specific options.
+.SS
+\fBGeneral options\fR
+.TP 
+\fBinit\fR
+Initialize minectl interactively by downloading the necessary *.jar files from the repository and creating a first server
+.TP 
+\fBlist\fR [\fB\-\-verbose\fR | \fB\-\-very\-verbose\fR]
+List available servers. To show the servers' configurations use the \fI\-\-verbose\fR switch. To additionally show the servers' properties, use the \-\-very\-verbose switch.
+.TP 
+\fBadd\fR \fIserver_name\fR [\fB\-\-jar\fR \fIjar_file\fR]
+Add a new server, specifying its unique name. You can use the \fB\-\-jar\fR \fIjar_file\fR option to directly select a jar file to use instead of selecting it interactively.
+.SH "EXIT STATUS"
+
+.SH "ENVIRONMENT"
+
+.SH "FILES"
+
+.SH "SEE ALSO"
+
+.SH "HISTORY"
+
