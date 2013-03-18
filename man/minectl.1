@@ -1,6 +1,6 @@
-.TH "minectl" "1" "5.7" "Richard Neumann" "Minecraft (TM) server manager"
+.TH "minectl" "1" "5.7" "Richard Neumann" "Minecraft (TM) server controller"
 .SH "NAME"
-minectl \- a Minecraft (TM) server management suite
+minectl \- a Minecraft (TM) server controller.
 .SH "SYNOPSIS"
 \fBminectl\fR [\fBinit\fR | \fBlist\fR [\fI\-\-verbose\fR, \fI\-\-very\-verbose\fR] | \fBadd\fR \fIserver_name\fR [\fB\-\-jar\fR \fIjar_file\fR]]
 
@@ -50,7 +50,7 @@ Create a backup of server \fBfoo\fR.
 \fBminectl\fR \fIfoo\fR \fIrestore\fR
 Restore latest backup of server \fBfoo\fR.
 .SH "OVERVIEW"
-
+\fBminectl\fR can add, remove and modify, backup and restore minecraft servers, update and select Jar files for them, manage the access to the servers and their user rights and execute server commands.
 .SH "DEFAULTS"
 
 .SH "OPTIONS"
@@ -61,13 +61,183 @@ Restore latest backup of server \fBfoo\fR.
 \fBinit\fR
 Initialize minectl interactively by downloading the necessary *.jar files from the repository and creating a first server
 .TP 
-\fBlist\fR [\fB\-\-verbose\fR | \fB\-\-very\-verbose\fR]
+\fBlist\fR, \fBlist\fR [\fB\-\-verbose\fR, \fB\-v\fR | \fB\-\-very\-verbose\fR, \fB\-vv\fR]
 List available servers. To show the servers' configurations use the \fI\-\-verbose\fR switch. To additionally show the servers' properties, use the \-\-very\-verbose switch.
 .TP 
 \fBadd\fR \fIserver_name\fR [\fB\-\-jar\fR \fIjar_file\fR]
 Add a new server, specifying its unique name. You can use the \fB\-\-jar\fR \fIjar_file\fR option to directly select a jar file to use instead of selecting it interactively.
-.SH "EXIT STATUS"
+.TP 
+\fBjar\fR [\fIJar Options\fR]
+Perform operations regarding the Jar file management.
+.TP 
+\fIserver_name\fR [\fIServer Options\fR]
+Perform operations on specific servers.
 
+.SS
+\fBJar Options\fR
+.TP 
+\fBlist\fR, \fBls\fR
+List available Jar files.
+.TP 
+\fBupdate\fR \fIjar_files..\fR
+Update Jar files, or the specified Jar files only.
+.TP 
+\fBupgrade\fR \fIjar_file\fR
+Upgrade Jar files, or the specified Jar files only.
+.TP 
+\fBrepository\fR, \fBrepo\fR \fIRepository Options\fR
+Perform operations regarding the Jar repository management.
+
+.SS
+\fBRepository Options\fR
+.TP 
+\fBlist\fR, \fBls\fR [\fB\-\-verbose\fR, \fB\-v\fR]
+List available repositories. You can additionally display more detailed information by using the \fI\-\-verbose\fR switch.
+.TP 
+\fBadd\fR \fIURL\fR \fIname\fR
+Add a new repository specifying the URL to the desired file and its unique name.
+.TP 
+\fBremove\fR, \fBrm\fR \fIname\fR
+Delete the repository specified by \fIname\fR.
+
+.SS
+\fBServer Options\fR
+.TP 
+\fBremove\fR [\fB\-\-force\fR]
+Remove a server from the disk. You can use the \-\-force switch to skip querying.
+.TP 
+\fBrename\fR \fInew_name\fR
+Rename a server. Note that the server must not be running at the time of renaming.
+.TP 
+\fBpasswd\fR [\fIPasswd Options\fR]
+Perform operations regarding the server's access and user management.
+.TP 
+\fBconfigure\fR, \fBconfig\fR, \fBcfg\fR [\fIvariable\fR=\fIvalue\fR, \-\fIvariable\fR]
+Alter the server's meta configuration. Without any argument, the current configuration will be displayed. You can set \fIvariable\fR to \fIvalue\fR or remove a variable assignment by typing \-\fIvariable\fR.
+.TP 
+\fBproperties\fR, \fBprops\fR, \fBpro\fR [\fIvariable\fR=\fIvalue\fR, \-\fIvariable\fR]
+Alter the server.properties file. For options, see \fBconfigure\fR.
+.TP 
+\fBbackup\fR [\fIbackup_name\fR]
+Create a backup of the server. You can specify a custom name for the backup file.
+.TP 
+\fBrestore\fR [\fB\-\-clean\fR] [\fIbackup_name\fR]
+Restore a backup of the server. Use the \-\-clean switch to erase the current server data before performing the restoring. If no backup name is specified, minectl will restore the latest backup of the server in /home/minectl/backup.
+.TP 
+\fBreset\fR [\fB\-\-erase\-config\fR]
+Reset the server to its initial state. This means, removing all world data. You can also let it remove the server's configuration by using the \fB\-\-erase\-config\fR switch.
+.TP 
+\fBstatus\fR
+Determine status of the server by querying the respective system service.
+.TP 
+\fBexec\fR [[\fB\-\-verbose\fR, \fB\-v\fR], [\fB\-\-show\-tail\fR, \fB\-s\fR], [\fB\-\-no\-clean\fR, \fB\-n\fR], [\fB\-\-wait\-time\fR, \fB\-w\fR] \fItime\fR] \fIJava_program_command\fR
+Execute \fIJava_program_command\fR of the respective server's Jar file. You can use the \fB\-\-verbose\fR switch to print a more detailed response, show the tail of the output pipe by specifying \fB\-\-show\-tail\fR, avoid pre\-executing an empty command for safety issues by specifying \fB\-\-no\-clean\fR and specify a custom waiting time for reading the pipes by typing \fB\-\-wait\-time\fR \fItime\fR.
+.TP 
+\fBplayers\fR
+List the names of the players on the server.
+.TP 
+\fBplayer\-count\fR
+Print the count of players on the server.
+.TP 
+[\fIexec_option\fR] \fIJava_program_command\fR
+If no other commands match, minectl will interpret the options following a server's name as arguments for \fBexec\fR (see above).
+.SH "EXIT STATUS"
+minectl will generally exit as follows
+
+.IP \fB0\fR 
+No error
+.IP \fB10\fR 
+No server name specified
+.IP \fB11\fR 
+Specified server does not exist
+.IP \fB13\fR 
+Server's directory could not be accessed
+.IP \fB14\fR 
+minectl erroneously changed the working directory to the server's directory 
+
+.IP \fB20\fR 
+An eponymous file is preventong a fifo pipe to be created
+.IP \fB21\fR 
+An eponymous file already exists
+.IP \fB22\fR 
+Home directory could not be accessed
+.IP \fB23\fR 
+Parent directory could not be accessed
+.IP \fB24\fR 
+PID file of cat process during pipe reading could not be removed
+
+.IP \fB30\fR 
+Parameter unknown
+
+.IP \fB40\fR 
+Execution of sleep failed
+.IP \fB41\fR 
+Could not kill cat during pipe reading
+.IP \fB42\fR 
+Could not execute Jar command
+.IP \fB45\fR 
+Could not determine service's status
+
+.IP \fB60\fR 
+Server already exists
+.IP \fB61\fR 
+No server name specified
+.IP \fB62\fR 
+Creation of server failed
+.IP \fB63\fR 
+Copying of skeleton configuration failed
+.IP \fB64\fR 
+Creation of configuration file templates failed
+.IP \fB65\fR 
+Server is expected to be offline but is still running
+.IP \fB66\fR 
+Server could not be removed
+.IP \fB67\fR 
+Server could not be cleaned up
+.IP \fB68\fR 
+Server could not be renamed
+.IP \fB69\fR 
+Server is expected to be running but is not
+
+.IP \fB70\fR 
+No Jar file has been specified
+.IP \fB71\fR 
+Specified Jar file could not be found
+.IP \fB72\fR 
+Failed to set the specified Jar file for the server
+
+.IP \fB80\fR 
+Backup creation failed
+.IP \fB81\fR 
+Backup file could not be found
+.IP \fB82\fR 
+Backup restoring failed
+.IP \fB83\fR 
+Temporary backup of server config failed
+.IP \fB84\fR 
+Failed to restore the server's Jar file
+.IP \fB85\fR 
+Failed to restore temporary configuration backup
+
+.IP \fB90\fR 
+Could not check the repository file
+.IP \fB91\fR 
+Could not parse the repository file
+.IP \fB92\fR 
+Saving of new repository failed
+.IP \fB93\fR 
+Could not access repositorie's directory
+
+.IP \fB100\fR 
+No user name specified
+.IP \fB101\fR 
+Server could not be locked
+.IP \fB102\fR 
+Server could not be unlocked
+
+.LP 
+Exceptions are the \fBupdate\fR and \fBupgrade\fR command, which will return the amount of updates and upgrades made.
+E.g. if update delivered three updates, it will return \fB3\fR.
 .SH "ENVIRONMENT"
 
 .SH "FILES"
