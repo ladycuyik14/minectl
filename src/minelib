@@ -24,23 +24,30 @@
 ###########################
 
 # Inform user about operations being executed
-tell() {
-        echo -en "$@"
+prompt() {
+        local -u MSG_TYPE="$1"
+	local MSG_VAR="ASK_$MSG_TYPE"
+	local MSG=${!MSG_VAR}
+
+	if [ -n "$MSG" ]; then
+		shift
+		echo -en "$MSG $@"
+	else
+		echo -en "$@ "
+	fi
 }
 
 # New function for displaying errors
 notify() {
-	if [ -n "$1" ]; then
-		local -u MSG_TYPE="$1"
-		local MSG_VAR="NOTIFY_$MSG_TYPE"
-		local MSG=${!MSG_VAR}
+	local -u MSG_TYPE="$1"
+	local MSG_VAR="NOTIFY_$MSG_TYPE"
+	local MSG=${!MSG_VAR}
 
-		if [ -n "$MSG" ]; then
-			shift
-			echo -e "$MSG $@"
-		else
-			echo "$1"
-		fi
+	if [ -n "$MSG" ]; then
+		shift
+		echo -e "$MSG $@"
+	else
+		echo -e "$@"
 	fi
 }
 
@@ -62,7 +69,7 @@ err() {
 				return -1
 			fi
 		else
-			echo "$1"
+			echo -e "$1"
 			if [ -n "$2" ]; then
 				return $2
 			else
@@ -191,7 +198,6 @@ ask() {
 		return 2
 	fi
 
-	local QUESTION="$@"
 	local ANSWER=
 	local RETVAL=1
 
@@ -203,18 +209,16 @@ ask() {
 		shift
 		echo -en "$MSG $@"
 	else
-		echo -n "$@ "
+		echo -en "$@ "
 	fi
 
 	# Read and print answer 
 	read ANSWER
-	echo "$ANSWER"
 
 	# Check if the answer was 'yes'
 	shopt -s nocasematch
 	case "$ANSWER" in
-		y|yes)
-			RETVAL=0
+		y|yes)	RETVAL=0
 	esac
 	shopt -u nocasematch
 

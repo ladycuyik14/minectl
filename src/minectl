@@ -231,19 +231,22 @@ init() {
 
 	# Check if no servers are configured yet
 	if ( ! list ); then
-		SERVER_NAME="`ask srv_name`"
+		prompt srv_name
+		read SERVER_NAME
 
 		# Check if we already have some JAR files at hand (although this should not be the case)
 		if ( jar list ); then
 			# Ask the user which jar file shall be used
-			JAR_FILE="`ask select_jar_file`"
+			prompt select_jar_file
+			read JAR_FILE
 		else
 			# Ask the user to update the system
 			if ( ask jar_update ); then
 				jar update
 				jar upgrade
 				jar list
-				JAR_FILE="`ask select_jar_file`"
+				prompt select_jar_file
+				read JAR_FILE
 			else
 				notify update_manually
 				exit 1
@@ -304,7 +307,8 @@ add() {
 			# If JAR file was not specified, let the user select one iteractively
 			if [ -z "$JAR_FILE" ]; then
 				if ( jar list ); then
-					JAR_FILE="`ask select_jar_file`"
+					prompt select_jar_file
+					read JAR_FILE
 				# ...and exit if we don't have any
 				else
 					exit 1
@@ -321,7 +325,7 @@ add() {
 		fi
 	# If no name was specified, we cannot create a server
 	else
-		fail no_server_name
+		fail no_srv_name
 	fi		
 }
 
@@ -986,11 +990,13 @@ jar() {
 
 			# If nothing has been specified via the parameters, go to interactive mode
 			if [ -z "$REPO_URL" ]; then
-				REPO_URL="`ask spec_repo_url`"
+				prompt spec_repo_url
+				read REPO_URL
 			fi
 
 			if [ -z "$REPO_NAME" ]; then
-				REPO_NAME="`ask spec_repo_name`"
+				prompt spec_repo_name
+				read REPO_NAME
 			fi
 
 			# Store new repository in file
@@ -1004,7 +1010,8 @@ jar() {
 
 			# If nothing has been specified via the parameters, go to interactive mode
 			if [ -z "$REPO_NAME" ]; then
-				REPO_NAME="`ask spec_repo_name`"
+				prompt spec_repo_name
+				read REPO_NAME
 			fi
 
 			# Remove repo from the list if it is inside
@@ -1085,7 +1092,7 @@ jar() {
 			$CONTINUE && continue
 
 			# Download the JAR file
-			tell "Retrieving \033[1m$REPO_NAME\033[0m\t"
+			prompt  "Retrieving \033[1m$REPO_NAME\033[0m\t"
 			wget -q "$REPO_URL" -O "$REPO_FILE" 2> /dev/null || fail "[  failed   ]"
 		
 			# If the file exists...
@@ -1148,7 +1155,7 @@ jar() {
 
 			$CONTINUE && continue
 		
-			tell "JAR file from repo \033[1m$REPO_NAME\033[0m "
+			prompt  "JAR file from repo \033[1m$REPO_NAME\033[0m "
 			# If the file exists...
 			if [ -f "$LATEST_FILE" ]; then
 				if [ -f "$CURRENT_FILE" ]; then
