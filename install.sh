@@ -48,10 +48,12 @@ install_files() {
 
 	# Install system services
 	if [ -d /lib/systemd/system ]; then
-		cp "minecraft@.service" /lib/systemd/system/
+		cp service/"minecraft@.service" /lib/systemd/system/
 		echo "Systemd service template '/lib/systemd/system/minecraft@.service' installed"
+		cp service/"minemon@.service" /lib/systemd/system/
+		echo "Systemd service template '/lib/systemd/system/minemon@.service' installed"
 	else
-		cp minecraft /etc/init.d/
+		cp service/minecraft /etc/init.d/
 		echo "Init service '/etc/init.d/minecraft' installed"
 	fi
 
