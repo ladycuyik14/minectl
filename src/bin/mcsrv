@@ -45,10 +45,10 @@ if [ $# -ne 1 ]; then
 fi
 
 # Change to server's directory
-access_server "$SERVER_NAME" || fail
+minelib_access_server "$SERVER_NAME" || minelib_fail
 
 # Source configuration file
-source $SERVER_CONFIG 2> /dev/null || fail "Configuration file is missing"
+source $SERVER_CONFIG 2> /dev/null || minelib_fail "Configuration file is missing"
 
 # Set default values for required 
 # configuration parameters
