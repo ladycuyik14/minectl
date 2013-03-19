@@ -74,4 +74,4 @@ if [ -n "$NICENESS" ]; then
 fi
 
 # Start the server and connect it to the named pipes
-exec $EXEC 0<> $SERVER_STDIN 1> $SERVER_STDOUT | tee -a "$LOGFILE" | tee $SERVER_EVENT_QUEU > stderr
+exec $EXEC 0<> $SERVER_STDIN 1> $SERVER_STDOUT | tee -a "$LOGFILE" | tee $SERVER_EVENT_QUEUE > $SERVER_STDERR
