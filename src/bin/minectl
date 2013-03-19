@@ -169,7 +169,7 @@ source /usr/local/libexec/minectl/minelib 2> /dev/null || minectl_lib_fail
 # Import messages and minelib_err or codes #
 ###################################
 source $LIB_DIR/lang/default.lang 2> /dev/null || minelib_fail "Language files could not be loaded from `dirname $0`/default.lang"
-source $LIB_DIR/minelib_err codes 2> /dev/null || minelib_fail "minelib_err or codes could not be loaded from `dirname $0`/minelib_err codes"
+source $LIB_DIR/errcodes 2> /dev/null || minelib_fail "minelib_err or codes could not be loaded from `dirname $0`/minelib_err codes"
 
 ######################################################################################################################
 
