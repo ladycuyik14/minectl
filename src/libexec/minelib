@@ -69,20 +69,28 @@ export SERVER_WHITE_LIST="./white-list.txt"
 # The server's ops-list
 export SERVER_OP_LIST="./ops.txt"
 
-# Name of the event queue FIFO pipe
-export SERVER_EVENT_QUEUE="./events"
-
 # Name of the event scripts
 export SERVER_EVENT_HANDLERS_DIR="./eh.d"
 
+### Pipes ###
+
 # The server's stdin pipe
 export SERVER_STDIN="./stdin"
+
+# The server's stdout pipe
+export SERVER_STDOUT_RAW="./.stdout"
+
+# The server's stderr pipe
+export SERVER_STDERR_RAW="./.stderr"
 
 # The server's stdout pipe
 export SERVER_STDOUT="./stdout"
 
 # The server's stderr pipe
 export SERVER_STDERR="./stderr"
+
+# Name of the event queue FIFO pipe
+export SERVER_EVENT_QUEUE="./events"
 
 ####################
 # Global functions #
@@ -414,7 +422,7 @@ minelib_clean() {
 
 # Create named pipes
 minelib_mk_fifos() {
-        for FIFO in $SERVER_STDIN $SERVER_STDOUT $SERVER_STDERR $SERVER_EVENT_QUEUE; do
+        for FIFO in $SERVER_STDIN $SERVER_STDOUT_RAW $SERVER_STDERR_RAW $SERVER_STDOUT $SERVER_STDERR $SERVER_EVENT_QUEUE; do
                 if [ -e $FIFO ]; then
                         if [ ! -p $FIFO ]; then
                                 minelib_fail file_blocking_pipe

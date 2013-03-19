@@ -73,5 +73,9 @@ if [ -n "$NICENESS" ]; then
 	EXEC="/bin/nice -n $NICENESS $EXEC"
 fi
 
+# "Copy" pipes
+tee < $SERVER_TMP_STDERR $SERVER_STDERR > $SERVER_EVENT_QUEUE &
+tee < $SERVER_TMP_STDOUT $SERVER_STDOUT > $SERVER_EVENT_QUEUE &
+
 # Start the server and connect it to the named pipes
-exec $EXEC 0<> $SERVER_STDIN 1> $SERVER_STDOUT | tee -a "$LOGFILE" | tee $SERVER_EVENT_QUEUE > $SERVER_STDERR
+exec $EXEC 0<> $SERVER_STDIN 1<> $SERVER_TMP_STDOUT 2<> $SERVER_TMP_STDERR
