@@ -60,6 +60,7 @@ ERR_SRV_NOT_RUNNING="Server is not running"
 ERR_NO_JAR_SPEC="No JAR file specified"
 ERR_JAR_FILE_NOT_FOUND="Specified JAR file could not be found"
 ERR_SET_JAR_FAILED="Could not set new JAR file"
+ERR_ACCESS_JAR_DIR_FAILED="Could not access JAR directory"
 
 # Backup and restore issues
 ERR_BACKUP_FAILED="Could not create backup"
@@ -79,3 +80,6 @@ ERR_ACCESS_REPO_DIR_FAILED="Could not access JAR repository directory"
 ERR_NO_USER_NAME="No user name given"
 ERR_SRV_LOCKING_FAILED="Server locking failed."
 ERR_SRV_UNLOCKING_FAILED="Server unlocking failed."
+
+# Event issues
+ERR_NO_SUCH_EVENT="No such event "
