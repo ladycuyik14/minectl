@@ -1192,34 +1192,8 @@ minectl_server_execute() {
 		minelib_access_server "$SERVER_NAME"
 
 		if ( minectl_server_status > /dev/null 2> /dev/null ); then
-			local CAT_PID="`mktemp`"
-		
-			# Delete tail if unwanted
-			if ( ! $SHOW_TAIL ); then
-				# Open stderr fifo for reading and discard the output
-				(	
-					cat $SERVER_STDERR  2> /dev/null& echo $! > $CAT_PID 2> /dev/null
-				) > /dev/null 2> /dev/null
-				# Wait a short time
-				sleep $WAIT_TIME 2> /dev/null || minelib_err  SLEEP_FAILED
-				# Close the stderr fifo
-				kill `cat $CAT_PID` 2> /dev/null || minelib_err  KILL_CAT_FAILED
-				# Remove PID file
-				rm -f $CAT_PID 2> /dev/null || minelib_err  REMOVE_CAT_PID_FAILED
-			fi
-
-			# Open stderr fifo for reading
-			(	
-				cat $SERVER_STDERR  2> /dev/null& echo $! > $CAT_PID 2> /dev/null
-			) 2> /dev/null
-			# Echo command into stdin fifo
+			# Push command into server's stdin pipe
 			echo $@ > $SERVER_STDIN 2> /dev/null || minelib_fail EXEC_CMD_FAILED
-			# Wait a short time
-			sleep $WAIT_TIME 2> /dev/null || minelib_err  SLEEP_FAILED
-			# Close the stderr fifo
-			kill `cat $CAT_PID` 2> /dev/null || minelib_err  KILL_CAT_FAILED
-			# Remove PID file
-			rm -f $CAT_PID 2> /dev/null || minelib_err  REMOVE_CAT_PID_FAILED
 		else
 			minelib_fail SRV_NOT_RUNNING
 		fi
@@ -1232,7 +1206,7 @@ minectl_server_execute() {
 			minectl_server_execute_cmd " "
 		# Else, discard the output
 		else
-			minectl_server_execute_cmd " " #> /dev/null 2> /dev/null
+			minectl_server_execute_cmd " " 2> /dev/null
 		fi
 	fi
 
