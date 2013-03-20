@@ -8,7 +8,7 @@ SERVER_NAME="$1"
 EVENT="$2"
 
 # Source minelib
-source /usr/local/libexec/minelib
+source /usr/local/libexec/minectl/minelib
 
 LOG_FILE="$SERVERS_DIR/$SERVER_NAME/mcsrv.log"
 
