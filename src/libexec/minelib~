@@ -1,0 +1,425 @@
+#! /bin/bash
+#
+#	minelib - Library for functions frequently used by minectl's scripts
+#
+#	Version 2.0
+#
+#	Copyright (C) 2012 Richard Neumann <mail@richard-neumann.de>
+#
+#	This program is free software: you can redistribute it and/or modify
+#	it under the terms of the GNU General Public License as published by
+#	the Free Software Foundation, either version 3 of the License, or
+#	at your option) any later version.
+#
+#	This program is distributed in the hope that it will be useful,
+#	but WITHOUT ANY WARRANTY; without even the implied warranty of
+#	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#	GNU General Public License for more details.
+#
+#	You should have received a copy of the GNU General Public License
+#	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+####################
+# Global variables #
+####################
+
+# Define default minectl user
+export MC_USER=minectl
+
+### Absolute paths ###
+
+# Define home directory
+export MC_HOME="/home/$MC_USER"
+
+# The directory containing the servers
+export SERVERS_DIR="$MC_HOME/servers"
+
+# Name of the event scripts
+export EVENT_HANDLERS_DIR="$MC_HOME/event-handlers"
+
+# The shared library's path
+export MC_LIB="$LIB_DIR/minelib"
+
+# Binaries' directory
+export BIN_DIR="/usr/local/bin"
+
+# Library directory
+export LIB_DIR="/usr/local/libexec/$MC_USER"
+
+# JARs' directory
+export JAR_DIR="$LIB_DIR/jar"
+
+# JARs' repository
+export JAR_REPO="$LIB_DIR/jar-repo"
+
+### Paths relative to server ###
+
+# The server's log file
+export SERVER_LOG_FILE="./srv.log"
+
+# Define our configuration file name
+export SERVER_CONFIG="./.mcsrv.cfg"
+
+# The server's properties file
+export SERVER_PROPERTIES="./server.properties"
+
+# The server's white-list
+export SERVER_WHITE_LIST="./white-list.txt"
+
+# The server's ops-list
+export SERVER_OP_LIST="./ops.txt"
+
+# Name of the event scripts
+export SERVER_EVENT_HANDLERS_DIR="./eh.d"
+
+### Pipes ###
+
+# The server's stdin pipe
+export SERVER_STDIN="./.stdin"
+
+# The server's stdout pipe
+export SERVER_STDOUT="./.stdout"
+
+# The server's stderr pipe
+export SERVER_STDERR="./.stderr"
+
+####################
+# Global functions #
+####################
+
+# Inform user about operations being executed
+minelib_prompt() {
+        local -u MSG_TYPE="$1"
+	local MSG_VAR="ASK_$MSG_TYPE"
+	local MSG=${!MSG_VAR}
+
+	if [ -n "$MSG" ]; then
+		shift
+		echo -en "$MSG $@"
+	else
+		echo -en "$@ "
+	fi
+}
+
+# New function for displaying minelib_err ors
+minelib_notify() {
+	local -u MSG_TYPE="$1"
+	local MSG_VAR="NOTIFY_$MSG_TYPE"
+	local MSG=${!MSG_VAR}
+
+	if [ -n "$MSG" ]; then
+		shift
+		echo -e "$MSG $@"
+	else
+		echo -e "$@"
+	fi
+}
+
+# New function for displaying minelib_err ors
+minelib_err () {
+	if [ -n "$1" ]; then
+		local -u MSG_TYPE="$1"
+		local MSG_VAR="minelib_err _$MSG_TYPE"
+		local CODE_VAR="CODE_$MSG_TYPE"
+		local MSG=${!MSG_VAR}
+		local CODE=${!CODE_VAR}
+
+		if [ -n "$MSG" ]; then
+			if [ -n "$CODE" ]; then
+				shift
+				echo -e "$MSG $@"  1>&2
+				return $CODE
+			else
+				return -1
+			fi
+		else
+			echo -e "$1"
+			if [ -n "$2" ]; then
+				return $2
+			else
+				return 1
+			fi
+		fi
+	else
+		echo -e "[   minelib_err or   ]" 1>&2
+		return 1
+	fi
+}
+
+# New function for displaying fails
+minelib_fail() {
+	if [ -n "$1" ]; then
+		minelib_err  "$@"
+		exit $?
+	else
+		echo -e "[  failed   ]" 1>&2
+		exit 1
+	fi
+}
+		
+
+# List (just) directories in the current folder (without sub directories)
+minelib_ls_dir() {
+	local DIR="$1"
+
+	if [ -z "$DIR" ]; then
+		DIR="./"
+	fi
+
+	find "$DIR" -type d 2> /dev/null | grep -E ^"./.[^/]*"$ | sed 's:./::g'
+}
+
+# Operate on files
+minelib_fileop() {
+	local GREP="grep"
+	local IGNORE_CASE=false
+	local BEGINS_WITH=false
+	local ENDS_WITH=false
+	local CMD=
+
+	# Add a string to a file
+	minelib_fileop_add() {
+		echo "$PATTERN" >> "$FILE"
+		return $?
+	}
+
+	# Check if a certain string is contained in a file
+	minelib_fileop_contains() {
+		if ( $BEGINS_WITH && $ENDS_WITH ); then
+			$GREP -E "^$PATTERN[[:blank:]]*$" "$FILE" 2> /dev/null
+		elif ( $BEGINS_WITH ); then
+			$GREP ^"$PATTERN" "$FILE" 2> /dev/null
+		elif ( $ENDS_WITH ); then
+			$GREP -E "$PATTERN[[:blank:]]*$" "$FILE" 2> /dev/null
+		else
+			$GREP "$PATTERN" "$FILE" 2> /dev/null
+		fi
+
+		return $?
+	}
+
+	# Remove a string that is in the beginning of a file from this file
+	minelib_fileop_remove() {
+		while read MATCH; do
+			local TMP="`mktemp`"		
+			grep -v "$MATCH" "$FILE" > "$TMP" 2> /dev/null
+			mv "$TMP" "$FILE"
+		done < "$1"
+	
+		rm -f "$1" 2> /dev/null
+	}
+
+	while (( $# ));do
+		case $1 in
+			--ignore-case|-i)	IGNORE_CASE=true
+			;;
+			--full-match|-f)	BEGINS_WITH=true
+						ENDS_WITH=true
+			;;
+			--begins-with|-b)	BEGINS_WITH=true
+			;;
+			--ends-with|-e)		ENDS_WITH=true
+			;;
+			*)			break
+		esac
+		shift
+	done
+
+	if ( $IGNORE_CASE ); then
+		GREP="$GREP -i"
+	fi
+
+	CMD="$1"
+	local PATTERN="$2"
+	local FILE="$3"
+
+	case $CMD in
+		contains)	minelib_fileop_contains
+		;;
+		remove)		local TMP_FILE="`mktemp`"
+				minelib_fileop_contains > "$TMP_FILE"
+				minelib_fileop_remove "$TMP_FILE"
+				rm -f "$TMP_FILE" 2> /dev/null
+		;;
+		add)		minelib_fileop_add
+		;;
+		*)		minelib_err or "Unknown file operation \"CMD\""
+	esac
+}
+
+# Extract data from a file removing comments and empty lines
+minelib_extract_data() {
+	grep -vE "^[[:blank:]]*$|^[[:blank:]]*#" $1 2> /dev/null
+}
+
+# Ask a question and return 0 on 'yes' or 1 otherwise
+minelib_ask() {
+	local USAGE="\
+	Usage: ask [The question]\nReturns 0 on \"y\" or 1 else."
+
+	if [ $# -lt 1 ]; then
+		echo -e $USAGE
+		return 2
+	fi
+
+	local ANSWER=
+	local RETVAL=1
+
+	local -u MSG_TYPE="$1"
+	local MSG_VAR="ASK_$MSG_TYPE"
+	local MSG=${!MSG_VAR}
+
+	if [ -n "$MSG" ]; then
+		shift
+		echo -en "$MSG $@"
+	else
+		echo -en "$@ "
+	fi
+
+	# Read and print answer 
+	read ANSWER
+
+	# Check if the answer was 'yes'
+	shopt -s nocasematch
+	case "$ANSWER" in
+		y|yes)	RETVAL=0
+	esac
+	shopt -u nocasematch
+
+	return $RETVAL
+}
+
+# Change the value of a variable inside a file
+minelib_set_var() {
+	# Arguments for variable name declaration
+	local DECLARE_ARGS=
+
+	# Check if we want to force the variable name to upper or lower case
+	case $1 in
+		-u|-l)	DECLARE_ARGS="$1"
+		shift
+	esac
+	
+	# First argument is the variable declaration 
+	# in the shape of <variable>=<value>
+	local VAR_DEC="$1"
+
+	# The second argument is the file to operate on
+	local FILE="$2"
+
+	local VARIABLE_PURE="`echo "$VAR_DEC" | cut -d "=" -f 1`"
+	local $DECLARE_ARGS VARIABLE="$VARIABLE_PURE"
+	local VALUE="`echo "$VAR_DEC" | cut -d "=" -f 2`"
+
+	# Check if variable is not empty
+	if [ -n "$VARIABLE_PURE" ]; then
+		# If the variable name preceeds a "-", that means
+		# we want the variable to be removed from the file
+		if [ -n "`echo "$VARIABLE_PURE" | grep ^"-" 2> /dev/null`" ]; then
+			VARIABLE_PURE="`echo "$VARIABLE_PURE" | cut -d "-" -f 2`"
+			minelib_fileop -b remove "$VARIABLE_PURE" "$FILE" 2> /dev/null
+		else
+			# Search for variable inside the file	
+			local VAR_LINE="`grep ^"$VARIABLE=" "$FILE" 2> /dev/null`"
+
+			# If the variable is in the file, replace it with its new value
+			if ( minelib_fileop -b contains "$VARIABLE=" "$FILE" > /dev/null 2> /dev/null ); then
+				sed -i "s|$VAR_LINE|$VARIABLE=$VALUE|" "$FILE" 2> /dev/null
+			else
+				minelib_fileop add "$VARIABLE=$VALUE" "$FILE"
+			fi
+
+			# Print out the new variable assignment
+			echo "$VARIABLE=$VALUE"
+		fi
+	else
+		minelib_err or "No variable specified"
+		return 2
+	fi
+	
+	return 0
+}
+
+# Print out a file and highlight changes. Usage:
+# print_file [--offset, -o <offset>] <file_name> [change_log]
+minelib_print_file() {
+	local OFFSET=""
+
+	# Check if we specified an offset
+	case $1 in
+		--offset|-o)	OFFSET="$2"
+				shift 2
+	esac
+
+	local FILE="$1"
+	local CHANGE_LOG="$2"
+
+        while read LINE; do
+		local CONTINUE=false
+
+		if [ -f "$CHANGE_LOG" ]; then
+			while read CHANGE; do
+				if [ "$CHANGE" == "$LINE" ]; then
+					echo -e "$OFFSET\033[1m$LINE\033[0m"
+					CONTINUE=true
+					continue
+				fi
+			done < "$CHANGE_LOG"
+		fi
+
+		# Skip the output of the line if
+		# it has already been highlighted
+		$CONTINUE && continue
+
+		echo -e "$OFFSET$LINE"
+        done < $FILE
+}
+
+# Access a server's directory securely
+# XXX: Do not just use a simple "cd" statement to change to a server's directory, beacuase
+# if a user does not specify a server name by mistake, we will change to $MC_HOME/servers 
+# and, if clean is called "clean()", may remove all servers by mistake. That won't be good!
+# 'access_server' also makes sure that a certain server (directory) exists
+minelib_access_server() {
+	# First parameter is the server name
+	# XXX: This variable needs to be global!
+	SERVER_NAME="$1"
+	
+	# Check is server name is not empty
+	test -n "$SERVER_NAME" 2> /dev/null || minelib_fail no_srv_name
+
+	# Check whether server's directory exists
+	test -d "$SERVERS_DIR/$SERVER_NAME" 2> /dev/null || minelib_fail srv_not_existant
+
+	# Check whether server's directory is accessible
+	cd "$SERVERS_DIR/$SERVER_NAME" 2> /dev/null || minelib_fail access_srv_dir_failed
+
+	# Check if we did really change to a subfolder of $MC_HOME/servers
+	test "`dirname $PWD`" == "$SERVERS_DIR" 2> /dev/null || minelib_fail inside_srv_dir
+}
+
+# Clean up the server directory
+minelib_clean() {
+	# First parameter is the server name
+	SERVER_NAME=$1
+	shift
+
+	# Change to server's directory
+	access_server "$SERVER_NAME"
+
+	# Remove server directory's content
+	rm -R * > /dev/null 2> /dev/null || minelib_fail srv_clean_failed
+}
+
+# Create named pipes
+minelib_mk_fifos() {
+        for FIFO in $SERVER_STDIN $SERVER_STDOUT_RAW $SERVER_STDERR_RAW $SERVER_STDOUT $SERVER_STDERR $SERVER_EVENT_QUEUE; do
+                if [ -e $FIFO ]; then
+                        if [ ! -p $FIFO ]; then
+                                minelib_fail file_blocking_pipe
+                        fi
+                else
+                        mkfifo $FIFO
+                fi
+        done
+}
