@@ -57,11 +57,12 @@ if [ $# -ne 1 ]; then
 fi
 
 # Change to server's directory
-access_server "$SERVER_NAME" || fail
+minelib_access_server "$SERVER_NAME" || minelib_fail 
 
+# Read the server's stderr fifo
 while read EVENT; do
 	handle_event "$EVENT"
 	test $? -eq 3 && break
-done < "$SERVER_EVENT_QUEUE"
+done < "$SERVER_STDERR"
 
 echo "Exitting event monitor" 1>&2
