@@ -119,7 +119,7 @@ minelib_notify() {
 minelib_err () {
 	if [ -n "$1" ]; then
 		local -u MSG_TYPE="$1"
-		local MSG_VAR="minelib_err _$MSG_TYPE"
+		local MSG_VAR="ERR_$MSG_TYPE"
 		local CODE_VAR="CODE_$MSG_TYPE"
 		local MSG=${!MSG_VAR}
 		local CODE=${!CODE_VAR}
