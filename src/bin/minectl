@@ -1277,16 +1277,16 @@ minectl_server_status() {
 # Event handling #
 ##################
 
-# List all available events 
-minectl_events() {
-	ls "$EVENT_HANDLERS_DIR"/*.eh
-}
-
 # Handle event configuration
 minectl_server_event() {
 	# List events enabled for the current server
 	minectl_server_event_list() {
-		cd "$SERVER_EVENT_HANDLERS_DIR"
+		case $1 in
+			--all)	cd "$EVENT_HANDLERS_DIR"
+			;;
+			*)	cd "$SERVER_EVENT_HANDLERS_DIR"
+		esac
+
 		ls *.eh 2> /dev/null
 	}
 
@@ -1351,7 +1351,7 @@ case $CMD in
 	;;
         jar)			minectl_jar "$@"
 	;;
-        events)			minectl_events
+        events)			minectl_server_event list --all
 	;;
 	""|help|--help|-h)	case $1 in
 					passwd)		minectl_server_passwd --help
