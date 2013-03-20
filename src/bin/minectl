@@ -1284,10 +1284,9 @@ minectl_events() {
 
 # Handle event configuration
 minectl_server_event() {
-	echo $PWD
 	# List events enabled for the current server
 	minectl_server_event_list() {
-		ls "$SERVER_EVENT_HANDLERS_DIR"/*.eh
+		ls "$SERVER_EVENT_HANDLERS_DIR"/*.eh 2> /dev/null
 	}
 
 	# Add an event to the server

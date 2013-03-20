@@ -149,7 +149,7 @@ minelib_err () {
 # New function for displaying fails
 minelib_fail() {
 	if [ -n "$1" ]; then
-		minelib_err  "$@"
+		minelib_err  $*
 		exit $?
 	else
 		echo -e "[  failed   ]" 1>&2
