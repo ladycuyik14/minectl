@@ -41,8 +41,7 @@ handle_event() {
 	# *.eh suffix
 	if ( `ls "$SERVER_EVENT_HANDLERS_DIR"/*.eh > /dev/null 2> /dev/null` ); then
 		for EVENT_HANDLER in "$SERVER_EVENT_HANDLERS_DIR"/*.eh; do
-			$EVENT_HANDLER "$SERVER_NAME" "$EVENT"
-			return $?
+			$EVENT_HANDLER "$SERVER_NAME" "$EVENT" &
 		done
 	else
 		echo "No event handlers defined for server $SERVER_NAME"
