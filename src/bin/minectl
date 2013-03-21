@@ -1410,7 +1410,7 @@ case $CMD in
 	;;
 	all)			# We want to operate on all servers
 				RETVAL=0
-
+				"$THIS" list
 				for SERVER in `"$THIS" list`; do
 					"$THIS" "$@"
 					RETVAL=$?
