@@ -48,4 +48,4 @@ decode_command() {
 
 # Execute command and return the respective
 # result to the executing user
-"$BIN_DIR"/minectl "$SERVER_NAME" tell "$USER_NAME" "`decode_command "$COMMAND_LINE"`"
+"$BIN_DIR"/minectl "$SERVER_NAME" tell "$USER_NAME" "`decode_command $COMMAND_LINE 2>&1`"
