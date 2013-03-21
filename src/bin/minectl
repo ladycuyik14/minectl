@@ -1412,8 +1412,18 @@ case $CMD in
 				RETVAL=0
 
 				for SERVER in `"$THIS" list`; do
+					echo "\033[1m$SERVER\033[0m:"
 					"$THIS" "$SERVER" "$@"
-					RETVAL=$?
+					SRV_RETVAL=$?
+
+					# Indicate error if at lest one server 
+					# does not return zero-state
+					if [ $SRV_RETVAL -ne 0 ]; then
+						RETVAL=1
+					fi
+
+					# Print exit state
+					echo "\033[1mreturned\033[0m: $?\n"
 				done
 
 				exit $RETVAL
