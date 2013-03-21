@@ -211,6 +211,15 @@ minectl_init() {
 
 # Add a server
 minectl_add_server() {
+	# TODO: Ask for MOTD on creation
+
+	# Set the server's configuration defaults
+	minectl_add_server_defaults() {
+		# TODO: Automatically configure unused port
+		# TODO: Automatically activate default event handlers
+		:
+	}
+
 	# First parameter is the server name
 	local SERVER_NAME=$1
 	shift
