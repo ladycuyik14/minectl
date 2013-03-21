@@ -27,10 +27,18 @@ SERVER_NAME="$1"
 # The directory containing the libraries
 LIB_DIR="/usr/local/libexec/minectl"
 
-# Indicate failure when loading of shared library fails
-lib_fail() {
-	echo "Could not load main library" 1>&2
-	exit 1
+# Handle events
+mcsrv_handle_events() {
+	# Read the server's stderr fifo
+	while read EVENT; do
+		# All event handling scripts must have the 
+		# *.eh suffix
+		if ( `ls "$SERVER_EVENT_HANDLERS_DIR"/*.eh > /dev/null 2> /dev/null` ); then
+			for EVENT_HANDLER in "$SERVER_EVENT_HANDLERS_DIR"/*.eh; do
+				$EVENT_HANDLER "$SERVER_NAME" "$EVENT" &
+			done
+		fi
+	done < "$SERVER_STDERR"
 }
 
 ###############
@@ -38,7 +46,7 @@ lib_fail() {
 ###############
 
 # Source main library
-source /usr/local/libexec/minectl/minelib 2> /dev/null || lib_fail
+source /usr/local/libexec/minectl/minelib 2> /dev/null || { echo "Could not load main library" 1>&2; exit 1; }
 
 if [ $# -ne 1 ]; then
 	minelib_fail "Usage: `basename $0` <server_name>" 
@@ -60,6 +68,10 @@ if [ -z "$XMX" ]; then
 	XMX="1024M"
 fi
 
+if [ -z "$EVENT_HANDLER" ]; then
+	EVENT_HANDLER=false
+fi
+
 # Set executable
 EXEC="/usr/bin/java -Xms$XMS -Xmx$XMX $CUSTOM_JAVA_ARGS -jar minecraft_server.jar $JAR_FILE_ARGS"
 
@@ -74,7 +86,9 @@ if [ -n "$NICENESS" ]; then
 fi
 
 # Start the server's event monitor
-$BIN_DIR/minemon "$SERVER_NAME" &
+if ( $EVENT_HANDLER ); then
+	 mcsrv_handle_events &
+fi
 
 # Start the server and connect it to the named pipes
 exec $EXEC 0<> $SERVER_STDIN 1<> $SERVER_STDOUT 2<> $SERVER_STDERR
