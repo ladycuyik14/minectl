@@ -39,13 +39,33 @@ decode_command() {
 
 	# Switch known commands
 	case $CMD in
+		"")		echo -e "Usage: %<command>\nValid commands are: date, uname, uptime, admininfo"
+		;;
 		date)		date "$@"
+		;;
+		uname)		uname "$@"
+		;;
+		uptime)		uptime "$@"
+		;;
+		admininfo)	echo -e "Administrator of this server is: coNQP\na.k.a. Richard Neumann\nMelanchthonstraße 7\n30165 Hannover"
 		;;
 		*)		echo "Unknown command: $CMD $@" 1>&2
 				return 1
 	esac
 }
 
-# Execute command and return the respective
-# result to the executing user
-"$BIN_DIR"/minectl "$SERVER_NAME" tell "$USER_NAME" "`decode_command $COMMAND_LINE 2>&1`"
+tell_result() {
+	local TMP_FILE="`mktemp`"
+
+	# Decode command and sore 
+	# answer in temporary file
+	decode_command $COMMAND_LINE > "$TMP_FILE" 2>&1
+
+	while read LINE; do
+		"$BIN_DIR"/minectl "$SERVER_NAME" tell "$USER_NAME" "$LINE"
+	done < "$TMP_FILE"
+	
+	rm -f "$TMP_FILE" 2> /dev/null
+}
+
+tell_result
