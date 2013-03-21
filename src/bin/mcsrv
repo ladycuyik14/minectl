@@ -27,6 +27,20 @@ SERVER_NAME="$1"
 # The directory containing the libraries
 LIB_DIR="/usr/local/libexec/minectl"
 
+# Handle events
+mcsrv_handle_events() {
+	# Read the server's stderr fifo
+	while read EVENT; do
+		# All event handling scripts must have the 
+		# *.eh suffix
+		if ( `ls "$SERVER_EVENT_HANDLERS_DIR"/*.eh > /dev/null 2> /dev/null` ); then
+			for EVENT_HANDLER in "$SERVER_EVENT_HANDLERS_DIR"/*.eh; do
+				$EVENT_HANDLER "$SERVER_NAME" "$EVENT" &
+			done
+		fi
+	done < "$SERVER_STDERR"
+}
+
 ###############
 # Main script #
 ###############
@@ -73,7 +87,7 @@ fi
 
 # Start the server's event monitor
 if ( $EVENT_HANDLER ); then
-	 /usr/local/bin/minemon "$SERVER_NAME" &
+	 mcsrv_handle_events &
 fi
 
 # Start the server and connect it to the named pipes
