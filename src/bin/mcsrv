@@ -39,6 +39,9 @@ mcsrv_handle_events() {
 			done
 		fi
 	done < "$SERVER_STDERR"
+
+	# Return zero-state in any case
+	return 0
 }
 
 ###############
