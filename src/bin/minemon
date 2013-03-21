@@ -1,0 +1,40 @@
+#! /bin/bash
+#
+#	minemon - The minecraft server event monitor
+#
+#	Copyright (C) 2012 Richard Neumann <mail@richard-neumann.de>
+#
+#	This program is free software: you can redistribute it and/or modify
+#	it under the terms of the GNU General Public License as published by
+#	the Free Software Foundation, either version 3 of the License, or
+#	at your option) any later version.
+#
+#	This program is distributed in the hope that it will be useful,
+#	but WITHOUT ANY WARRANTY; without even the implied warranty of
+#	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#	GNU General Public License for more details.
+#
+#	You should have received a copy of the GNU General Public License
+#	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# Source main library
+source /usr/local/libexec/minectl/minelib 2> /dev/null || { echo "Could not load main library" 1>&2; exit 1; }
+
+# First argument is the server's name
+SERVER_NAME="$1"
+
+# Access the server securely
+minelib_access_server "$SERVER_NAME"
+
+# Handle events
+# Read the server's stderr fifo
+while read EVENT; do
+	# All event handling scripts must have the 
+	# *.eh suffix
+	if ( `ls "$SERVER_EVENT_HANDLERS_DIR"/*.eh > /dev/null 2> /dev/null` ); then
+		for EVENT_HANDLER in "$SERVER_EVENT_HANDLERS_DIR"/*.eh; do
+			$EVENT_HANDLER "$SERVER_NAME" "$EVENT" &
+		done
+	fi
+done < "$SERVER_STDERR"
+
