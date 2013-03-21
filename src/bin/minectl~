@@ -156,7 +156,7 @@ USAGE="Usage:	\033[1m`basename $0`\033[0m [\033[1mINDEPENDENT_COMMAND\033[0m]
 #######################
 # Source main library #
 #######################
-source /usr/local/libexec/minectl/minelib 2> /dev/null || { echo "Could not load main library" 1>&2; exit 1; }
+source /usr/local/libexec/minectl/minelib 2> /dev/null || minectl_lib_fail
 
 ###################################
 # Import messages and error codes #

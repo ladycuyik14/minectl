@@ -41,6 +41,7 @@ install_files() {
 	install -o minectl -g minectl -m 775 -t /home/minectl/event-handlers event-handlers/*
 	install -o minectl -g minectl -m 775 -d /usr/local/libexec/minectl
 	install -o minectl -g minectl -m 775 -t /usr/local/libexec/minectl libexec/*
+	install -o minectl -g minectl -m 775 -t /usr/local/libexec/minectl libexec/.[^.]*
 	install -o minectl -g minectl -m 775 -d /usr/local/libexec/minectl/jar
 	install -o minectl -g minectl -m 775 -d /usr/local/libexec/minectl/jar-repo
 	install -o minectl -g minectl -m 775 -d /usr/local/libexec/minectl/lang
@@ -50,8 +51,6 @@ install_files() {
 	if [ -d /lib/systemd/system ]; then
 		cp service/"minecraft@.service" /lib/systemd/system/
 		echo "Systemd service template '/lib/systemd/system/minecraft@.service' installed"
-		cp service/"minemon@.service" /lib/systemd/system/
-		echo "Systemd service template '/lib/systemd/system/minemon@.service' installed"
 	else
 		cp service/minecraft /etc/init.d/
 		echo "Init service '/etc/init.d/minecraft' installed"
@@ -81,7 +80,7 @@ disable_services() {
 	# Uninstall system services
 	if [ -d /lib/systemd/system ]; then
 		cd /etc/systemd/system/multi-user.target.wants/
-		for SERVICE in minecraft@* minemon@*; do
+		for SERVICE in minecraft@*; do
 			systemctl disable $SERVICE
 			systemctl stop $SERVICE
 		done

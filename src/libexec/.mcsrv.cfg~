@@ -12,7 +12,7 @@ CPU_AFFINITY=
 NICENESS=
 
 # Event handler switch
-MONITOR_EVENTS=true
+EVENT_HANDLER=true
 
 
 ### Java ###

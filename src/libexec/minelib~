@@ -55,7 +55,7 @@ export JAR_REPO="$LIB_DIR/jar-repo"
 ### Paths relative to server ###
 
 # The server's log file
-export SERVER_LOG_FILE="./mcsrv.log"
+export SERVER_LOG_FILE="./srv.log"
 
 # Define our configuration file name
 export SERVER_CONFIG="./.mcsrv.cfg"

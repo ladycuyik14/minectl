@@ -110,7 +110,7 @@ if ( $MONITOR_EVENTS ); then
 fi
 
 # Begin logfile
-echo "Attempting to start server '$SERVER_NAME' on `date +%Y-%m-%d" at "%H:%M:%S`" > "$SERVER_LOG_FILE"
+echo "Attempting to start server '$SERVER_NAME' on `date +%Y-%m-%d" at "%H:%M:%S`"
 
 # Start the server and connect it to the named pipes
 exec $EXEC 0<> $SERVER_STDIN 1<> $SERVER_STDOUT 2<> $SERVER_STDERR
