@@ -39,7 +39,7 @@ decode_command() {
 
 	# Switch known commands
 	case $CMD in
-		"")		echo -e "Usage: %<command>\nValid commands are: date, uname, uptime, admininfo"
+		"")		echo -e "Usage: %<command> [arguments]\nValid commands are: date, uname, uptime, admininfo"
 		;;
 		date)		date "$@"
 		;;
