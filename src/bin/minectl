@@ -33,6 +33,9 @@ ARCH=noarch
 # Global variables #
 ####################
 
+# Full path to the script
+THIS="`realpath $0`"
+
 # Synopsis of usage for user information
 USAGE="Usage:	\033[1m`basename $0`\033[0m [\033[1mINDEPENDENT_COMMAND\033[0m]
 
@@ -1406,17 +1409,14 @@ case $CMD in
 	--version)		echo -e "`basename $0`-$VERSION.$ARCH"
 	;;
 	all)			# We want to operate on all servers
-				if [ "$SERVER_NAME" == "all" ]; then
-					THIS="`realpath $0`"
-					RETVAL=0
+				RETVAL=0
 
-					for SERVER in `"$THIS" list`; do
-						"$THIS" "$@"
-						RETVAL=$?
-					done
+				for SERVER in `"$THIS" list`; do
+					"$THIS" "$@"
+					RETVAL=$?
+				done
 
-					exit $RETVAL
-				fi
+				exit $RETVAL
 	;;
 	*)			# If no commands match, we assume, that
 				# the argument is the server's name
