@@ -738,16 +738,49 @@ minectl_server_passwd() {
 minectl_server_backup() {
 	# Set current time and date as default backup name
 	local BACKUP_NAME="$SERVER_NAME-`date +%Y.%m.%d-%H.%M`"
-	
+	local MESSAGE_PRE=
+	local MESSAGE_POST=
+
+	# Process params
+	while (( $# )); do
+		case $1 in
+			--message-pre|--message|-m)	MESSAGE_PRE="$2"
+							shift 2
+			;;
+			--message-post|-p)		MESSAGE_POST="$2"
+							shift 2
+			;;
+			*)				break
+		esac
+	done
+		
+	# If there is still an argument (or more) remaining
+	# it must be the backup's name
 	if [ $# -gt 0 ]; then
 		BACKUP_NAME="$@"
+	fi
+
+	# Display pre-backup message on server
+	if [ -n "$MESSAGE_PRE" ]; then
+		minectl_server_execute say "$MESSAGE_PRE"
 	fi
 	
 	# Create the backup as a gzip compressed tar archive, but with the custom *.mcb suffix 
 	tar czf "$MC_HOME/backup/$BACKUP_NAME.mcb" * > /dev/null 2> /dev/null 
-	if [ $? -le 1 ]; then
+	if [ $? -le 1 ]; then		
+		# Display pre-backup message on server
+		if [ -n "$MESSAGE_POST" ]; then
+			minectl_server_execute say "$MESSAGE_POST"
+		fi
+
 		return 0
 	else
+		# Display failure message on server, if one type of
+		# notification was enabled.
+		if [ -n "$MESSAGE_PRE" -o -n "$MESSAGE_POST" ]; then
+			minectl_server_execute say "WARNING: Attempted backup failed!"
+		fi
+
 		minelib_fail BACKUP_FAILED
 	fi
 }
@@ -1405,7 +1438,8 @@ case $CMD in
 					;;
 					# Assume that we want to run a command of the Java program
 					# iff nothing else applies
-					*)			minectl_server_execute "$CMD" "$@"
+					*)			echo "Executing '$CMD $@' on server '$SERVER_NAME'"
+								minectl_server_execute "$CMD" "$@"
 				esac
 esac
 
