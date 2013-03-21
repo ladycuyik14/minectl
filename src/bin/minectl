@@ -272,14 +272,15 @@ minectl_add_server() {
 			minectl_server_configure "JAR_FILE=$JAR_FILE"
 
 			# Create basic minecraft-specific files
-			touch $SERVER_PROPERTIES $SERVER_OP_LIST $SERVER_WHITE_LIST $SERVER_LOG_FILE $SERVER_EVENT_HANDLERS_DIR 2> /dev/null || minelib_fail CREATE_CFG_FILES_FAILED
+			touch $SERVER_PROPERTIES $SERVER_OP_LIST $SERVER_WHITE_LIST $SERVER_LOG_FILE 2> /dev/null || { cd ..; rm -Rf "$SERVER_NAME"; minelib_fail CREATE_CFG_FILES_FAILED; }
+			mkdir $SERVER_EVENT_HANDLERS_DIR 2> /dev/null || { cd ..; rm -Rf "$SERVER_NAME"; minelib_fail CREATE_CFG_FILES_FAILED; }
 
 			# Create named pipes for the server
 			minelib_mk_fifos 
 		fi
 	# If no name was specified, we cannot create a server
 	else
-		minelib_fail NO_SRV_NAME
+		minelib_fail NO_SRV_NAME || { cd ..; rm -Rf "$SERVER_NAME"; minelib_fail CREATE_CFG_FILES_FAILED; }
 	fi		
 }
 
@@ -1325,24 +1326,32 @@ minectl_server_event() {
 
 	# Add an event to the server
 	minectl_server_event_add() {
-		EVENT_NAME="$1.eh"
+		while (( $# )); do
+			EVENT_NAME="$1.eh"
 
-		if [ -f "$EVENT_HANDLERS_DIR/$EVENT_NAME" ]; then
-			ln -s "$EVENT_HANDLERS_DIR/$EVENT_NAME" "$SERVER_EVENT_HANDLERS_DIR/$EVENT_NAME" 2> /dev/null
-		else
-			minelib_fail NO_SUCH_EVENT $1
-		fi
+			if [ -f "$EVENT_HANDLERS_DIR/$EVENT_NAME" ]; then
+				ln -s "$EVENT_HANDLERS_DIR/$EVENT_NAME" "$SERVER_EVENT_HANDLERS_DIR/$EVENT_NAME" 2> /dev/null
+			else
+				minelib_fail NO_SUCH_EVENT $1
+			fi
+
+			shift
+		done
 	}
 
 	# Add an event to the server
 	minectl_server_event_remove() {
-		EVENT_NAME="$1.eh"
+		while (( $# )); do
+			EVENT_NAME="$1.eh"
 
-		if [ -f "$SERVER_EVENT_HANDLERS_DIR/$EVENT_NAME" ]; then
-			unlink "$SERVER_EVENT_HANDLERS_DIR/$EVENT_NAME" 2> /dev/null
-		else
-			minelib_fail NO_SUCH_EVENT $1
-		fi
+			if [ -f "$SERVER_EVENT_HANDLERS_DIR/$EVENT_NAME" ]; then
+				unlink "$SERVER_EVENT_HANDLERS_DIR/$EVENT_NAME" 2> /dev/null
+			else
+				minelib_fail NO_SUCH_EVENT $1
+			fi
+
+			shift
+		done
 	}
 
 	local CMD="$1"
@@ -1396,9 +1405,24 @@ case $CMD in
 	;;
 	--version)		echo -e "`basename $0`-$VERSION.$ARCH"
 	;;
+	all)			# We want to operate on all servers
+				if [ "$SERVER_NAME" == "all" ]; then
+					THIS="`realpath $0`"
+					RETVAL=0
+
+					for SERVER in `"$THIS" list`; do
+						"$THIS" "$@"
+						RETVAL=$?
+					done
+
+					exit $RETVAL
+				fi
+	;;
 	*)			# If no commands match, we assume, that
 				# the argument is the server's name
 				SERVER_NAME=$CMD
+
+					
 
 				# Change securely to the server's directory
 				minelib_access_server "$SERVER_NAME"
