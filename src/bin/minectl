@@ -1412,7 +1412,7 @@ case $CMD in
 				RETVAL=0
 
 				for SERVER in `"$THIS" list`; do
-					echo "\033[1m$SERVER\033[0m:"
+					echo -e "\033[1m$SERVER\033[0m:"
 					"$THIS" "$SERVER" "$@"
 					SRV_RETVAL=$?
 
@@ -1423,7 +1423,7 @@ case $CMD in
 					fi
 
 					# Print exit state
-					echo "\033[1mreturned\033[0m: $?\n"
+					echo -e "\033[1mreturned\033[0m: $?\n"
 				done
 
 				exit $RETVAL
