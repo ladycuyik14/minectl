@@ -177,7 +177,7 @@ minectl_init() {
 	cd $MC_HOME 2> /dev/null || minelib_fail ACCESS_HOME_DIR_FAILED
 
 	# Check if no servers are configured yet
-	if ( ! minectl_list_servers ); then
+	if ( ! minectl_list_servers > /dev/null ); then
 		minelib_prompt srv_name
 		read SERVER_NAME
 
