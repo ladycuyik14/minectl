@@ -705,33 +705,39 @@ minectl_server_passwd() {
 	# Switch commands
 	while (( $# )); do
 		case "$1" in
-			reload)			minectl_server_passwd_whitelist_reload
+			reload)				minectl_server_passwd_whitelist_reload
+			;;
+			is-whitelisted)		minectl_server_passwd_is_whitelisted $2
+								shift
 			;;
 			add|whitelist)		minectl_server_passwd_whitelist $2
-						shift
+								shift
 			;;
 			remove|blacklist)	minectl_server_passwd_remove $2
-						shift
+								shift
 			;;
-			op)			minectl_server_passwd_op $2
-						shift
+			is-op)				minectl_server_passwd_is_op $2
+								shift
 			;;
-			deop)			minectl_server_passwd_deop $2
-						shift
+			op)					minectl_server_passwd_op $2
+								shift
 			;;
-			status)			minectl_server_passwd_status $2
-						shift
+			deop)				minectl_server_passwd_deop $2
+								shift
 			;;
-			lock)			minectl_server_passwd_lock
+			status)				minectl_server_passwd_status $2
+								shift
 			;;
-			unlock)			minectl_server_passwd_unlock
+			lock)				minectl_server_passwd_lock
+			;;
+			unlock)				minectl_server_passwd_unlock
 			;;
 			""|list|print)		minectl_server_passwd_print
 			;;
 			-h|--help|help)		echo -e "$USAGE" | /usr/bin/less -r
-						exit 0
+								exit 0
 			;;
-			*)			minelib_fail UNKNOWN_PARAM $1
+			*)					minelib_fail UNKNOWN_PARAM $1
 		esac
 		shift
 	done

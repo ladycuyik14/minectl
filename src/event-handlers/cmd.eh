@@ -1,7 +1,7 @@
 #! /bin/bash
-########################################
-# This is an event handler for logging #
-########################################
+########################################################
+# This is an event handler for local command execution #
+########################################################
 
 # Define default arguments
 SERVER_NAME="$1"
