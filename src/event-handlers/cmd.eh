@@ -83,7 +83,7 @@ handle_event() {
 			backup)		# Check if user is operator
 						if ( is_admin "$PLAYER_NAME" ); then
 							/usr/local/bin/minectl $SERVER_NAME exec say "Operator $PLAYER_NAME called for a backup of the server" 
-							/usr/local/bin/minectl $SERVER_NAME passwd backup -m "Creating a backup of the server..." -p "...done"
+							/usr/local/bin/minectl $SERVER_NAME backup -m "Creating a backup of the server..." -p "...done"
 						fi
 			;;
 			*)		echo "Unknown command: $CMD $@" 1>&2
