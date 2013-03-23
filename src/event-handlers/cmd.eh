@@ -30,51 +30,68 @@ handle_event() {
 
 	# The name of the user, calling the command
 	# In Minecraft's output, it's standing in between "<" and ">"
-	USER_NAME="`echo "$VALID_LINE" | cut -d "<" -f 2 | cut -d ">" -f 1`"
+	PLAYER_NAME="`echo "$VALID_LINE" | cut -d "<" -f 2 | cut -d ">" -f 1`"
 
 	# The command line containing
 	# %<command> [arguments]
 	COMMAND_LINE="`echo "$VALID_LINE" | cut -d ">" -f 2- | cut -d "%" -f 2-`"
-
-	# Decode valid commands
-	decode_command() {
+		
+	# Execute valid commands
+	execute_command() {
 		# The first argument is the command itself
 		# the further arguments may be arguments for the command
 		CMD="$1"
 		shift
+		
+		# Results file
+		local TMP_RESULT="`mktemp`"
+		
+		# Check if the user is an admin
+		is_admin() {
+			if ( /usr/local/bin/minectl $SERVER_NAME passwd is-op "$PLAYER_NAME" ); then
+				return 0
+			else
+				/usr/local/bin/minectl $SERVER_NAME exec say "Player $PLAYER_NAME tried to play admin."
+				/usr/local/bin/minectl $SERVER_NAME exec tell "$PLAYER_NAME" "Fool! May the creeper get you!" 
+			fi
+			
+			return 1
+		}
 
+		tell_result() {
+			if [ -f "$TMP_RESULT" ]; then				
+				while read LINE; do
+					/usr/local/bin/minectl "$SERVER_NAME" tell "$PLAYER_NAME" "$LINE"
+				done < "$TMP_RESULT"
+			
+				rm -f "$TMP_RESULT" 2> /dev/null
+			fi
+		}
+		
 		# Switch known commands
 		case $CMD in
-			"")		echo -e "Usage: %<command> [arguments]\nValid commands are: date, uname, uptime, admininfo"
+			""|help)	echo -e "Usage: %<command> [arguments]\nValid commands are: date, uname, uptime, admininfo" > "$TMP_RESULT" 2>&1
 			;;
-			date)		date "$@"
+			date)		date "$@" > "$TMP_RESULT" 2>&1
 			;;
-			uname)		uname "$@"
+			uname)		uname "$@" > "$TMP_RESULT" 2>&1
 			;;
-			uptime)		uptime "$@"
+			uptime)		uptime "$@" > "$TMP_RESULT" 2>&1
 			;;
-			admininfo)	echo -e "Administrator of this server is: coNQP\na.k.a. Richard Neumann\nMelanchthonstraße 7\n30165 Hannover"
+			admininfo)	echo -e "Administrator of this server is: coNQP\na.k.a. Richard Neumann\nMelanchthonstraße 7\n30165 Hannover" > "$TMP_RESULT" 2>&1
 			;;
+			backup)		# Check if user is operator
+						if ( is_admin "$PLAYER_NAME" ); then
+							/usr/local/bin/minectl $SERVER_NAME exec say "Operator $PLAYER_NAME called for a backup of the server" 
+							/usr/local/bin/minectl $SERVER_NAME passwd backup -m "Creating a backup of the server..." -p "...done"
+						fi
 			*)		echo "Unknown command: $CMD $@" 1>&2
 					return 1
 		esac
 	}
-
-	tell_result() {
-		local TMP_FILE="`mktemp`"
-
-		# Decode command and sore 
-		# answer in temporary file
-		decode_command $COMMAND_LINE > "$TMP_FILE" 2>&1
-
-		while read LINE; do
-			"$BIN_DIR"/minectl "$SERVER_NAME" tell "$USER_NAME" "$LINE"
-		done < "$TMP_FILE"
-		
-		rm -f "$TMP_FILE" 2> /dev/null
-	}
-
-	tell_result
+	
+	# Execute the command line
+	execute_command $COMMAND_LINE
 }
 
 CMD=$1
