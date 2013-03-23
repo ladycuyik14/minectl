@@ -83,5 +83,5 @@ shift
 case $CMD in
 	handle)	handle_event "$1" "$2"
 	;;
-	info)	echo -e "\033[1m`basename $0` - INFORMATION\033[0m\n$INFO\n$EXAMPLE\n$MORE\n"
+	info)	echo -e "\033[1m`basename $0 .eh` - INFORMATION\033[0m\n$INFO\n$EXAMPLE\n$MORE\n"
 esac
