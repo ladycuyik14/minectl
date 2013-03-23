@@ -1310,16 +1310,16 @@ case $CMD in
 	;;
 	add)			minectl_add_server "$@"
 	;;
-        jar)			minectl_jar "$@"
+	jar)			minectl_jar "$@"
 	;;
-        events)			minectl_server_event list --all
+	events)			minectl_server_event list --all
 	;;
 	""|help|--help|-h)	case $1 in
 					passwd)		minectl_server_passwd --help
 					;;
 					jar)		minectl_jar --help
 					;;
-					*)	echo -e "$USAGE" | /usr/bin/less -r
+					*)	echo -e "$USAGE"
 				esac
 	;;
 	--version)		echo -e "`basename $0`-$VERSION.$ARCH"
