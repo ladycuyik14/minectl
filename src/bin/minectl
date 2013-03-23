@@ -47,7 +47,7 @@ USAGE="Usage:
 	\033[1mminectl\033[0m \033[3mserver_name\033[0m [\033[1mremove\033[0m | \033[1mrename\033[0m \033[3mnew_name\033[0m]
 	\033[1mminectl\033[0m \033[3mserver_name\033[0m \033[1mpasswd\033[0m [\033[1mlist\033[0m | \033[1mlock\033[0m | \033[1munlock\033[0m | [\033[1mwhitelist\033[0m | \033[1mblacklist\033[0m | \033[1mop\033[0m | \033[1mdeop\033[0m | \033[1mstatus\033[0m] \033[3muser_name\033[0m]
 	\033[1mminectl\033[0m \033[3mserver_name\033[0m [\033[1mconfigure\033[0m | \033[1mproperties\033[0m] [\033[3mvariable\033[0m=\033[3mvalue\033[0m | -\033[3mvariable\033[0m]
-	\033[1mminectl\033[0m \033[3mserver_name\033[0m [\033[1mbackup\033[0m [\033[3mbackup_name\033[0m] | \033[1mrestore\033[0m [\033[1m--clean\033[0m] [\033[3mbackup_name\033[0m] | \033[1mreset\033[0m [\033[1m--erase-config\033[0m]]
+	\033[1mminectl\033[0m \033[3mserver_name\033[0m [[\033[1mbackup\033[0m | \033[1mrestore\033[0m [\033[1m--clean\033[0m]] [\033[3mbackup_name\033[0m] | \033[1mreset\033[0m [\033[1m--erase-config\033[0m]]
 	\033[1mminectl\033[0m \033[3mserver_name\033[0m \033[1mstatus\033[0m 
 	\033[1mminectl\033[0m \033[3mserver_name\033[0m [\033[1mexec\033[0m \033[3mjava_program_command\033[0m | \033[1mplayers\033[0m | \033[1mplayer-count\033[0m]
 	\033[1mminectl\033[0m \033[3mserver_name\033[0m \033[3mjava_program_command\033[0m
