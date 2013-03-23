@@ -85,6 +85,7 @@ handle_event() {
 							/usr/local/bin/minectl $SERVER_NAME exec say "Operator $PLAYER_NAME called for a backup of the server" 
 							/usr/local/bin/minectl $SERVER_NAME passwd backup -m "Creating a backup of the server..." -p "...done"
 						fi
+			;;
 			*)		echo "Unknown command: $CMD $@" 1>&2
 					return 1
 		esac
