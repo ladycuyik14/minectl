@@ -22,12 +22,15 @@
 # TODO: Make all output language-dependent
 # TODO: Outsource common functions to minelib
 
-#######################
-# Version information #
-#######################
+###################################
+# Version and license information #
+###################################
 
 VERSION=6.0
 ARCH=noarch
+AUTHOR="Richard Neumann"
+YEAR="2013"
+LICENSE="GPL ver. 3.0 or later"
 
 ####################
 # Global variables #
@@ -38,28 +41,17 @@ THIS="`realpath $0`"
 
 # Synopsis of usage for user information
 USAGE="Usage:	
-\033[1mminectl\033[0m [\033[1minit\033[0m | \033[1mlist\033[0m [\033[3m--verbose\033[0m, \033[3m--very-verbose\033[0m] | \033[1madd\033[0m \033[3mserver_name\033[0m [\033[1m--jar\033[0m \033[3mjar_file\033[0m]]
-
-\033[1mminectl\033[0m \033[1mjar\033[0m [list | update | upgrade]]
-
-\033[1mminectl\033[0m \033[1mjar\033[0m \033[1mrepository\033[0m [list | add \033[3mURL\033[0m \033[3mname\033[0m | remove \033[3mname\033[0m]
-
-\033[1mminectl\033[0m \033[3mserver_name\033[0m [\033[1mremove\033[0m | \033[1mrename\033[0m \033[3mnew_name\033[0m]
-
-\033[1mminectl\033[0m \033[3mserver_name\033[0m \033[1mpasswd\033[0m [\033[1mlist\033[0m | \033[1mlock\033[0m | \033[1munlock\033[0m | [\033[1mwhitelist\033[0m | \033[1mblacklist\033[0m | \033[1mop\033[0m | \033[1mdeop\033[0m | \033[1mstatus\033[0m] \033[3muser_name\033[0m]
-
-\033[1mminectl\033[0m \033[3mserver_name\033[0m [\033[1mconfigure\033[0m | \033[1mproperties\033[0m] [\033[3mvariable\033[0m=\033[3mvalue\033[0m | -\033[3mvariable\033[0m]
-
-\033[1mminectl\033[0m \033[3mserver_name\033[0m [\033[1mbackup\033[0m [\033[3mbackup_name\033[0m] | \033[1mrestore\033[0m [\033[1m--clean\033[0m] [\033[3mbackup_name\033[0m] | \033[1mreset\033[0m [\033[1m--erase-config\033[0m]]
-
-\033[1mminectl\033[0m \033[3mserver_name\033[0m \033[1mstatus\033[0m 
-
-\033[1mminectl\033[0m \033[3mserver_name\033[0m [\033[1mexec\033[0m \033[3mjava_program_command\033[0m | \033[1mplayers\033[0m | \033[1mplayer-count\033[0m]
-
-\033[1mminectl\033[0m \033[3mserver_name\033[0m \033[3mjava_program_command\033[0m
-
-\033[1mminectl\033[0m [\033[1m--version\033[0m | \033[1m--help\033[0m]
-
+	\033[1mminectl\033[0m [\033[1minit\033[0m | \033[1mlist\033[0m [\033[3m--verbose\033[0m, \033[3m--very-verbose\033[0m] | \033[1madd\033[0m \033[3mserver_name\033[0m [\033[1m--jar\033[0m \033[3mjar_file\033[0m]]
+	\033[1mminectl\033[0m \033[1mjar\033[0m [list | update | upgrade]]
+	\033[1mminectl\033[0m \033[1mjar\033[0m \033[1mrepository\033[0m [list | add \033[3mURL\033[0m \033[3mname\033[0m | remove \033[3mname\033[0m]
+	\033[1mminectl\033[0m \033[3mserver_name\033[0m [\033[1mremove\033[0m | \033[1mrename\033[0m \033[3mnew_name\033[0m]
+	\033[1mminectl\033[0m \033[3mserver_name\033[0m \033[1mpasswd\033[0m [\033[1mlist\033[0m | \033[1mlock\033[0m | \033[1munlock\033[0m | [\033[1mwhitelist\033[0m | \033[1mblacklist\033[0m | \033[1mop\033[0m | \033[1mdeop\033[0m | \033[1mstatus\033[0m] \033[3muser_name\033[0m]
+	\033[1mminectl\033[0m \033[3mserver_name\033[0m [\033[1mconfigure\033[0m | \033[1mproperties\033[0m] [\033[3mvariable\033[0m=\033[3mvalue\033[0m | -\033[3mvariable\033[0m]
+	\033[1mminectl\033[0m \033[3mserver_name\033[0m [\033[1mbackup\033[0m [\033[3mbackup_name\033[0m] | \033[1mrestore\033[0m [\033[1m--clean\033[0m] [\033[3mbackup_name\033[0m] | \033[1mreset\033[0m [\033[1m--erase-config\033[0m]]
+	\033[1mminectl\033[0m \033[3mserver_name\033[0m \033[1mstatus\033[0m 
+	\033[1mminectl\033[0m \033[3mserver_name\033[0m [\033[1mexec\033[0m \033[3mjava_program_command\033[0m | \033[1mplayers\033[0m | \033[1mplayer-count\033[0m]
+	\033[1mminectl\033[0m \033[3mserver_name\033[0m \033[3mjava_program_command\033[0m
+	\033[1mminectl\033[0m [\033[1m--version\033[0m | \033[1m--help\033[0m]
 "
 
 ######################################################################################################################
@@ -1314,7 +1306,7 @@ case $CMD in
 	;;
 	events)			minectl_server_event list --all
 	;;
-	""|help|--help|-h)	case $1 in
+	help|--help|-h)	case $1 in
 					passwd)		minectl_server_passwd --help
 					;;
 					jar)		minectl_jar --help
@@ -1322,7 +1314,9 @@ case $CMD in
 					*)	echo -e "$USAGE"
 				esac
 	;;
-	--version)		echo -e "`basename $0`-$VERSION.$ARCH"
+	"")				minelib_fail "$USAGE"
+	;;
+	--version)		echo -e "`basename $0`-$VERSION.$ARCH - Copyright $YEAR: Richard Neumann under the terms of the $LICENSE"
 	;;
 	all)			# We want to operate on all servers
 				RETVAL=0
