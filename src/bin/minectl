@@ -438,7 +438,7 @@ minectl_server_passwd() {
 	# Check whether a certain user is white-listed
 	minectl_server_passwd_is_whitelisted() {
 		minectl_server_passwd_valid_user "$1"
-		if ( minelib_fileop -f -i contains "$1" "$SERVER_WHITE_LIST" ); then
+		if ( minelib_fileop -f -i contains "$1" "$SERVER_WHITE_LIST" > /dev/null 2 /dev/null ); then
 			minelib_notify "User \033[1m$1\033[0m is \033[1mwhitelisted\033[0m on server \033[1m$SERVER_NAME\033[0m"
 		else
 			minelib_err  "User \033[1m$1\033[0m is \033[1mnot whitelisted\033[0m on server \033[1m$SERVER_NAME\033[0m"
@@ -448,7 +448,7 @@ minectl_server_passwd() {
 	# Check whether a certain user is an operator
 	minectl_server_passwd_is_op() {
 		minectl_server_passwd_valid_user "$1"
-		if ( minelib_fileop -f -i contains "$1" "$SERVER_OP_LIST" ); then
+		if ( minelib_fileop -f -i contains "$1" "$SERVER_OP_LIST" > /dev/null 2 /dev/null ); then
 			minelib_notify "User \033[1m$1\033[0m is \033[1man operator\033[0m on server \033[1m$SERVER_NAME\033[0m."
 		else
 			minelib_err  "User \033[1m$1\033[0m is \033[1mnot an operator\033[0m on server \033[1m$SERVER_NAME\033[0m."
@@ -573,12 +573,18 @@ minectl_server_passwd() {
 		minectl_server_properties "online-mode=false" "white-list=false" > /dev/null && minelib_notify SRV_UNLOCKED || minelib_fail SRV_UNLOCKING_FAILED
 	}
 
+	# Error flag
+	local ERROR=false
+	
 	# Switch commands
 	while (( $# )); do
 		case "$1" in
 			reload)				minectl_server_passwd_whitelist_reload
 			;;
 			is-whitelisted)		minectl_server_passwd_is_whitelisted $2
+								if [ $? -ne 0 ]; then
+									ERROR=true
+								fi
 								shift
 			;;
 			add|whitelist)		minectl_server_passwd_whitelist $2
@@ -588,6 +594,9 @@ minectl_server_passwd() {
 								shift
 			;;
 			is-op)				minectl_server_passwd_is_op $2
+								if [ $? -ne 0 ]; then
+									ERROR=true
+								fi
 								shift
 			;;
 			op)					minectl_server_passwd_op $2
@@ -609,6 +618,10 @@ minectl_server_passwd() {
 		esac
 		shift
 	done
+	
+	if ( $ERROR ); then
+		return 1
+	fi
 }
 
 # Create a backup of the server
