@@ -141,7 +141,7 @@ minelib_err () {
 			fi
 		fi
 	else
-		echo -e "[   minelib_err or   ]" 1>&2
+		echo -e "[   error   ]" 1>&2
 		return 1
 	fi
 }
@@ -149,7 +149,7 @@ minelib_err () {
 # New function for displaying fails
 minelib_fail() {
 	if [ -n "$1" ]; then
-		minelib_err  $*
+		minelib_err  "$1" "$2"
 		exit $?
 	else
 		echo -e "[  failed   ]" 1>&2
