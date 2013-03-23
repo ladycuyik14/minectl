@@ -88,6 +88,8 @@ handle_event() {
 			*)		echo "Unknown command: $CMD $@" 1>&2
 					return 1
 		esac
+		
+		tell_result
 	}
 	
 	# Execute the command line
