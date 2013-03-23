@@ -418,38 +418,6 @@ minectl_server_passwd() {
 	# Set temporary file
 	local TMP="`mktemp`"
 
-	# Usage information
-	local USAGE="Usage: \033[1m`basename $0`\033[0m \033[3mserver_name\033[0m \033[1mpasswd\033[0m [\033[3mCOMMAND\033[0m \033[4muser_name\033[0m]
-
-\033[1mCOMMANDS\033[0m
-	\033[1madd\033[0m, \033[1mwhitelist\033[0m \033[3muser_name\033[0m
-		Add \033[3muser_name\033[0m to the white-list
-
-	\033[1mremove\033[0m, \033[1mblacklist\033[0m \033[3muser_name\033[0m
-		Remove \033[3muser_name\033[0m from white-list
-
-	\033[1mop\033[0m \033[3muser_name\033[0m
-		Add \033[3muser_name\033[0m to the ops list
-
-	\033[1mdeop\033[0m \033[3muser_name\033[0m
-		Remove \033[3muser_name\033[0m from the ops list
-
-	\033[1mstatus\033[0m \033[3muser_name\033[0m
-		List status of \033[3muser_name\033[0m
-
-	\033[1mprint\033[0m, \033[1mlist\033[0m
-		Print current status, white- and ops-list
-
-	\033[1mlock\033[0m
-		Lock server by putting it into online mode and enabling the white-list (recommended)
-
-	\033[1munlock\033[0m
-		Unlock server by putting it into offline mode an disabling the white-list (not recommended)
-
-	\033[1mhelp\033[0m
-		Print this information
-"
-
 	####################
 	# Passwd functions #
 	####################
@@ -637,9 +605,6 @@ minectl_server_passwd() {
 			;;
 			""|list|print)		minectl_server_passwd_print
 			;;
-			-h|--help|help)		echo -e "$USAGE" | /usr/bin/less -r
-								exit 0
-			;;
 			*)					minelib_fail UNKNOWN_PARAM $1
 		esac
 		shift
@@ -792,27 +757,6 @@ minectl_jar() {
 	# Set temporary repository for re-formatted repo list
 	local TMP_REPO_LIST="`mktemp`"
 
-	# Usage information
-	local USAGE="Usage: \033[1m`basename $0`\033[0m \033[1mjar\033[0m [\033[3mCOMMAND\033[0m]
-
-\033[1mCOMMANDS\033[0m
-	\033[1mlist\033[0m or \033[1mls\033[0m [\033[1m--all\033[0m]
-		List available JAR files
- 
-	\033[1mupdate\033[0m [\033[3mREPOSITORY\033[0m]
-		Update JAR file repository
- 
-	\033[1mupgrade\033[0m [\033[3mREPOSITORY\033[0m]
-		Upgrade used JAR files to the latest ones
-
-	\033[1mrepository\033[0m or \033[1mrepo\033[0m
-		Perform operations on the repositories
-		See \033[1m`basename $0` jar repository --help\033[0m for further information.
-
-	\033[1m--help\033[0m, \033[1m-h\033[0m or \033[1mhelp\033[0m
-		Print this information
-"
-	
 	##################
 	# Repo functions #
 	##################
@@ -828,22 +772,6 @@ minectl_jar() {
 
 	# Operate on the repository
 	minectl_jar_repository() {
-		# Usage information
-		local USAGE="Usage: \033[1m`basename $0`\033[0m \033[1mjar\033[0m \033[1mrepository\033[0m [\033[3mCOMMAND\033[0m]
-
-\033[1mCOMMANDS\033[0m
-	\033[1mlist\033[0m or \033[1mls\033[0m [\033[1m--verbose\033[0m]
-		List active repositories
-
-	\033[1madd\033[0m \033[3mURL\033[0m \033[3mname\033[0m
-		Add a repository
-
-	\033[1mremove\033[0m, \033[1mrm\033[0m or \033[1mdelete\033[0m \033[3mname\033[0m
-		Remove a repository
-
-	\033[1m--help\033[0m, \033[1m-h\033[0m or \033[1mhelp\033[0m
-		Print this information
-"
 		# List available repositories
 		minectl_jar_repository_list() {
 			# Parse our repo list
@@ -926,9 +854,6 @@ minectl_jar() {
 			add)			minectl_jar_repository_add "$@"
 			;;
 			remove|delete|rm)	minectl_jar_repository_remove "$@"
-			;;
-			--help|-h|help)		echo -e "$USAGE" | /usr/bin/less -r
-						exit 0
 			;;
 			*)			minelib_fail UNKNOWN_PARAM $CMD
 		esac
@@ -1092,9 +1017,6 @@ minectl_jar() {
 		upgrade)		minectl_jar_upgrade "$@"
 		;;
 		repository|repo)	minectl_jar_repository "$@"
-		;;
-		--help|-h|help)		echo -e "$USAGE" | /usr/bin/less -r
-					exit 0
 		;;
 		*)			minelib_err  UNKNOWN_PARAM $1
 					exit 1
@@ -1306,13 +1228,7 @@ case $CMD in
 	;;
 	events)			minectl_server_event list --all
 	;;
-	help|--help|-h)	case $1 in
-					passwd)		minectl_server_passwd --help
-					;;
-					jar)		minectl_jar --help
-					;;
-					*)	echo -e "$USAGE"
-				esac
+	help|--help|-h)	echo -e "$USAGE"
 	;;
 	"")				minelib_fail "$USAGE"
 	;;
