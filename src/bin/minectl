@@ -1155,7 +1155,7 @@ minectl_server_event() {
 		esac
 
 		for EVENT_HANDLER in `ls *.eh 2> /dev/null`; do
-			"$EVENT_HANDLER" info
+			"./$EVENT_HANDLER" info
 		done
 	}
 
