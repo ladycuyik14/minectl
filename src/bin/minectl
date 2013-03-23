@@ -1164,8 +1164,9 @@ minectl_server_event() {
 
 			if [ -f "$EVENT_HANDLERS_DIR/$EVENT_NAME" ]; then
 				ln -s "$EVENT_HANDLERS_DIR/$EVENT_NAME" "$SERVER_EVENT_HANDLERS_DIR/$EVENT_NAME" 2> /dev/null
+				"$EVENT_HANDLERS_DIR/$EVENT_NAME" info
 			else
-				minelib_fail NO_SUCH_EVENT $1
+				minelib_fail NO_SUCH_EVENT "$1"
 			fi
 
 			shift
