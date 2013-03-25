@@ -34,25 +34,25 @@ install_files() {
 	# Install appropriate files
 	mkdir -p /usr/local/bin
 
-	install -o minectl -g minectl -m 775 -t /usr/local/bin bin/*
+	install -o root -g root -m 775 -t /usr/local/bin bin/*
+	install -o root -g root -m 775 -d /usr/local/libexec/minectl
+	install -o root -g root -m 775 -t /usr/local/libexec/minectl libexec/*
+	install -o root -g root -m 775 -t /usr/local/libexec/minectl libexec/.[^.]*
+	install -o root -g root -m 775 -d /usr/local/libexec/minectl/jar
+	install -o root -g root -m 775 -d /usr/local/libexec/minectl/jar-repo
+	install -o root -g root -m 775 -d /usr/local/libexec/minectl/lang
+	install -o root -g root -m 775 -t /usr/local/libexec/minectl/lang lang/*
 	install -o minectl -g minectl -m 775 -d /home/minectl/backup
 	install -o minectl -g minectl -m 775 -d /home/minectl/servers
 	install -o minectl -g minectl -m 775 -d /home/minectl/event-handlers
 	install -o minectl -g minectl -m 775 -t /home/minectl/event-handlers event-handlers/*
-	install -o minectl -g minectl -m 775 -d /usr/local/libexec/minectl
-	install -o minectl -g minectl -m 775 -t /usr/local/libexec/minectl libexec/*
-	install -o minectl -g minectl -m 775 -t /usr/local/libexec/minectl libexec/.[^.]*
-	install -o minectl -g minectl -m 775 -d /usr/local/libexec/minectl/jar
-	install -o minectl -g minectl -m 775 -d /usr/local/libexec/minectl/jar-repo
-	install -o minectl -g minectl -m 775 -d /usr/local/libexec/minectl/lang
-	install -o minectl -g minectl -m 775 -t /usr/local/libexec/minectl/lang lang/*
 
 	# Install system services
 	if [ -d /lib/systemd/system ]; then
-		cp service/"minecraft@.service" /lib/systemd/system/
+		install -o root -g root -m 775 -t /lib/systemd/system/ service/"minecraft@.service"
 		echo "Systemd service template '/lib/systemd/system/minecraft@.service' installed"
 	else
-		cp service/minecraft /etc/init.d/
+		install -o root -g root -m 775 -t /etc/init.d/ service/minecraft
 		echo "Init service '/etc/init.d/minecraft' installed"
 	fi
 
