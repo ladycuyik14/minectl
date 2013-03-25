@@ -1255,7 +1255,7 @@ case $CMD in
 
 				for SERVER in `"$THIS" list`; do
 					echo -e "\033[1m$SERVER\033[0m:"
-					"$THIS" "$SERVER" "$@"
+					"$THIS" "$SERVER" $@
 					SRV_RETVAL=$?
 
 					# Indicate error if at lest one server 
