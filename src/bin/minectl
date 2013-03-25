@@ -30,7 +30,7 @@ VERSION=6.0
 ARCH=noarch
 AUTHOR="Richard Neumann"
 YEAR="2013"
-LICENSE="GPL ver. 3.0 or later"
+LICENSE="GPL v. 3.0 or later"
 
 ####################
 # Global variables #
@@ -1244,11 +1244,11 @@ case $CMD in
 	;;
 	events)			minectl_server_event list --all
 	;;
-	help|--help|-h)	echo -e "$USAGE"
+	help|--help|-h)		echo -e "$USAGE"
 	;;
-	"")				minelib_fail "$USAGE"
+	"")			minelib_fail "$USAGE"
 	;;
-	--version)		echo -e "`basename $0`-$VERSION.$ARCH - Copyright $YEAR: Richard Neumann under the terms of the $LICENSE"
+	--version)		echo -e "`basename $0`-$VERSION.$ARCH - Copyright $YEAR: $AUTHOR under the terms of the $LICENSE"
 	;;
 	all)			# We want to operate on all servers
 				RETVAL=0
