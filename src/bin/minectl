@@ -635,13 +635,14 @@ minectl_server_backup() {
 	while (( $# )); do
 		case $1 in
 			--message-pre|--message|-m)	MESSAGE_PRE="$2"
-							shift 2
+										shift
 			;;
 			--message-post|-p)		MESSAGE_POST="$2"
-							shift 2
+									shift
 			;;
-			*)				break
+			*)						minelib_err UNKNOWN_PARAM $1
 		esac
+		shift
 	done
 		
 	# If there is still an argument (or more) remaining
@@ -651,24 +652,30 @@ minectl_server_backup() {
 	fi
 
 	# Display pre-backup message on server
+	# XXX: Execute in a shubshell, so that a failure in
+	# minectl_server_execute won't affect the backup
 	if [ -n "$MESSAGE_PRE" ]; then
-		minectl_server_execute say "$MESSAGE_PRE"
+		( minectl_server_execute say "$MESSAGE_PRE" )
 	fi
 	
 	# Create the backup as a gzip compressed tar archive, but with the custom *.mcb suffix 
 	tar czf "$MC_HOME/backup/$BACKUP_NAME.mcb" * > /dev/null 2> /dev/null 
 	if [ $? -le 1 ]; then		
 		# Display pre-backup message on server
+		# XXX: Execute in a shubshell, so that a failure in
+		# minectl_server_execute won't affect the backup
 		if [ -n "$MESSAGE_POST" ]; then
-			minectl_server_execute say "$MESSAGE_POST"
+			( minectl_server_execute say "$MESSAGE_POST" )
 		fi
 
 		return 0
 	else
 		# Display failure message on server, if one type of
 		# notification was enabled.
+		# XXX: Execute in a shubshell, so that a failure in
+		# minectl_server_execute won't affect the backup
 		if [ -n "$MESSAGE_PRE" -o -n "$MESSAGE_POST" ]; then
-			minectl_server_execute say "WARNING: Attempted backup failed!"
+			( minectl_server_execute say "WARNING: Attempted backup failed!" )
 		fi
 
 		minelib_fail BACKUP_FAILED
@@ -1255,7 +1262,7 @@ case $CMD in
 
 				for SERVER in `"$THIS" list`; do
 					echo -e "\033[1m$SERVER\033[0m:"
-					"$THIS" "$SERVER" $@
+					"$THIS" "$SERVER" "$@"
 					SRV_RETVAL=$?
 
 					# Indicate error if at lest one server 
@@ -1265,7 +1272,7 @@ case $CMD in
 					fi
 
 					# Print exit state
-					echo -e "\033[1mreturned\033[0m: $?\n"
+					echo -e "\033[1mreturned\033[0m: $SRV_RETVAL\n"
 				done
 
 				exit $RETVAL
