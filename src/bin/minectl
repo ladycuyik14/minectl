@@ -161,19 +161,20 @@ minectl_add_server() {
 		# Default event handlers
 		local EVENT_HANDLERS="log cmd"
 		
-		minectl_server_configure "server-port=$SERVER_PORT"
-		minectl_server_event add $EVENT_HANDLERS
+		minectl_server_configure "server-port=$SERVER_PORT" > /dev/null
+		minectl_server_event add $EVENT_HANDLERS > /dev/null
 	}
 	
 	# Switch options
 	while (( $# )); do
 		case $1 in
-			--jar)			JAR_FILE=$2
-							shift
+			--jar)					JAR_FILE=$2
+									shift
 			;;
-			--defaults)		DEFAULTS=true
+			--defaults)				DEFAULTS=true
 			;;
-			--configure)	CONFIG="$@"
+			--configure|--config)	CONFIG="$@"
+									break
 			;;
 			*)				minelib_err UNKNOWN_PARAM $1
 		esac
@@ -214,14 +215,14 @@ minectl_add_server() {
 			fi
 
 			# Set the specified Jar file
-			minectl_server_configure "JAR_FILE=$JAR_FILE"
+			minectl_server_configure "JAR_FILE=$JAR_FILE" > /dev/null
 			
 			# Set the default configuration if wanted
 			$DEFAULTS && minectl_add_server_defaults
 			
 			# Set further initial custom configuration if specified
 			if [ -n "$CONFIG" ]; then
-				minectl_server_configure $CONFIG
+				minectl_server_configure $CONFIG > /dev/null
 			fi
 
 			# Create basic minecraft-specific files
