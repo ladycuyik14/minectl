@@ -37,13 +37,14 @@ install_files() {
 	install -o root -g root -m 775 -t /usr/local/bin bin/*
 	install -o root -g root -m 775 -d /usr/local/libexec/minectl
 	install -o root -g root -m 775 -t /usr/local/libexec/minectl libexec/*
-	install -o minectl -g minectl -m 775 -t /usr/local/libexec/minectl libexec/.[^.]*
-	install -o minectl -g minectl -m 775 -d /usr/local/libexec/minectl/lang
-	install -o minectl -g minectl -m 775 -t /usr/local/libexec/minectl/lang lang/*
-	install -o minectl -g minectl -m 775 -d /usr/local/libexec/minectl/jar
-	install -o minectl -g minectl -m 775 -d /usr/local/libexec/minectl/jar-repo
+	install -o minectl -g minectl -m 775 -d /home/minectl/lang
+	install -o minectl -g minectl -m 775 -t /home/minectl/lang lang/*
+	install -o minectl -g minectl -m 775 -d /home/minectl/jar
+	install -o minectl -g minectl -m 775 -d /home/minectl/jar/repo
+	install -o minectl -g minectl -m 775 -t /home/minectl/jar/repo jar/repo/.[^.]*
 	install -o minectl -g minectl -m 775 -d /home/minectl/backup
 	install -o minectl -g minectl -m 775 -d /home/minectl/servers
+	install -o minectl -g minectl -m 775 -t /home/minectl/servers servers/.[^.]*
 	install -o minectl -g minectl -m 775 -d /home/minectl/event-handlers
 	install -o minectl -g minectl -m 775 -t /home/minectl/event-handlers event-handlers/*
 

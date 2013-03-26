@@ -90,7 +90,7 @@ source /usr/local/libexec/minectl/minelib 2> /dev/null || { echo "Could not load
 ###################################
 # Import messages and error codes #
 ###################################
-source $LIB_DIR/lang/default.lang 2> /dev/null || minelib_fail "Language files could not be loaded from `dirname $0`/default.lang"
+source /home/minectl/lang/default.lang 2> /dev/null || minelib_fail "Language files could not be loaded from `dirname $0`/default.lang"
 source $LIB_DIR/errcodes 2> /dev/null || minelib_fail "minelib_err or codes could not be loaded from `dirname $0`/minelib_err codes"
 
 ######################################################################################################################
@@ -211,7 +211,7 @@ minectl_add_server() {
 
 			# If JAR file was not specified, let the user select one iteractively
 			if [ -z "$JAR_FILE" ]; then
-				if ( jar list ); then
+				if ( minectl_jar list ); then
 					minelib_prompt SELECT_JAR_FILE
 					read JAR_FILE
 				# ...and exit if we don't have any
@@ -831,9 +831,6 @@ minectl_server_reset() {
 
 # Manage the JAR files
 minectl_jar() {
-	# Define repository list
-	local REPO_LIST="$LIB_DIR/.repolist"
-
 	# Set temporary repository for re-formatted repo list
 	local TMP_REPO_LIST="`mktemp`"
 

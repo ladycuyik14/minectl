@@ -34,23 +34,23 @@ export MC_HOME="/home/$MC_USER"
 # The directory containing the servers
 export SERVERS_DIR="$MC_HOME/servers"
 
+# JARs' directory
+export JAR_DIR="$MC_HOME/jar"
+
+# JARs' repository
+export JAR_REPO="$JAR_DIR/repo"
+
+# Define repository list
+export REPO_LIST="$JAR_REPO/.repolist"
+
 # Name of the event scripts
 export EVENT_HANDLERS_DIR="$MC_HOME/event-handlers"
-
-# The shared library's path
-export MC_LIB="$LIB_DIR/minelib"
 
 # Binaries' directory
 export BIN_DIR="/usr/local/bin"
 
 # Library directory
 export LIB_DIR="/usr/local/libexec/$MC_USER"
-
-# JARs' directory
-export JAR_DIR="$LIB_DIR/jar"
-
-# JARs' repository
-export JAR_REPO="$LIB_DIR/jar-repo"
 
 ### Paths relative to server ###
 
