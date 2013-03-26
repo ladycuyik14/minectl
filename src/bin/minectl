@@ -54,6 +54,32 @@ USAGE="Usage:
 	\033[1mminectl\033[0m [\033[1m--version\033[0m | \033[1m--help\033[0m]
 "
 
+# Get a list of ports that are in use
+minectl_ports_in_use() {
+	local PORTS_IN_USE=""
+	
+	for SERVER in `minectl_list_servers`; do
+		PORTS_IN_USE="$PORTS_IN_USE `minectl $SERVER configure 2> /dev/null | grep "server-port=" 2> /dev/null | cut -d "=" -f 2> /dev/null`"
+	done
+	
+	echo "$PORTS_IN_USE"
+}
+
+# Find a port not used by any existing server
+minectl_server_get_free_port() {
+	local PORT=25565
+	
+	for PORT_IN_USE in `minectl_ports_in_use`; do
+		if [ $PORT -eq $PORT_IN_USE ]; then
+			PORT=$(($PORT+1))
+		else
+			break
+		fi
+	done
+	
+	echo "$PORT"
+}
+		
 ######################################################################################################################
 
 #######################
@@ -114,29 +140,42 @@ minectl_init() {
 
 # Add a server
 minectl_add_server() {
-	# TODO: Ask for MOTD on creation
-
-	# Set the server's configuration defaults
-	minectl_add_server_defaults() {
-		# TODO: Automatically configure unused port
-		# TODO: Automatically activate default event handlers
-		:
-	}
-
 	# First parameter is the server name
 	local SERVER_NAME=$1
 	shift
 
 	# JAR file to be used
 	local JAR_FILE=
+	
+	# Flag whether to set server defaults
+	local DEFAULTS=false
+	
+	# Server configuration options
+	local CONFIG=
 
+	# Set the server's configuration defaults
+	minectl_add_server_defaults() {
+		# Default server port
+		local SERVER_PORT=`minectl_server_get_free_port`
+		
+		# Default event handlers
+		local EVENT_HANDLERS="log cmd"
+		
+		minectl_server_configure "server-port=$SERVER_PORT"
+		minectl_server_event add $EVENT_HANDLERS
+	}
+	
 	# Switch options
 	while (( $# )); do
 		case $1 in
-			--jar)	JAR_FILE=$2
-				shift
+			--jar)			JAR_FILE=$2
+							shift
 			;;
-			*)	minelib_err UNKNOWN_PARAM $1
+			--defaults)		DEFAULTS=true
+			;;
+			--configure)	CONFIG="$@"
+			;;
+			*)				minelib_err UNKNOWN_PARAM $1
 		esac
 		shift
 	done
@@ -174,7 +213,16 @@ minectl_add_server() {
 				fi
 			fi
 
+			# Set the specified Jar file
 			minectl_server_configure "JAR_FILE=$JAR_FILE"
+			
+			# Set the default configuration if wanted
+			$DEFAULTS && minectl_add_server_defaults
+			
+			# Set further initial custom configuration if specified
+			if [ -n "$CONFIG" ]; then
+				minectl_server_configure $CONFIG
+			fi
 
 			# Create basic minecraft-specific files
 			touch $SERVER_PROPERTIES $SERVER_OP_LIST $SERVER_WHITE_LIST $SERVER_LOG_FILE 2> /dev/null || { cd ..; rm -Rf "$SERVER_NAME"; minelib_fail CREATE_CFG_FILES_FAILED; }

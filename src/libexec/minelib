@@ -186,9 +186,9 @@ minelib_fileop() {
 	# Check if a certain string is contained in a file
 	minelib_fileop_contains() {
 		if ( $BEGINS_WITH && $ENDS_WITH ); then
-			$GREP -E "^$PATTERN[[:blank:]]*$" "$FILE" 2> /dev/null
+			$GREP -E "^[[:blank:]]*$PATTERN[[:blank:]]*$" "$FILE" 2> /dev/null
 		elif ( $BEGINS_WITH ); then
-			$GREP ^"$PATTERN" "$FILE" 2> /dev/null
+			$GREP "^[[:blank:]]*$PATTERN" "$FILE" 2> /dev/null
 		elif ( $ENDS_WITH ); then
 			$GREP -E "$PATTERN[[:blank:]]*$" "$FILE" 2> /dev/null
 		else
