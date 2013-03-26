@@ -58,7 +58,7 @@ install_files() {
 	fi
 
 	# Set EN_us as default language
-	cd /usr/local/libexec/minectl/lang
+	cd /home/minectl/lang
 	ln -sf EN_us.lang default.lang
 
 	# Add binaries' path to the users's PATH variable
