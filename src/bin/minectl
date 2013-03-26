@@ -153,6 +153,9 @@ minectl_add_server() {
 	# Server configuration options
 	local CONFIG=
 
+	# Server properties options
+	local PROPERTIES=
+	
 	# Set the server's configuration defaults
 	minectl_add_server_defaults() {
 		# Default server port
@@ -161,7 +164,7 @@ minectl_add_server() {
 		# Default event handlers
 		local EVENT_HANDLERS="log cmd"
 		
-		minectl_server_configure "server-port=$SERVER_PORT" > /dev/null
+		minectl_server_properties "server-port=$SERVER_PORT" > /dev/null
 		minectl_server_event add $EVENT_HANDLERS > /dev/null
 	}
 	
@@ -173,10 +176,13 @@ minectl_add_server() {
 			;;
 			--defaults)				DEFAULTS=true
 			;;
-			--configure|--config)	CONFIG="$@"
-									break
+			--configure|--config)	CONFIG="$2"
+									shift
 			;;
-			*)				minelib_err UNKNOWN_PARAM $1
+			--properties|--props)	PROPERTIES="$2"
+									shift
+			;;
+			*)						minelib_err UNKNOWN_PARAM $1
 		esac
 		shift
 	done
@@ -225,6 +231,11 @@ minectl_add_server() {
 				minectl_server_configure $CONFIG > /dev/null
 			fi
 
+			# Set further initial custom properties if specified
+			if [ -n "$PROPERTIES" ]; then
+				minectl_server_properties $PROPERTIES > /dev/null
+			fi
+			
 			# Create basic minecraft-specific files
 			touch $SERVER_PROPERTIES $SERVER_OP_LIST $SERVER_WHITE_LIST $SERVER_LOG_FILE 2> /dev/null || { cd ..; rm -Rf "$SERVER_NAME"; minelib_fail CREATE_CFG_FILES_FAILED; }
 			mkdir $SERVER_EVENT_HANDLERS_DIR 2> /dev/null || { cd ..; rm -Rf "$SERVER_NAME"; minelib_fail CREATE_CFG_FILES_FAILED; }
