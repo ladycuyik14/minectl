@@ -78,7 +78,7 @@ handle_event() {
 			;;
 			uptime)		uptime "$@" > "$TMP_RESULT" 2>&1
 			;;
-			admininfo)	echo -e "Administrator of this server is: coNQP\na.k.a. Richard Neumann\nMelanchthonstraße 7\n30165 Hannover" > "$TMP_RESULT" 2>&1
+			admininfo)	echo -e "Administrator of this server is: <ADMIN_NAME>" > "$TMP_RESULT" 2>&1
 			;;
 			backup)		# Check if user is operator
 						if ( is_admin "$PLAYER_NAME" ); then
