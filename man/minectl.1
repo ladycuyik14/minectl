@@ -2,7 +2,7 @@
 .SH "NAME"
 minectl \- a Minecraft (TM) server controller.
 .SH "SYNOPSIS"
-\fBminectl\fR [\fBinit\fR | \fBlist\fR [\fI\-\-verbose\fR, \fI\-\-very\-verbose\fR] | \fBadd\fR \fIserver_name\fR [\fB\-\-jar\fR \fIjar_file\fR]]
+\fBminectl\fR [\fBinit\fR | \fBlist\fR [\fI\-\-verbose\fR, \fI\-\-very\-verbose\fR] | \fBadd\fR \fIserver_name\fR [\fB\-\-jar\fR \fIjar_file\fR] | \fBevents\fR ]
 
 \fBminectl\fR \fBjar\fR [list | update | upgrade]]
 
@@ -15,6 +15,8 @@ minectl \- a Minecraft (TM) server controller.
 \fBminectl\fR \fIserver_name\fR [\fBconfigure\fR | \fBproperties\fR] [\fIvariable\fR=\fIvalue\fR | \-\fIvariable\fR]
 
 \fBminectl\fR \fIserver_name\fR [[\fBbackup\fR | \fBrestore\fR [\fB\-\-clean\fR]] [\fIbackup_name\fR] | \fBreset\fR [\fB\-\-erase\-config\fR]]
+
+\fBminectl\fR \fIserver_name\fR \fBevent\fR  [\fBlist\fR | \fBadd\fR \fIname\fR | \fBremove\fR \fIname\fR]
 
 \fBminectl\fR \fIserver_name\fR \fBstatus\fR 
 
@@ -69,6 +71,9 @@ Add a new server, specifying its unique name. You can use the \fB\-\-jar\fR \fIj
 .TP 
 \fBjar\fR [\fIJar Options\fR]
 Perform operations regarding the Jar file management.
+.TP 
+\fBevents\fR
+List available event handlers.
 .TP 
 \fIserver_name\fR [\fIServer Options\fR]
 Perform operations on specific servers.
@@ -126,6 +131,9 @@ Restore a backup of the server. Use the \-\-clean switch to erase the current se
 .TP 
 \fBreset\fR [\fB\-\-erase\-config\fR]
 Reset the server to its initial state. This means, removing all world data. You can also let it remove the server's configuration by using the \fB\-\-erase\-config\fR switch.
+.TP 
+\fBevent \fR  [\fBlist\fR | \fBadd\fR \fIname\fR | \fBremove\fR \fIname\fR]
+Manage event handlers on a specific server. Used to list enabled event handlers, add event handlers and remove event handlers.
 .TP 
 \fBstatus\fR
 Determine status of the server by querying the respective system service.
