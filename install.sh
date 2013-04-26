@@ -34,6 +34,7 @@ install_files() {
 	# Install appropriate files
 	mkdir -p /usr/local/bin
 
+	install -o root -g root -m 775 -t /usr/local/share/man/man1 man/minectl.1
 	install -o root -g root -m 775 -t /usr/local/bin bin/*
 	install -o root -g root -m 775 -d /usr/local/libexec/minectl
 	install -o root -g root -m 775 -t /usr/local/libexec/minectl libexec/*
@@ -74,6 +75,7 @@ uninstall_files() {
 	rm -f /etc/init.d/minecraft
 	rm -f "/lib/systemd/system/minecraft@.service"
 	rm -f "/lib/systemd/system/minemon@.service"
+	rm -f /usr/local/share/man/man1/minectl.1
 }
 
 # Disable and stop minectl's services
@@ -88,6 +90,8 @@ disable_services() {
 		echo "Systemd services uninstalled"
 	else
 		chkconfig minecraft off
+		rm -f /etc/minectl.servers
+		rm -f /tmp/minectl.servers
 		echo "Init service uninstalled"
 	fi
 }
