@@ -16,7 +16,7 @@ minectl \- a Minecraft (TM) server controller.
 
 \fBminectl\fR \fIserver_name\fR [[\fBbackup\fR | \fBrestore\fR [\fB\-\-clean\fR]] [\fIbackup_name\fR] | \fBreset\fR [\fB\-\-erase\-config\fR]]
 
-\fBminectl\fR \fIserver_name\fR \fBevent\fR  [\fBlist\fR | \fBenable\fR \fIevent_handler\fR | \fBdisable\fR \fIevent_handler\fR]
+\fBminectl\fR \fIserver_name\fR \fBevent\fR  [\fBlist\fR | [\fBenable\fR | \fBdisable\fR] \fIevent_handler\fR]
 
 \fBminectl\fR \fIserver_name\fR \fBstatus\fR 
 
@@ -132,7 +132,7 @@ Restore a backup of the server. Use the \-\-clean switch to erase the current se
 \fBreset\fR [\fB\-\-erase\-config\fR]
 Reset the server to its initial state. This means, removing all world data. You can also let it remove the server's configuration by using the \fB\-\-erase\-config\fR switch.
 .TP 
-\fBevent \fR  [\fBlist\fR | \fBenable\fR \fIevent_handler\fR | \fBdisable\fR \fIevent_handler\fR]
+\fBevent \fR [\fBlist\fR | [\fBenable\fR | \fBdisable\fR] \fIevent_handler\fR]
 Manage event handlers on a specific server. Used to list, enable and disable event handlers.
 .TP 
 \fBstatus\fR
