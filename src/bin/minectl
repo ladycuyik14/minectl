@@ -41,13 +41,14 @@ THIS="`realpath $0`"
 
 # Synopsis of usage for user information
 USAGE="Usage:	
-	\033[1mminectl\033[0m [\033[1minit\033[0m | \033[1mlist\033[0m [\033[3m--verbose\033[0m, \033[3m--very-verbose\033[0m] | \033[1madd\033[0m \033[3mserver_name\033[0m [\033[1m--jar\033[0m \033[3mjar_file\033[0m]]
+	\033[1mminectl\033[0m [\033[1minit\033[0m | \033[1mlist\033[0m [\033[3m--verbose\033[0m, \033[3m--very-verbose\033[0m] | \033[1madd\033[0m \033[3mserver_name\033[0m [\033[1m--jar\033[0m \033[3mjar_file\033[0m] | \033[1mevents\033[0m]
 	\033[1mminectl\033[0m \033[1mjar\033[0m [list | update | upgrade]]
 	\033[1mminectl\033[0m \033[1mjar\033[0m \033[1mrepository\033[0m [list | add \033[3mURL\033[0m \033[3mname\033[0m | remove \033[3mname\033[0m]
 	\033[1mminectl\033[0m \033[3mserver_name\033[0m [\033[1mremove\033[0m | \033[1mrename\033[0m \033[3mnew_name\033[0m]
 	\033[1mminectl\033[0m \033[3mserver_name\033[0m \033[1mpasswd\033[0m [\033[1mlist\033[0m | \033[1mlock\033[0m | \033[1munlock\033[0m | [\033[1mwhitelist\033[0m | \033[1mblacklist\033[0m | \033[1mop\033[0m | \033[1mdeop\033[0m | \033[1mstatus\033[0m] \033[3muser_name\033[0m]
 	\033[1mminectl\033[0m \033[3mserver_name\033[0m [\033[1mconfigure\033[0m | \033[1mproperties\033[0m] [\033[3mvariable\033[0m=\033[3mvalue\033[0m | -\033[3mvariable\033[0m]
 	\033[1mminectl\033[0m \033[3mserver_name\033[0m [[\033[1mbackup\033[0m | \033[1mrestore\033[0m [\033[1m--clean\033[0m]] [\033[3mbackup_name\033[0m] | \033[1mreset\033[0m [\033[1m--erase-config\033[0m]]
+	\033[1mminectl\033[0m \033[3mserver_name\033[0m \033[1mevent\033[0m [\033[1mlist\033[0m | [\033[1menable\033[0m|\033[1mdisable\033[0m] \033[3mevent_handler\033[0m]
 	\033[1mminectl\033[0m \033[3mserver_name\033[0m \033[1mstatus\033[0m 
 	\033[1mminectl\033[0m \033[3mserver_name\033[0m [\033[1mexec\033[0m \033[3mjava_program_command\033[0m | \033[1mplayers\033[0m | \033[1mplayer-count\033[0m]
 	\033[1mminectl\033[0m \033[3mserver_name\033[0m \033[3mjava_program_command\033[0m
@@ -1236,8 +1237,8 @@ minectl_server_event() {
 		done
 	}
 
-	# Add an event to the server
-	minectl_server_event_add() {
+	# Enable an event on the server
+	minectl_server_event_enable() {
 		while (( $# )); do
 			EVENT_NAME="$1.eh"
 
@@ -1252,8 +1253,8 @@ minectl_server_event() {
 		done
 	}
 
-	# Add an event to the server
-	minectl_server_event_remove() {
+	# Disable an event on the server
+	minectl_server_event_disable() {
 		while (( $# )); do
 			EVENT_NAME="$1.eh"
 
@@ -1273,9 +1274,9 @@ minectl_server_event() {
 	case $CMD in
 		ls|list)	minectl_server_event_list "$@"
 		;;
-		add)		minectl_server_event_add "$@"
+		enable)		minectl_server_event_enable "$@"
 		;;
-		remove|rm)	minectl_server_event_remove "$@"
+		disable)	minectl_server_event_disable "$@"
 		;;
 		*)		minelib_err UNKNOWN_PARAM $1
 	esac		
