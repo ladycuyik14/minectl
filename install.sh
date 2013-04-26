@@ -34,7 +34,7 @@ install_files() {
 	# Install appropriate files
 	mkdir -p /usr/local/bin
 
-	install -o root -g root -m 775 -t /usr/local/share/man/man1 man/minectl.1
+	install -o root -g root -m 775 -t /usr/local/share/man/man1 ../man/minectl.1
 	install -o root -g root -m 775 -t /usr/local/bin bin/*
 	install -o root -g root -m 775 -d /usr/local/libexec/minectl
 	install -o root -g root -m 775 -t /usr/local/libexec/minectl libexec/*
