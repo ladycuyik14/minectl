@@ -87,7 +87,7 @@ export SERVER_STDERR="./.stderr"
 # Global functions #
 ####################
 
-# Inform user about operations being executed
+# Display prompt before reading stuff from CMD line
 minelib_prompt() {
         local -u MSG_TYPE="$1"
 	local MSG_VAR="ASK_$MSG_TYPE"
@@ -101,7 +101,12 @@ minelib_prompt() {
 	fi
 }
 
-# New function for displaying minelib_err ors
+# Display stuff
+minelib_print() {
+	echo -e "$@"
+}
+
+# Display notifications
 minelib_notify() {
 	local -u MSG_TYPE="$1"
 	local MSG_VAR="NOTIFY_$MSG_TYPE"
@@ -115,7 +120,7 @@ minelib_notify() {
 	fi
 }
 
-# New function for displaying minelib_err ors
+# Display errors
 minelib_err () {
 	if [ -n "$1" ]; then
 		local -u MSG_TYPE="$1"
