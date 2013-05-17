@@ -592,7 +592,7 @@ minectl_server_passwd() {
 	minectl_server_passwd_status() {
 		minectl_server_passwd_valid_user "$1"
 		if ( minectl_server_passwd_is_whitelisted "$1" ); then	
-			is_op "$1"
+			minectl_server_passwd_is_op "$1"
 		fi
 	}
 
