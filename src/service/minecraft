@@ -16,7 +16,9 @@ SERVERS_DIR="$MC_HOME/servers"
 # A list of enabled servers
 ENABLED_SERVERS="/etc/minectl.servers"
 # Make sure it at least exists
-touch $ENABLED_SERVERS
+if [ ! -e "$ENABLED_SERVERS" ]; then
+	touch $ENABLED_SERVERS
+fi
 
 # A list of all servers
 ALL_SERVERS="/tmp/minectl.servers"
