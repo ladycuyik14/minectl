@@ -23,7 +23,9 @@ fi
 # A list of all servers
 ALL_SERVERS="/tmp/minectl.servers"
 # Create list of all servers
-su - -c "/usr/local/bin/minectl list" minectl > $ALL_SERVERS
+if [ "$USER" != "$MC_USER" ]; then
+	su - -c "/usr/local/bin/minectl list" $MC_USER > $ALL_SERVERS
+fi
 
 # Start server(s)
 start() {
