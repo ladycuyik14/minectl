@@ -48,7 +48,11 @@ handle_event() {
 		
 		# Check if the user is an admin
 		is_admin() {
-			if ( /usr/local/bin/minectl $SERVER_NAME passwd is-op "$PLAYER_NAME" ); then
+			local "PLAYER_NAME"="$1"
+			
+			/usr/local/bin/minectl $SERVER_NAME passwd is-op "$PLAYER_NAME" > /dev/null 2>&1
+			
+			if [ $? -eq 0 ]; then
 				return 0
 			else
 				/usr/local/bin/minectl $SERVER_NAME exec say "Player $PLAYER_NAME tried to play admin."
@@ -70,15 +74,19 @@ handle_event() {
 		
 		# Switch known commands
 		case $CMD in
-			""|help)	echo -e "Usage: %<command> [arguments]\nValid commands are: date, uname, uptime, admininfo" > "$TMP_RESULT" 2>&1
+			""|help)	/bin/echo -e "Usage: %<command> [arguments]\nValid commands are: date, uname, uptime, admininfo" > "$TMP_RESULT" 2>&1
 			;;
-			date)		date "$@" > "$TMP_RESULT" 2>&1
+			date)		/bin/date "$@" > "$TMP_RESULT" 2>&1
 			;;
-			uname)		uname "$@" > "$TMP_RESULT" 2>&1
+			uname)		/bin/uname "$@" > "$TMP_RESULT" 2>&1
 			;;
-			uptime)		uptime "$@" > "$TMP_RESULT" 2>&1
+			uptime)		/usr/bin/uptime "$@" > "$TMP_RESULT" 2>&1
 			;;
-			admininfo)	echo -e "Administrator of this server is: <ADMIN_NAME>" > "$TMP_RESULT" 2>&1
+			admininfo)	if [ -f /home/minectl/event-handlers/.admin.info ]; then
+							/bin/cat /home/minectl/event-handlers/.admin.info > "$TMP_RESULT" 2>&1
+						else
+							/bin/echo -e "No admin info defined. :-(" > "$TMP_RESULT" 2>&1
+						fi
 			;;
 			backup)		# Check if user is operator
 						if ( is_admin "$PLAYER_NAME" ); then
