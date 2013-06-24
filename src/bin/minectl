@@ -1191,14 +1191,14 @@ minectl_server_player_count()  {
 	local TMP_PLAYERS="`mktemp`"
 	local RETVAL=1
 	
-	minectl_server_players | head -n 1 | awk '{ print $3 }' | cut -d "/" -f 1 > $TMP_PLAYERS 2> /dev/null
-	cat $TMP_PLAYERS
-	PLAYERS=`cat $TMP_PLAYERS`
-
-	if [ $PLAYERS -gt 0 ]; then
+	if ( minectl_server_players > /dev/null 2>&1 ); then
+		minectl_server_players | head -n 1 | awk '{ print $3 }' | cut -d "/" -f 1 > $TMP_PLAYERS 2> /dev/null
+		PLAYERS=`cat $TMP_PLAYERS`
 		RETVAL=0
+	else
+		echo 0
 	fi
-
+	
 	rm -f $TMP_PLAYERS 2> /dev/null
 	return $RETVAL
 }
