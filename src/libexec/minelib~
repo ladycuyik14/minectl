@@ -31,9 +31,6 @@ export MC_USER=minectl
 # Define home directory
 export MC_HOME="/home/$MC_USER"
 
-# Define backup directory
-export MC_BACKUP="$MC_HOME/backup"
-
 # The directory containing the servers
 export SERVERS_DIR="$MC_HOME/servers"
 

@@ -42,7 +42,6 @@ THIS="`realpath $0`"
 # Synopsis of usage for user information
 USAGE="Usage:	
 	\033[1mminectl\033[0m [\033[1minit\033[0m | \033[1mlist\033[0m [\033[3m--verbose\033[0m, \033[3m--very-verbose\033[0m] | \033[1madd\033[0m \033[3mserver_name\033[0m [\033[1m--jar\033[0m \033[3mjar_file\033[0m] | \033[1mevents\033[0m]
-	\033[1mminectl\033[0m \033[1mbackup\033[0m \033[3mbackup_directory\033[0m
 	\033[1mminectl\033[0m \033[1mjar\033[0m [list | update | upgrade]]
 	\033[1mminectl\033[0m \033[1mjar\033[0m \033[1mrepository\033[0m [list | add \033[3mURL\033[0m \033[3mname\033[0m | remove \033[3mname\033[0m]
 	\033[1mminectl\033[0m \033[3mserver_name\033[0m [\033[1mremove\033[0m | \033[1mrename\033[0m \033[3mnew_name\033[0m]
