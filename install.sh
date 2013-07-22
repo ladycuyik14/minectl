@@ -39,15 +39,15 @@ install_files() {
 
 	install -o root -g root -m 775 -t /usr/local/share/man/man1 ../man/minectl.1
 	install -o root -g root -m 775 -t /usr/local/bin bin/*
-	install -o root -g root -m 775 -d /usr/local/libexec/minectl
-	install -o root -g root -m 775 -t /usr/local/libexec/minectl libexec/*
+	install -o root -g root -m 775 -d /usr/local/libexec/"$MC_USER"
+	install -o root -g root -m 775 -t /usr/local/libexec/"$MC_USER" libexec/*
 	install -o "$MC_USER" -g "$MC_USER" -m 775 -d "$MC_HOME"/lang
 	install -o "$MC_USER" -g "$MC_USER" -m 775 -t "$MC_HOME"/lang lang/*
 	install -o "$MC_USER" -g "$MC_USER" -m 775 -d "$MC_HOME"/jar
 	install -o "$MC_USER" -g "$MC_USER" -m 775 -d "$MC_HOME"/jar/repo
 	install -o "$MC_USER" -g "$MC_USER" -m 775 -t "$MC_HOME"/jar/repo jar/repo/.[^.]*
 	install -o "$MC_USER" -g "$MC_USER" -m 775 -d "$MC_HOME"/.backup
-	ln -s "$MC_HOME/.backup" "$MC_HOME/backup"
+	ln -s "$MC_HOME"/.backup "$MC_HOME"/backup
 	install -o "$MC_USER" -g "$MC_USER" -m 775 -d "$MC_HOME"/servers
 	install -o "$MC_USER" -g "$MC_USER" -m 775 -t "$MC_HOME"/servers servers/.[^.]*
 	install -o "$MC_USER" -g "$MC_USER" -m 775 -d "$MC_HOME"/event-handlers
@@ -55,11 +55,11 @@ install_files() {
 
 	# Install system services
 	if [ -d /lib/systemd/system ]; then
-		install -o root -g root -m 775 -t /lib/systemd/system/ service/""$MC_USER"@.service"
-		echo "Systemd service template '/lib/systemd/system/"$MC_USER"@.service' installed"
+		install -o root -g root -m 775 -t /lib/systemd/system/ service/"$MC_USER@.service"
+		echo "Systemd service template '/lib/systemd/system/$MC_USER@.service' installed"
 	else
 		install -o root -g root -m 775 -t /etc/init.d/ service/"$MC_USER"
-		echo "Init service '/etc/init.d/"$MC_USER"' installed"
+		echo "Init service '/etc/init.d/$MC_USER' installed"
 	fi
 
 	# Set EN_us as default language
@@ -75,7 +75,7 @@ install_files() {
 # Uninstall minectl's files and directories
 uninstall_files() {
 	rm -f /usr/local/bin/{mcpasswd,mcsrv,minectl}
-	rm -Rf /usr/local/libexec/minectl
+	rm -Rf /usr/local/libexec/"$MC_USER"
 	rm -f /etc/init.d/"$MC_USER"
 	rm -f "/lib/systemd/system/"$MC_USER"@.service"
 	rm -f "/lib/systemd/system/minemon@.service"
