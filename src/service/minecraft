@@ -5,10 +5,7 @@
 # chkconfig: 234 90 10
 # description: Start and stop minecraft servers
 
-MC_USER=minectl
-
-# The home og mienctl
-MC_HOME="/home/$MC_USER"
+source /usr/local/libexec/minectl/minelib
 
 # The directory for the servers
 SERVERS_DIR="$MC_HOME/servers"
