@@ -3,7 +3,7 @@
 # Minectl installation script
 #
 
-MC_USER=""$MC_USER""
+MC_USER="minecraft"
 MC_HOME="/srv/$MC_USER"
 
 # Test if we are root
