@@ -24,12 +24,12 @@
 ####################
 
 # Define default minectl user
-export MC_USER=minectl
+export MC_USER=minecraft
 
 ### Absolute paths ###
 
 # Define home directory
-export MC_HOME="/home/$MC_USER"
+export MC_HOME="/srv/$MC_USER"
 
 # Define backup directory
 export MC_BACKUP="$MC_HOME/backup"

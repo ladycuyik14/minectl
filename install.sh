@@ -14,16 +14,16 @@ ROOT_DIR="$(dirname $(realpath $0))"
 # Add minectl user
 add_user() {
 	# Create new minectl user
-	if [ `grep -c ^"minectl:" /etc/passwd` == "0" ]; then
-		/usr/sbin/useradd -mUrd /home/minectl minectl
+	if [ `grep -c ^"minecraft:" /etc/passwd` == "0" ]; then
+		/usr/sbin/useradd -mUrd /srv/minecraft minecraft
 	else
-		/usr/sbin/usermod -md /home/minectl minectl
+		/usr/sbin/usermod -md /srv/minecraft minecraft
 	fi
 }
 
 # Remove minectl user
 remove_user() {
-	userdel $@ minectl
+	userdel $@ minecraft
 }
 
 # Install necessary files
@@ -38,16 +38,16 @@ install_files() {
 	install -o root -g root -m 775 -t /usr/local/bin bin/*
 	install -o root -g root -m 775 -d /usr/local/libexec/minectl
 	install -o root -g root -m 775 -t /usr/local/libexec/minectl libexec/*
-	install -o minectl -g minectl -m 775 -d /home/minectl/lang
-	install -o minectl -g minectl -m 775 -t /home/minectl/lang lang/*
-	install -o minectl -g minectl -m 775 -d /home/minectl/jar
-	install -o minectl -g minectl -m 775 -d /home/minectl/jar/repo
-	install -o minectl -g minectl -m 775 -t /home/minectl/jar/repo jar/repo/.[^.]*
-	install -o minectl -g minectl -m 775 -d /home/minectl/backup
-	install -o minectl -g minectl -m 775 -d /home/minectl/servers
-	install -o minectl -g minectl -m 775 -t /home/minectl/servers servers/.[^.]*
-	install -o minectl -g minectl -m 775 -d /home/minectl/event-handlers
-	install -o minectl -g minectl -m 775 -t /home/minectl/event-handlers event-handlers/*
+	install -o minectl -g minectl -m 775 -d /srv/minecraft/lang
+	install -o minectl -g minectl -m 775 -t /srv/minecraft/lang lang/*
+	install -o minectl -g minectl -m 775 -d /srv/minecraft/jar
+	install -o minectl -g minectl -m 775 -d /srv/minecraft/jar/repo
+	install -o minectl -g minectl -m 775 -t /srv/minecraft/jar/repo jar/repo/.[^.]*
+	install -o minectl -g minectl -m 775 -d /srv/minecraft/backup
+	install -o minectl -g minectl -m 775 -d /srv/minecraft/servers
+	install -o minectl -g minectl -m 775 -t /srv/minecraft/servers servers/.[^.]*
+	install -o minectl -g minectl -m 775 -d /srv/minecraft/event-handlers
+	install -o minectl -g minectl -m 775 -t /srv/minecraft/event-handlers event-handlers/*
 
 	# Install system services
 	if [ -d /lib/systemd/system ]; then
@@ -59,12 +59,12 @@ install_files() {
 	fi
 
 	# Set EN_us as default language
-	cd /home/minectl/lang
+	cd /srv/minecraft/lang
 	ln -sf EN_us.lang default.lang
 
 	# Add binaries' path to the users's PATH variable
-	if [ -z "`grep "PATH=.*/usr/local/bin" /home/minectl/.bashrc`" ]; then
-		echo 'export PATH="$PATH:/usr/local/bin"' >> /home/minectl/.bashrc
+	if [ -z "`grep "PATH=.*/usr/local/bin" /srv/minecraft/.bashrc`" ]; then
+		echo 'export PATH="$PATH:/usr/local/bin"' >> /srv/minecraft/.bashrc
 	fi
 }
 
