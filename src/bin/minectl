@@ -975,9 +975,9 @@ minectl_jar() {
 			# A descriptive name of the JAR file
 			local REPO_NAME="`echo "$REPO" | cut -d "#" -f 2`"
 			# The name of the file we want to store
-			local REPO_FILE="$JAR_REPO/`date +%s`-$REPO_NAME.jar"
+			local REPO_FILE="`date +%s`-$REPO_NAME.jar"
 			# The latest file of the repo
-			local LATEST_FILE="$JAR_REPO/$REPO_NAME.latest.jar"
+			local LATEST_FILE="$REPO_NAME.latest.jar"
 
 			# Check if we specified aonly a selection 
 			# of repos and skip unwanted ones
@@ -1039,9 +1039,9 @@ minectl_jar() {
 			# A descriptive name of the JAR file
 			local REPO_NAME="`echo "$REPO" | cut -d "#" -f 2`"
 			# The latest file of the repo
-			local LATEST_FILE="$JAR_REPO/$REPO_NAME.latest.jar"
+			local LATEST_FILE="$REPO_NAME.latest.jar"
 			# The current file of the repo
-			local CURRENT_FILE="$JAR_DIR/$REPO_NAME.jar"
+			local CURRENT_FILE="$REPO_NAME.jar"
 			# Check if we specified aonly a selection 
 			# of repos and skip unwanted ones
 
@@ -1067,7 +1067,7 @@ minectl_jar() {
 					fi
 				fi
 
-				ln -sf "`readlink $LATEST_FILE`" "$CURRENT_FILE" 2> /dev/null
+				ln -sf "$(basename $JAR_REPO)/$(basename "$(readlink $LATEST_FILE)")" "$CURRENT_FILE" 2> /dev/null
 
 				# Increment update counter
 				UPGRADES=$(($UPGRADES+1))
