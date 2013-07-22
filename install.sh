@@ -44,8 +44,7 @@ install_files() {
 	install -o "$MC_USER" -g "$MC_USER" -m 775 -d "$MC_HOME"/lang
 	install -o "$MC_USER" -g "$MC_USER" -m 775 -t "$MC_HOME"/lang lang/*
 	install -o "$MC_USER" -g "$MC_USER" -m 775 -d "$MC_HOME"/jar
-	install -o "$MC_USER" -g "$MC_USER" -m 775 -d "$MC_HOME"/jar/repo
-	install -o "$MC_USER" -g "$MC_USER" -m 775 -t "$MC_HOME"/jar/repo jar/repo/.[^.]*
+	install -o "$MC_USER" -g "$MC_USER" -m 775 -t "$MC_HOME"/jar jar/.[^.]*
 	install -o "$MC_USER" -g "$MC_USER" -m 775 -d "$MC_HOME"/.backup
 	ln -s "$MC_HOME"/.backup "$MC_HOME"/backup
 	install -o "$MC_USER" -g "$MC_USER" -m 775 -d "$MC_HOME"/servers

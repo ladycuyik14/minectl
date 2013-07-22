@@ -40,11 +40,8 @@ export SERVERS_DIR="$MC_HOME/servers"
 # JARs' directory
 export JAR_DIR="$MC_HOME/jar"
 
-# JARs' repository
-export JAR_REPO="$JAR_DIR/repo"
-
 # Define repository list
-export REPO_LIST="$JAR_REPO/.repolist"
+export REPO_LIST="$JAR_DIR/.repolist"
 
 # Name of the event scripts
 export EVENT_HANDLERS_DIR="$MC_HOME/event-handlers"

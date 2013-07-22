@@ -957,7 +957,7 @@ minectl_jar() {
 	# Check if updates for JAR files are available
 	minectl_jar_update() {
 		# Change to temoprary directory
-		cd "$JAR_REPO" > /dev/null 2> /dev/null || minelib_fail ACCESS_REPO_DIR_FAILED
+		cd "$JAR_DIR" > /dev/null 2> /dev/null || minelib_fail ACCESS_REPO_DIR_FAILED
 
 		# Update counter
 		local UPDATES=0
@@ -1021,7 +1021,7 @@ minectl_jar() {
 	# Upgrade Minecraft's JAR files
 	minectl_jar_upgrade() {
 		# Change to temoprary directory
-		cd "$JAR_REPO" > /dev/null 2> /dev/null || minelib_fail ACCESS_REPO_DIR_FAILED
+		cd "$JAR_DIR" > /dev/null 2> /dev/null || minelib_fail ACCESS_REPO_DIR_FAILED
 
 		# Upgrade counter
 		local UPGRADES=0
@@ -1067,7 +1067,7 @@ minectl_jar() {
 					fi
 				fi
 
-				ln -sf "$(basename $JAR_REPO)/$(basename "$(readlink $LATEST_FILE)")" "$CURRENT_FILE" 2> /dev/null
+				ln -sf "$(basename $JAR_DIR)/$(basename "$(readlink $LATEST_FILE)")" "$CURRENT_FILE" 2> /dev/null
 
 				# Increment update counter
 				UPGRADES=$(($UPGRADES+1))
