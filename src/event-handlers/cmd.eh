@@ -12,6 +12,9 @@ MORE="The valid commands the users can execute are checked against a case switch
 inside this event handler up until now but may be outsourced to more extensive 
 configuration files in the future."
 
+# Source main library
+source /usr/local/libexec/minecraft/minelib 2> /dev/null || { echo "Could not load main library" 1>&2; exit 1; }
+
 # Handle the event
 handle_event() {
 	# Define default arguments
@@ -82,8 +85,8 @@ handle_event() {
 			;;
 			uptime)		/usr/bin/uptime "$@" > "$TMP_RESULT" 2>&1
 			;;
-			admininfo)	if [ -f /home/minectl/event-handlers/.admin.info ]; then
-							/bin/cat /home/minectl/event-handlers/.admin.info > "$TMP_RESULT" 2>&1
+			admininfo)	if [ -f $EVENT_HANDLERS_DIR/.admin.info ]; then
+							/bin/cat $EVENT_HANDLERS_DIR/.admin.info > "$TMP_RESULT" 2>&1
 						else
 							/bin/echo -e "No admin info defined. :-(" > "$TMP_RESULT" 2>&1
 						fi
