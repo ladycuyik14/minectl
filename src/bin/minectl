@@ -1067,7 +1067,7 @@ minectl_jar() {
 					fi
 				fi
 
-				ln -sf "$(basename $JAR_DIR)/$(basename "$(readlink $LATEST_FILE)")" "$CURRENT_FILE" 2> /dev/null
+				ln -sf "$(basename "$(readlink $LATEST_FILE)")" "$CURRENT_FILE" 2> /dev/null
 
 				# Increment update counter
 				UPGRADES=$(($UPGRADES+1))
