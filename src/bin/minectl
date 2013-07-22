@@ -1396,8 +1396,6 @@ case $CMD in
 					;;
 					player-count)		minectl_server_player_count "$@"
 					;;
-					""|help|--help|-h)	echo -e "$USAGE" | /usr/bin/less -r
-					;;
 					# Assume that we want to run a command of the Java program
 					# iff nothing else applies
 					*)			echo "Executing '$CMD $@' on server '$SERVER_NAME'"
