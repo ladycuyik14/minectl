@@ -87,7 +87,7 @@ minectl_server_get_free_port() {
 #######################
 # Source main library #
 #######################
-source /usr/local/libexec/minectl/minelib 2> /dev/null || { echo "Could not load main library" 1>&2; exit 1; }
+source /usr/local/libexec/minecraft/minelib 2> /dev/null || { echo "Could not load main library" 1>&2; exit 1; }
 
 ###################################
 # Import messages and error codes #
