@@ -26,7 +26,7 @@
 # Version and license information #
 ###################################
 
-VERSION=6.0
+VERSION=6.1
 ARCH=noarch
 AUTHOR="Richard Neumann"
 YEAR="2013"
