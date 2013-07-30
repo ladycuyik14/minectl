@@ -173,18 +173,18 @@ minectl_add_server() {
 	# Switch options
 	while (( $# )); do
 		case $1 in
-			--jar)					JAR_FILE=$2
-									shift
+			--jar)			JAR_FILE=$2
+						shift
 			;;
-			--defaults)				DEFAULTS=true
+			--defaults)		DEFAULTS=true
 			;;
 			--configure|--config)	CONFIG="$2"
-									shift
+						shift
 			;;
 			--properties|--props)	PROPERTIES="$2"
-									shift
+						shift
 			;;
-			*)						minelib_err UNKNOWN_PARAM $1
+			*)			minelib_err UNKNOWN_PARAM $1
 		esac
 		shift
 	done
@@ -641,42 +641,42 @@ minectl_server_passwd() {
 	# Switch commands
 	while (( $# )); do
 		case "$1" in
-			reload)				minectl_server_passwd_whitelist_reload
+			reload)			minectl_server_passwd_whitelist_reload
 			;;
 			is-whitelisted)		minectl_server_passwd_is_whitelisted $2
-								if [ $? -ne 0 ]; then
-									ERROR=true
-								fi
-								shift
+						if [ $? -ne 0 ]; then
+							ERROR=true
+						fi
+						shift
 			;;
 			add|whitelist)		minectl_server_passwd_whitelist $2
-								shift
+						shift
 			;;
 			remove|blacklist)	minectl_server_passwd_remove $2
+						shift
+			;;
+			is-op)			minectl_server_passwd_is_op $2
+						if [ $? -ne 0 ]; then
+							ERROR=true
+						fi
+						shift
+			;;
+			op)			minectl_server_passwd_op $2
+						shift
+			;;
+			deop)			minectl_server_passwd_deop $2
 								shift
 			;;
-			is-op)				minectl_server_passwd_is_op $2
-								if [ $? -ne 0 ]; then
-									ERROR=true
-								fi
-								shift
+			status)			minectl_server_passwd_status $2
+						shift
 			;;
-			op)					minectl_server_passwd_op $2
-								shift
+			lock)			minectl_server_passwd_lock
 			;;
-			deop)				minectl_server_passwd_deop $2
-								shift
-			;;
-			status)				minectl_server_passwd_status $2
-								shift
-			;;
-			lock)				minectl_server_passwd_lock
-			;;
-			unlock)				minectl_server_passwd_unlock
+			unlock)			minectl_server_passwd_unlock
 			;;
 			""|list|print)		minectl_server_passwd_print
 			;;
-			*)					minelib_fail UNKNOWN_PARAM $1
+			*)			minelib_fail UNKNOWN_PARAM $1
 		esac
 		shift
 	done
@@ -697,12 +697,12 @@ minectl_server_backup() {
 	while (( $# )); do
 		case $1 in
 			--message-pre|--message|-m)	MESSAGE_PRE="$2"
-										shift
+							shift
 			;;
 			--message-post|-p)		MESSAGE_POST="$2"
-									shift
+							shift
 			;;
-			*)						minelib_err UNKNOWN_PARAM $1
+			*)				minelib_err UNKNOWN_PARAM $1
 		esac
 		shift
 	done
