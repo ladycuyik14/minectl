@@ -32,10 +32,10 @@ GENERAL
 	manage a minecraft server.
 
 DOCUMENTATION
-	All shell scripts in the mined collection, except the server wrapper 
-	(mined) respond to the "--help" parameter to print information about 
-	their usage. This means: if you want information about how to use 
-	script "./foo" type "./foo --help".
+	For short information about the usage of minectl, type:
+	$ minectl --help
+	For a more detailed description of minectl, please see the manpage:
+	$ man minectl
 
 BUGS
 	If you have experience with shell scripting (in fact you should have, 

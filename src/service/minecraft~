@@ -96,8 +96,8 @@ status() {
 enable() {
 	local SERVER_NAME="$1"
 	
-	if ( grep ^"$SERVER_NAME"$ "$ALL_SERVERS" > /dev/null 2> /dev/null ); then
-		if ( grep ^"$SERVER_NAME"$ "$ENABLED_SERVERS" > /dev/null 2> /dev/null ); then
+	if ( `grep ^"$SERVER_NAME"$ "$ALL_SERVERS" > /dev/null 2> /dev/null` ); then
+		if ( `grep ^"$SERVER_NAME"$ "$ENABLED_SERVERS" > /dev/null 2> /dev/null` ); then
 			echo "Server $SERVER_NAME is already enabled"
 			return 0
 		else
@@ -115,8 +115,8 @@ enable() {
 disable() {
 	local SERVER_NAME="$1"
 	
-	if ( grep ^"$SERVER_NAME"$ "$ALL_SERVERS" > /dev/null 2> /dev/null ); then
-		if ( grep ^"$SERVER_NAME"$ "$ENABLED_SERVERS" > /dev/null 2> /dev/null ); then
+	if ( `grep ^"$SERVER_NAME"$ "$ALL_SERVERS" > /dev/null 2> /dev/null` ); then
+		if ( `grep ^"$SERVER_NAME"$ "$ENABLED_SERVERS" > /dev/null 2> /dev/null` ); then
 			echo "Disabling server $SERVER_NAME"
 			local TMP_ENABLED_SERVERS="`mktemp`"
 			grep -v ^"$SERVER_NAME"$ "$ENABLED_SERVERS" > $TMP_ENABLED_SERVERS 2> /dev/null

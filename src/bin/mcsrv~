@@ -30,7 +30,7 @@ mcsrv_handle_events() {
 	while read EVENT; do
 		# All event handling scripts must have the 
 		# *.eh suffix
-		if ( ls "$SERVER_EVENT_HANDLERS_DIR"/*.eh > /dev/null 2> /dev/null ); then
+		if ( `ls "$SERVER_EVENT_HANDLERS_DIR"/*.eh > /dev/null 2> /dev/null` ); then
 			for EVENT_HANDLER in "$SERVER_EVENT_HANDLERS_DIR"/*.eh; do
 				$EVENT_HANDLER handle "$EVENT" "$SERVER_NAME" &
 			done
