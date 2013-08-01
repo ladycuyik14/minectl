@@ -227,7 +227,7 @@ _minectl_loaded_plugins() {
 		echo $PLUGIN >> "$TEMP1"
 	done
 
-	sort "$TEMP1" | uniq > "$TEMP2"
+	sort -r "$TEMP1" | uniq > "$TEMP2"
 
 	while read PLUGIN; do
 		LOADED_PLUGINS_TEMP="$PLUGIN $LOADED_PLUGINS_TEMP"
@@ -236,6 +236,22 @@ _minectl_loaded_plugins() {
 	echo $LOADED_PLUGINS_TEMP
 
 	rm -f "$TEMP1" "$TEMP2"
+}
+
+# List all defined commands
+_minectl_list_commands() {
+	local TEMP="$(mktemp)"
+	local COMMANDS=""
+
+	declare -F | awk '{print $3}' | grep ^"mc_" | cut -d "_" --output-delimiter "_" -f 2- | sed 's/_/-/g' | sort -r > "$TEMP"
+
+	while read COMMAND; do
+		COMMANDS="$COMMAND $COMMANDS"
+	done < "$TEMP"
+
+	echo "$COMMANDS"
+
+	rm -f "$TEMP"
 }
 
 ####################
@@ -265,8 +281,8 @@ if [ $# -eq 0 ]; then
 else
 	while (( $# )); do
 		case $1 in
-			--plugins|-p)	PLUGINS="$2"
-					shift
+			--plugins|-p)	print "Loaded plugins: $(_minectl_loaded_plugins)"
+					exit 0
 			;;
 			--verbose|-v)	DEBUG_LEVEL=1
 			;;
@@ -275,12 +291,18 @@ else
 			--level|-l)	DEBUG_LEVEL=$2
 					shift
 			;;
+			--commands|-c)	print "Available commands: $(_minectl_list_commands)"
+					exit 0
+			;;
 			*)		_minectl_load_plugins $PLUGINS
 
 					if ( verbose ); then
 						print "Loaded plugins: $(_minectl_loaded_plugins)"
 					fi
-
+					
+					if ( very_verbose ); then
+						print "Available commands: $(_minectl_list_commands)"
+					fi
 					CMDLINE="$@"
 					_minectl_run $CMDLINE
 					break
