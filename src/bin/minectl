@@ -293,7 +293,7 @@ else
 							_minectl_store_plugins_cfg
 					exit 0
 			;;
-			--list-plugins|-lp)	cd "$PLUGINS_DIR"
+			--list-plugins|-lp)	cd "$PLUGIN_DIR"
 								ls *.mp
 			;;
 			--verbose|-v)	DEBUG_LEVEL=1
