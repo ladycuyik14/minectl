@@ -194,18 +194,20 @@ _minectl_load_plugin() {
 				LOADED_PLUGINS="$(echo $LOADED_PLUGINS | sort | uniq)"
 				return 0
 			else
-				print -2 "Plugin '$PLUGIN' $LANG_PLUGIN_DEPS_ERR"
+				print -2 "Plugin '$PLUGIN' failed dependency check"
+				#print -2 "Plugin '$PLUGIN' $LANG_PLUGIN_DEPS_ERR"
 				return 1
 			fi
 		else
-			print -2 "Plugin '$PLUGIN' $LANG_PLUGIN_NOT_FOUND"
+			print -2 "Plugin '$PLUGIN' could not be found"
+			#print -2 "Plugin '$PLUGIN' $LANG_PLUGIN_NOT_FOUND"
 			return 1
 		fi
 	else
-		print -2 "Plugin '$PLUGIN' $LANG_PLUGIN_ALREADY_LOADED"
+		print -2 "Plugin '$PLUGIN' is already loaded"
+		#print -2 "Plugin '$PLUGIN' $LANG_PLUGIN_ALREADY_LOADED"
 	fi
 	
-	print -2 "Plugin '$PLUGIN' $LANG_PLUGIN_NONEXISTANT!"
 	return 1
 }
 
