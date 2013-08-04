@@ -157,7 +157,7 @@ _minectl_plugin_loaded() {
 	local LOADED_PLUGIN=
 	
 	for LOADED_PLUGIN in $LOADED_PLUGINS; do
-		if [ "$PLUGN" == "$LOADED_PLUGIN" ]; then
+		if [ "$PLUGIN" == "$LOADED_PLUGIN" ]; then
 			return 0
 		fi
 	done
