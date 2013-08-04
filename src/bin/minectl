@@ -310,6 +310,3 @@ else
 		shift
 	done
 fi
-
-# Return the state of the executed command
-exit $RETVAL
