@@ -233,6 +233,14 @@ _minectl_loaded_plugins() {
 	rm -f "$TEMP1" "$TEMP2"
 }
 
+# Store loaded plugins cfg
+_minectl_store_plugins_cfg() {
+	rm -f "$PLUGINS_LIST"
+	for PLUGIN in $LOADED_PLUGINS; do
+		echo $PLUGIN >> "$PLUGINS_LIST"
+	done
+}
+
 # List all defined commands
 _minectl_list_commands() {
 	local TEMP="$(mktemp)"
@@ -282,7 +290,11 @@ else
 	while (( $# )); do
 		case $1 in
 			--plugins|-p)	print "Loaded plugins: $(_minectl_loaded_plugins)"
+							_minectl_store_plugins_cfg
 					exit 0
+			;;
+			--list-plugins|-lp)	cd "$PLUGINS_DIR"
+								ls *.mp
 			;;
 			--verbose|-v)	DEBUG_LEVEL=1
 			;;
