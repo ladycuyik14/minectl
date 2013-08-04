@@ -40,9 +40,7 @@ install_files() {
 	install -o root -g root -m 775 -t /usr/local/share/man/man1 ../man/minectl.1
 	install -o root -g root -m 775 -t /usr/local/bin bin/*
 	install -o root -g root -m 775 -d /usr/local/libexec/"$MC_USER"
-	install -o root -g root -m 775 -d /usr/local/libexec/"$MC_USER"/plugins
-	install -o root -g root -m 775 -t /usr/local/libexec/"$MC_USER" libexec/*
-	install -o root -g root -m 775 -t /usr/local/libexec/"$MC_USER"/plugins libexec/plugins/*
+	install -o root -g root -m 775 -t /usr/local/libexec/"$MC_USER-plugins" libexec/*
 	install -o "$MC_USER" -g "$MC_USER" -m 775 -d "$MC_HOME"/lang
 	install -o "$MC_USER" -g "$MC_USER" -m 775 -t "$MC_HOME"/lang lang/*
 	install -o "$MC_USER" -g "$MC_USER" -m 775 -d "$MC_HOME"/jar
@@ -75,11 +73,10 @@ install_files() {
 
 # Uninstall minectl's files and directories
 uninstall_files() {
-	rm -f /usr/local/bin/{mcpasswd,mcsrv,minectl}
+	rm -f /usr/local/bin/{mcsrv,minectl}
 	rm -Rf /usr/local/libexec/"$MC_USER"
 	rm -f /etc/init.d/"$MC_USER"
 	rm -f "/lib/systemd/system/"$MC_USER"@.service"
-	rm -f "/lib/systemd/system/minemon@.service"
 	rm -f /usr/local/share/man/man1/minectl.1
 }
 

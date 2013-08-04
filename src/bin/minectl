@@ -145,11 +145,6 @@ USAGE="Usage:
 		
 ######################################################################################################################
 
-#######################
-# Source main library #
-#######################
-source /usr/local/libexec/minecraft/minelib 2> /dev/null || { echo "Could not load main library" 1>&2; exit 1; }
-
 ######################################################################################################################
 
 #####################
@@ -188,7 +183,7 @@ _minectl_load_plugins() {
 
 # Add plugins to list of wanted plugins
 _minectl_require() {
-	_minectl_load_plugins $@
+	_minectl_load_plugins "$@"
 }
 
 # Check if we are a valid user
@@ -211,7 +206,7 @@ _minectl_run() {
 	local FUNCTION="mc_$(echo $CMD | sed 's/-/_/g')"
 
 	if ( function_exists "$FUNCTION" ); then
-		$FUNCTION $@
+		$FUNCTION "$@"
 	else
 		print --fail "No such command '$CMD'"
 	fi
@@ -224,7 +219,7 @@ _minectl_loaded_plugins() {
 	local LOADED_PLUGINS_TEMP=""
 
 	for PLUGIN in $LOADED_PLUGINS; do
-		echo $PLUGIN >> "$TEMP1"
+		echo "$PLUGIN" >> "$TEMP1"
 	done
 
 	sort -r "$TEMP1" | uniq > "$TEMP2"
@@ -233,7 +228,7 @@ _minectl_loaded_plugins() {
 		LOADED_PLUGINS_TEMP="$PLUGIN $LOADED_PLUGINS_TEMP"
 	done < "$TEMP2"
 
-	echo $LOADED_PLUGINS_TEMP
+	echo "$LOADED_PLUGINS_TEMP"
 
 	rm -f "$TEMP1" "$TEMP2"
 }
@@ -259,7 +254,7 @@ _minectl_list_commands() {
 ####################
 
 require() {
-	_minectl_require $@
+	_minectl_require "$@"
 }
 
 ######################################################################################################################
@@ -267,6 +262,11 @@ require() {
 ###############
 # Main script #
 ###############
+
+#####################
+# Load main library #
+#####################
+require minelib 2> /dev/null || { echo "Could not load main library" 1>&2; exit 1; }
 
 # Read plugin list
 if [ -f "$PLUGINS_LIST" ]; then
@@ -288,13 +288,13 @@ else
 			;;
 			--very-verbose|-vv)	DEBUG_LEVEL=2
 			;;
-			--level|-l)	DEBUG_LEVEL=$2
+			--level|-l)	DEBUG_LEVEL="$2"
 					shift
 			;;
 			--commands|-c)	print "Available commands: $(_minectl_list_commands)"
 					exit 0
 			;;
-			*)		_minectl_load_plugins $PLUGINS
+			*)		_minectl_load_plugins "$PLUGINS"
 
 					if ( verbose ); then
 						print "Loaded plugins: $(_minectl_loaded_plugins)"
@@ -304,7 +304,7 @@ else
 						print "Available commands: $(_minectl_list_commands)"
 					fi
 					CMDLINE="$@"
-					_minectl_run $CMDLINE
+					_minectl_run "$CMDLINE"
 					break
 		esac
 		shift
