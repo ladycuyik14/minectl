@@ -158,13 +158,17 @@ _minectl_load_plugin() {
 
 	if [ -f "$PLUGIN_FILE" ]; then
 		if ( "$PLUGIN_FILE" checkdeps $PLUGINS 2> /dev/null ); then
-			LOADED_PLUGINS="$LOADED_PLUGINS $PLUGIN"
 			source "$PLUGIN_FILE"
+			LOADED_PLUGINS="$LOADED_PLUGINS $PLUGIN"
+			LOADED_PLUGINS="$(echo $LOADED_PLUGINS | sort | uniq)"
 			return 0
 		else
-			print -2 "Plugin '$PLUGIN' $LANG_PLUGIN_NOT_FOUND"
+			print -2 "Plugin '$PLUGIN' $LANG_PLUGIN_DEPS_ERR"
 			return 1
 		fi
+	else
+		print -2 "Plugin '$PLUGIN' $LANG_PLUGIN_NOT_FOUND"
+		return 1
 	fi
 
 	print -2 "Plugin '$PLUGIN' $LANG_PLUGIN_NONEXISTANT!"
@@ -294,7 +298,7 @@ if [ $# -eq 0 ]; then
 else
 	while (( $# )); do
 		case $1 in
-			--plugins|-p)	_minectl_load_plugin $2
+			--plugins|-p)	_minectl_load_plugin "$2"
 							shift
 							_minectl_store_plugins_cfg
 					exit 0
