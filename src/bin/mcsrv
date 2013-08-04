@@ -25,7 +25,7 @@
 SERVER_NAME="$1"
 
 # Handle events
-mcsrv_handle_events() {
+_mcsrv_handle_events() {
 	# Read the server's stderr fifo
 	while read EVENT; do
 		# All event handling scripts must have the 
@@ -43,7 +43,7 @@ mcsrv_handle_events() {
 
 # Set default values for required 
 # configuration parameters
-mcsrv_set_defaults() {
+_mcsrv_set_defaults() {
 	# Minimum Java heap size
 	if [ -z "$XMS" ]; then
 		XMS="512M"
@@ -78,21 +78,21 @@ mcsrv_set_defaults() {
 ###############
 
 # Source main library
-source /usr/local/libexec/minecraft/minelib 2> /dev/null || { echo "Could not load main library" 1>&2; exit 1; }
+source /usr/local/bin/minectl 2> /dev/null || { echo "Could not load main library" 1>&2; exit 1; }
 
 if [ $# -ne 1 ]; then
 	minelib_fail "Usage: `basename $0` <server_name>" 
 fi
 
 # Change to server's directory
-minelib_access_server "$SERVER_NAME" || minelib_fail
+access_server "$SERVER_NAME" || minelib_fail
 
 # Source configuration file
 source $SERVER_CONFIG 2> /dev/null || minelib_fail "Configuration file is missing"
 
 # Set default values for required 
 # configuration parameters
-mcsrv_set_defaults
+_mcsrv_set_defaults
 
 # Backup old log file
 if [ -f "$SERVER_LOG_FILE" ]; then
@@ -103,7 +103,7 @@ fi
 
 # Start the server's event monitor
 if ( $MONITOR_EVENTS ); then
-	 mcsrv_handle_events &
+	 _mcsrv_handle_events &
 fi
 
 # Begin logfile
