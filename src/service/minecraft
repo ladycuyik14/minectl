@@ -55,7 +55,7 @@ stop() {
 	# Stop all servers
 	if [ -z "$SERVER_NAME" ]; then
                 while read SERVER; do
-                        $0 stop "$SERVER"
+                        stop "$SERVER"
                 done < $ALL_SERVERS
         else
 		# Stop selected server
@@ -76,7 +76,7 @@ status() {
 	# Determine status of all servers
 	if [ -z "$SERVER_NAME" ]; then
                 while read SERVER; do
-                        $0 status "$SERVER"
+                        status "$SERVER"
                 done < $ALL_SERVERS
         else
 		# Determine status of selected server
@@ -87,6 +87,7 @@ status() {
 				return 0
 			else
 				echo "Server $SERVER_NAME seems to have died" 1>&2
+			rm "$SERVERS_DIR/$SERVER_NAME.pid"
 				return 2
 			fi
 		else

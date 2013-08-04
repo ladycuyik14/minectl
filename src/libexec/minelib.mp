@@ -19,6 +19,75 @@
 #	You should have received a copy of the GNU General Public License
 #	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+####################
+# Global variables #
+####################
+
+# Define default minectl user
+export MC_USER=minecraft
+
+# Debug level for output detail management
+export DEBUG_LEVEL=0
+
+# The current server's name
+export SERVER_NAME=""
+
+### Absolute paths ###
+
+# Define home directory
+export MC_HOME="/srv/$MC_USER"
+
+# Define backup directory
+export MC_BACKUP="$MC_HOME/backup"
+
+# The directory containing the servers
+export SERVERS_DIR="$MC_HOME/servers"
+
+# JARs' directory
+export JAR_DIR="$MC_HOME/jar"
+
+# Define repository list
+export REPO_LIST="$JAR_DIR/.repolist"
+
+# Name of the event scripts
+export EVENT_HANDLERS_DIR="$MC_HOME/event-handlers"
+
+# Binaries' directory
+export BIN_DIR="/usr/local/bin"
+
+# Library directory
+export LIB_DIR="/usr/local/libexec/$MC_USER"
+
+### Paths relative to server ###
+
+# The server's log file
+export SERVER_LOG_FILE="./mcsrv.log"
+
+# Define our configuration file name
+export SERVER_CONFIG="./.mcsrv.cfg"
+
+# The server's properties file
+export SERVER_PROPERTIES="./server.properties"
+
+# The server's white-list
+export SERVER_WHITE_LIST="./white-list.txt"
+
+# The server's ops-list
+export SERVER_OP_LIST="./ops.txt"
+
+# Name of the event scripts
+export SERVER_EVENT_HANDLERS_DIR="./eh.d"
+
+### Pipes ###
+
+# The server's stdin pipe
+export SERVER_STDIN="./.stdin"
+
+# The server's stdout pipe
+export SERVER_STDOUT="./.stdout"
+
+# The server's stderr pipe
+export SERVER_STDERR="./.stderr"
 
 #####################
 # Private functions #

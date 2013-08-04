@@ -81,14 +81,14 @@ _mcsrv_set_defaults() {
 source /usr/local/bin/minectl 2> /dev/null || { echo "Could not load main library" 1>&2; exit 1; }
 
 if [ $# -ne 1 ]; then
-	minelib_fail "Usage: `basename $0` <server_name>" 
+	print --fail "Usage: `basename $0` <server_name>" 
 fi
 
 # Change to server's directory
-access_server "$SERVER_NAME" || minelib_fail
+access_server "$SERVER_NAME" || print --fail
 
 # Source configuration file
-source $SERVER_CONFIG 2> /dev/null || minelib_fail "Configuration file is missing"
+source $SERVER_CONFIG 2> /dev/null || print --fail "Configuration file is missing"
 
 # Set default values for required 
 # configuration parameters
