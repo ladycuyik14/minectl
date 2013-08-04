@@ -72,7 +72,7 @@ export BIN_DIR="/usr/local/bin"
 export LIB_DIR="/usr/local/libexec/$MC_USER"
 
 # Plugins directory
-export PLUGIN_DIR="$LIB_DIR/plugins"
+export PLUGIN_DIR="/usr/local/libexec/$MC_USER-plugins"
 
 # Minectl's wanted plugins
 export PLUGINS_LIST="$MC_HOME/.plugins.list"
