@@ -334,7 +334,7 @@ if [ $# -eq 0 ]; then
 else
 	while (( $# )); do
 		case $1 in
-			--plugins|-p)	_minectl_load_plugin $2
+			--plugins|-p)	_minectl_load_plugins $2
 							shift
 							_minectl_store_plugins_cfg
 					exit 0
