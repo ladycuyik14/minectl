@@ -5,7 +5,11 @@
 # chkconfig: 234 90 10
 # description: Start and stop minecraft servers
 
-source /usr/local/bin/minectl
+# The minecraft user's name
+MC_USER="minecraft"
+
+# The minecraft user's home directory
+MC_HOME="/srv/$MC_USER"
 
 # The directory for the servers
 SERVERS_DIR="$MC_HOME/servers"
