@@ -39,7 +39,7 @@ install_files() {
 
 	install -o root -g root -m 775 -t /usr/local/share/man/man1 ../man/minectl.1
 	install -o root -g root -m 775 -t /usr/local/bin bin/*
-	install -o root -g root -m 775 -d /usr/local/libexec/"$MC_USER"
+	install -o root -g root -m 775 -d /usr/local/libexec/"$MC_USER-plugins"
 	install -o root -g root -m 775 -t /usr/local/libexec/"$MC_USER-plugins" libexec/*
 	install -o "$MC_USER" -g "$MC_USER" -m 775 -d "$MC_HOME"/lang
 	install -o "$MC_USER" -g "$MC_USER" -m 775 -t "$MC_HOME"/lang lang/*
