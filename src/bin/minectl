@@ -205,10 +205,15 @@ _minectl_run() {
 
 	local FUNCTION="mc_$(echo $CMD | sed 's/-/_/g')"
 
-	if ( function_exists "$FUNCTION" ); then
-		$FUNCTION "$@"
+	if [ -n "$CMD" ]; then
+		if ( function_exists "$FUNCTION" ); then
+			$FUNCTION "$@"
+		else
+			print --fail "No such command '$CMD'"
+		fi
 	else
-		print --fail "No such command '$CMD'"
+		# TODO: Enter shell here?
+		return 0
 	fi
 }
 
@@ -289,12 +294,14 @@ if [ $# -eq 0 ]; then
 else
 	while (( $# )); do
 		case $1 in
-			--plugins|-p)	print "Loaded plugins: $(_minectl_loaded_plugins)"
+			--plugins|-p)	_minectl_load_plugin $2
+							shift
 							_minectl_store_plugins_cfg
 					exit 0
 			;;
 			--list-plugins|-lp)	cd "$PLUGIN_DIR"
 								ls *.mp
+								exit 0
 			;;
 			--verbose|-v)	DEBUG_LEVEL=1
 			;;
