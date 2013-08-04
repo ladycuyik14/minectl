@@ -151,26 +151,58 @@ USAGE="Usage:
 # Private functions #
 #####################
 
+# Check if certain plugins are loaded
+_minectl_plugin_loaded() {
+	local PLUGIN="$1"
+	local LOADED_PLUGIN=
+	
+	for LOADED_PLUGIN in $LOADED_PLUGINS; do
+		if [ "$PLUGN" == "$LOADED_PLUGIN" ]; then
+			return 0
+		fi
+	return 1
+}
+
+_minectl_plugins_loaded() {
+	local PLUGINS="$@"
+	local PLUGIN=
+	local RETVAL=0
+	
+	for PLUGIN in $PLUGINS; do
+		if ( _minectl_plugin_loaded $PLUGIN ); then
+			let RETVAL++
+		fi
+	done
+	
+	return $RETVAL
+}
+
 # Load a plugin
 _minectl_load_plugin() {
 	local PLUGIN="$1"
 	local PLUGIN_FILE="$PLUGIN_DIR/$PLUGIN.mp"
 
-	if [ -f "$PLUGIN_FILE" ]; then
-		if ( "$PLUGIN_FILE" checkdeps $PLUGINS 2> /dev/null ); then
-			source "$PLUGIN_FILE"
-			LOADED_PLUGINS="$LOADED_PLUGINS $PLUGIN"
-			LOADED_PLUGINS="$(echo $LOADED_PLUGINS | sort | uniq)"
-			return 0
+	if ( ! _minectl_plugin_loaded $PLUGIN ); then
+		if [ -f "$PLUGIN_FILE" ]; then
+			if ( "$PLUGIN_FILE" checkdeps $PLUGINS 2> /dev/null ); then
+				# XXX: debug
+				echo "Loading plugin $PLUGIN"
+				source "$PLUGIN_FILE"
+				LOADED_PLUGINS="$LOADED_PLUGINS $PLUGIN"
+				LOADED_PLUGINS="$(echo $LOADED_PLUGINS | sort | uniq)"
+				return 0
+			else
+				print -2 "Plugin '$PLUGIN' $LANG_PLUGIN_DEPS_ERR"
+				return 1
+			fi
 		else
-			print -2 "Plugin '$PLUGIN' $LANG_PLUGIN_DEPS_ERR"
+			print -2 "Plugin '$PLUGIN' $LANG_PLUGIN_NOT_FOUND"
 			return 1
 		fi
 	else
-		print -2 "Plugin '$PLUGIN' $LANG_PLUGIN_NOT_FOUND"
-		return 1
+		print -2 "Plugin '$PLUGIN' $LANG_PLUGIN_ALREADY_LOADED"
 	fi
-
+	
 	print -2 "Plugin '$PLUGIN' $LANG_PLUGIN_NONEXISTANT!"
 	return 1
 }
