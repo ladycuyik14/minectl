@@ -188,7 +188,7 @@ _minectl_load_plugin() {
 		if [ -f "$PLUGIN_FILE" ]; then
 			if ( "$PLUGIN_FILE" checkdeps $PLUGINS 2> /dev/null ); then
 				# XXX: debug
-				echo "Loading plugin $PLUGIN"
+				print -l 3 "Loading plugin $PLUGIN"
 				source "$PLUGIN_FILE"
 				LOADED_PLUGINS="$LOADED_PLUGINS $PLUGIN"
 				LOADED_PLUGINS="$(echo $LOADED_PLUGINS | sort | uniq)"
@@ -204,8 +204,8 @@ _minectl_load_plugin() {
 			return 1
 		fi
 	else
-		print -2 "Plugin '$PLUGIN' is already loaded"
-		#print -2 "Plugin '$PLUGIN' $LANG_PLUGIN_ALREADY_LOADED"
+		print -l 3 -2 "Plugin '$PLUGIN' is already loaded"
+		#print -l 3 -2 "Plugin '$PLUGIN' $LANG_PLUGIN_ALREADY_LOADED"
 	fi
 	
 	return 1
