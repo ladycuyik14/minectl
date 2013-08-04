@@ -7,7 +7,7 @@ require jarmgr
 #####################
 
 # Determine status of server
-_srvmgr_server_status() {
+_srvmgr_status() {
 	local SERVER_NAME="$1"
 	shift
 
