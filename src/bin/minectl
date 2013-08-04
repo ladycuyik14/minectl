@@ -250,7 +250,7 @@ require() {
 #####################
 # Load main library #
 #####################
-require minelib 2> /dev/null || { echo "Could not load main library" 1>&2; exit 1; }
+source /usr/local/etc/minelib 2> /dev/null || { echo "Could not load main library" 1>&2; exit 1; }
 
 # Read plugin list
 if [ -f "$PLUGINS_LIST" ]; then
