@@ -4,7 +4,7 @@
 #
 
 MC_USER="minecraft"
-MC_HOME="/home/$MC_USER"
+MC_HOME="/srv/$MC_USER"
 
 # Test if we are root
 if [ $EUID -ne 0 ]; then

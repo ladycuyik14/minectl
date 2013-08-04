@@ -48,7 +48,7 @@ export SERVER_NAME=""
 ### Absolute paths ###
 
 # Define home directory
-export MC_HOME="/home/$MC_USER"
+export MC_HOME="/srv/$MC_USER"
 
 # Define backup directory
 export MC_BACKUP="$MC_HOME/backup"
