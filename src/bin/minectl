@@ -160,6 +160,8 @@ _minectl_plugin_loaded() {
 		if [ "$PLUGN" == "$LOADED_PLUGIN" ]; then
 			return 0
 		fi
+	done
+	
 	return 1
 }
 
