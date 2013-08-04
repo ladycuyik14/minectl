@@ -22,6 +22,11 @@
 # TODO: Make all output language-dependent
 # TODO: Outsource common functions to minelib
 
+#####################
+# Load main library #
+#####################
+source /usr/local/etc/minelib 2> /dev/null || { echo "Could not load main library" 1>&2; exit 1; }
+
 ###################################
 # Version and license information #
 ###################################
@@ -31,7 +36,6 @@ ARCH=noarch
 AUTHOR="Richard Neumann"
 YEAR="2013"
 LICENSE="GPL v. 3.0 or later"
-
 
 ###################
 # Local variables #
@@ -246,11 +250,6 @@ require() {
 ###############
 # Main script #
 ###############
-
-#####################
-# Load main library #
-#####################
-source /usr/local/etc/minelib 2> /dev/null || { echo "Could not load main library" 1>&2; exit 1; }
 
 # Read plugin list
 if [ -f "$PLUGINS_LIST" ]; then
