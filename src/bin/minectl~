@@ -1,0 +1,1388 @@
+#! /bin/bash
+#
+#	minectl - Control a minecraft server
+#
+#	Copyright (C) 2012 Richard Neumann <mail@richard-neumann.de>
+#
+#	This program is free software: you can redistribute it and/or modify
+#	it under the terms of the GNU General Public License as published by
+#	the Free Software Foundation, either version 3 of the License, or
+#	at your option) any later version.
+#
+#	This program is distributed in the hope that it will be useful,
+#	but WITHOUT ANY WARRANTY; without even the implied warranty of
+#	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#	GNU General Public License for more details.
+#
+#	You should have received a copy of the GNU General Public License
+#	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+################################################################################
+
+# TODO: Make all output language-dependent
+# TODO: Outsource common functions to minelib
+
+###################################
+# Version and license information #
+###################################
+
+VERSION=6.0
+ARCH=noarch
+AUTHOR="Richard Neumann"
+YEAR="2013"
+LICENSE="GPL v. 3.0 or later"
+
+####################
+# Global variables #
+####################
+
+# Full path to the script
+THIS="`realpath $0`"
+
+# Synopsis of usage for user information
+USAGE="Usage:	
+	\033[1mminectl\033[0m [\033[1minit\033[0m | \033[1mlist\033[0m [\033[3m--verbose\033[0m, \033[3m--very-verbose\033[0m] | \033[1madd\033[0m \033[3mserver_name\033[0m [\033[1m--jar\033[0m \033[3mjar_file\033[0m] | \033[1mevents\033[0m]
+	\033[1mminectl\033[0m \033[1mjar\033[0m [list | update | upgrade]]
+	\033[1mminectl\033[0m \033[1mjar\033[0m \033[1mrepository\033[0m [list | add \033[3mURL\033[0m \033[3mname\033[0m | remove \033[3mname\033[0m]
+	\033[1mminectl\033[0m \033[3mserver_name\033[0m [\033[1mremove\033[0m | \033[1mrename\033[0m \033[3mnew_name\033[0m]
+	\033[1mminectl\033[0m \033[3mserver_name\033[0m \033[1mpasswd\033[0m [\033[1mlist\033[0m | \033[1mlock\033[0m | \033[1munlock\033[0m | [\033[1mwhitelist\033[0m | \033[1mblacklist\033[0m | \033[1mop\033[0m | \033[1mdeop\033[0m | \033[1mstatus\033[0m] \033[3muser_name\033[0m]
+	\033[1mminectl\033[0m \033[3mserver_name\033[0m [\033[1mconfigure\033[0m | \033[1mproperties\033[0m] [\033[3mvariable\033[0m=\033[3mvalue\033[0m | -\033[3mvariable\033[0m]
+	\033[1mminectl\033[0m \033[3mserver_name\033[0m [[\033[1mbackup\033[0m | \033[1mrestore\033[0m [\033[1m--clean\033[0m]] [\033[3mbackup_name\033[0m] | \033[1mreset\033[0m [\033[1m--erase-config\033[0m]]
+	\033[1mminectl\033[0m \033[3mserver_name\033[0m \033[1mevent\033[0m [\033[1mlist\033[0m | [\033[1menable\033[0m | \033[1mdisable\033[0m] \033[3mevent_handler\033[0m]
+	\033[1mminectl\033[0m \033[3mserver_name\033[0m \033[1mstatus\033[0m 
+	\033[1mminectl\033[0m \033[3mserver_name\033[0m [\033[1mexec\033[0m \033[3mjava_program_command\033[0m | \033[1mplayers\033[0m | \033[1mplayer-count\033[0m]
+	\033[1mminectl\033[0m \033[3mserver_name\033[0m \033[3mjava_program_command\033[0m
+	\033[1mminectl\033[0m [\033[1m--version\033[0m | \033[1m--help\033[0m]
+"
+
+# Get a list of ports that are in use
+minectl_ports_in_use() {
+	local PORTS_IN_USE=""
+	
+	for SERVER in `minectl_list_servers`; do
+		PORTS_IN_USE="$PORTS_IN_USE `minectl $SERVER configure 2> /dev/null | grep "server-port=" 2> /dev/null | cut -d "=" -f 2> /dev/null`"
+	done
+	
+	echo "$PORTS_IN_USE"
+}
+
+# Find a port not used by any existing server
+minectl_server_get_free_port() {
+	local PORT=25565
+	
+	for PORT_IN_USE in `minectl_ports_in_use`; do
+		if [ $PORT -eq $PORT_IN_USE ]; then
+			PORT=$(($PORT+1))
+		else
+			break
+		fi
+	done
+	
+	echo "$PORT"
+}
+		
+######################################################################################################################
+
+#######################
+# Source main library #
+#######################
+source /usr/local/libexec/minectl/minelib 2> /dev/null || { echo "Could not load main library" 1>&2; exit 1; }
+
+###################################
+# Import messages and error codes #
+###################################
+source /home/minectl/lang/default.lang 2> /dev/null || minelib_fail "Language files could not be loaded from `dirname $0`/default.lang"
+source $LIB_DIR/errcodes 2> /dev/null || minelib_fail "minelib_err or codes could not be loaded from `dirname $0`/minelib_err codes"
+
+######################################################################################################################
+
+##################
+# Main functions #
+##################
+
+# Initialize the minecraft server installation and configuration after installation
+# This should be done interactively
+minectl_init() {
+	# Change to home directory
+	cd $MC_HOME 2> /dev/null || minelib_fail ACCESS_HOME_DIR_FAILED
+
+	# Check if no servers are configured yet
+	if ( ! minectl_list_servers > /dev/null ); then
+		minelib_prompt srv_name
+		read SERVER_NAME
+
+		# Check if we already have some JAR files at hand (although this should not be the case)
+		if ( minectl_jar list ); then
+			# minelib_ask the user which jar file shall be used
+			minelib_prompt SELECT_JAR_FILE
+			read JAR_FILE
+		else
+			# minelib_ask the user to update the system
+			if ( minelib_ask jar_update ); then
+				minectl_jar update
+				minectl_jar upgrade
+				minectl_jar list
+				minelib_prompt SELECT_JAR_FILE
+				read JAR_FILE
+			else
+				minelib_notify UPDATE_MANUALLY
+				exit 1
+			fi
+		fi
+
+		# Add the new server
+		minectl_add_server "$SERVER_NAME" --jar "$JAR_FILE" 
+
+	# If we already have servers, don't initialize
+	else
+		minelib_notify INIT_NOT_REQUIRED
+	fi		
+}
+
+# Add a server
+minectl_add_server() {
+	# First parameter is the server name
+	local SERVER_NAME=$1
+	shift
+
+	# JAR file to be used
+	local JAR_FILE=
+	
+	# Flag whether to set server defaults
+	local DEFAULTS=false
+	
+	# Server configuration options
+	local CONFIG=
+
+	# Server properties options
+	local PROPERTIES=
+	
+	# Set the server's configuration defaults
+	minectl_add_server_defaults() {
+		# Default server port
+		local SERVER_PORT=`minectl_server_get_free_port`
+		
+		# Default event handlers
+		local EVENT_HANDLERS="log cmd"
+		
+		minectl_server_properties "server-port=$SERVER_PORT" > /dev/null
+		minectl_server_event add $EVENT_HANDLERS > /dev/null
+	}
+	
+	# Switch options
+	while (( $# )); do
+		case $1 in
+			--jar)					JAR_FILE=$2
+									shift
+			;;
+			--defaults)				DEFAULTS=true
+			;;
+			--configure|--config)	CONFIG="$2"
+									shift
+			;;
+			--properties|--props)	PROPERTIES="$2"
+									shift
+			;;
+			*)						minelib_err UNKNOWN_PARAM $1
+		esac
+		shift
+	done
+
+	# Change to servers directory
+	cd $SERVERS_DIR 2> /dev/null || minelib_fail ACCESS_SRV_DIR_FAILED
+
+	# Check if we specified a server name
+	if [ -n "$SERVER_NAME" ]; then
+		# Check whether no such file or folder already exists
+		if [ -e "$SERVER_NAME" ]; then
+			# If there's already such a directory, we assume that the server already exists
+			if [ -d "$SERVER_NAME" ]; then
+				minelib_fail SRV_EXISTS
+			# If the thing with the server's name is not a directory, we give up :-(
+			else
+				minelib_fail FILE_EXISTS
+			fi				
+		else
+			# Create the server
+			mkdir "$SERVER_NAME" 2> /dev/null || minelib_fail CREATE_SRV_DIR_FAILED
+			cp "$SERVER_CONFIG" "$SERVER_NAME" 2> /dev/null || minelib_fail COPY_SKEL_CFG_FAILED
+
+			# Change to new server
+			minelib_access_server "$SERVER_NAME"
+
+			# If JAR file was not specified, let the user select one iteractively
+			if [ -z "$JAR_FILE" ]; then
+				if ( minectl_jar list ); then
+					minelib_prompt SELECT_JAR_FILE
+					read JAR_FILE
+				# ...and exit if we don't have any
+				else
+					exit 1
+				fi
+			fi
+
+			# Set the specified Jar file
+			minectl_server_configure "JAR_FILE=$JAR_FILE" > /dev/null
+			
+			# Set the default configuration if wanted
+			$DEFAULTS && minectl_add_server_defaults
+			
+			# Set further initial custom configuration if specified
+			if [ -n "$CONFIG" ]; then
+				minectl_server_configure $CONFIG > /dev/null
+			fi
+
+			# Set further initial custom properties if specified
+			if [ -n "$PROPERTIES" ]; then
+				minectl_server_properties $PROPERTIES > /dev/null
+			fi
+			
+			# Create basic minecraft-specific files
+			touch $SERVER_PROPERTIES $SERVER_OP_LIST $SERVER_WHITE_LIST $SERVER_LOG_FILE 2> /dev/null || { cd ..; rm -Rf "$SERVER_NAME"; minelib_fail CREATE_CFG_FILES_FAILED; }
+			mkdir $SERVER_EVENT_HANDLERS_DIR 2> /dev/null || { cd ..; rm -Rf "$SERVER_NAME"; minelib_fail CREATE_CFG_FILES_FAILED; }
+
+			# Create named pipes for the server
+			minelib_mk_fifos 
+		fi
+	# If no name was specified, we cannot create a server
+	else
+		minelib_fail NO_SRV_NAME || { cd ..; rm -Rf "$SERVER_NAME"; minelib_fail CREATE_CFG_FILES_FAILED; }
+	fi		
+}
+
+# Remove a server
+minectl_server_remove() {
+	# As default, minelib_ask again, before removing the server
+	local FORCE=false
+
+	# Switch options
+	while (( $# ));do
+		case $1 in
+			--force)	FORCE=true
+			;;
+			*)		minelib_err  UNKNOWN_PARAM $1
+		esac
+		shift
+	done
+
+	# Do we really want to remove the server?
+	local REMOVE=false
+
+	# Check if we want to remove non-interactively
+	if ( $FORCE ); then
+		REMOVE=true
+	else
+		# minelib_ask the user if they really wants to remove the server
+		minelib_ask REMOVE_SRV && REMOVE=true
+	fi
+
+	# If we finally want to remove the server
+	if ( $REMOVE ); then
+		# Change to server's directory
+		minelib_access_server "$SERVER_NAME"
+
+		# Stop server if it is running
+		minectl_server_status > /dev/null 2> /dev/null && minelib_fail SRV_RUNNING
+
+		# Change to parent folder
+		cd .. 2> /dev/null || minelib_fail ACCESS_PARENT_DIR_FAILED
+
+		# Remove stuff
+		rm -R "$SERVER_NAME" && minelib_notify SRV_REMOVED || minelib_fail SRV_REMOVE_FAILED
+	fi
+}
+
+# List available servers
+minectl_list_servers() {
+	# Define tamporary server list	
+	local SERVER_LIST="`mktemp`"
+	local RETVAL=1
+
+	# Don't be verbose by default
+	local VERBOSE=false
+	local VERY_VERBOSE=false
+
+	# List all folders (servers) in the servers directory
+	cd "$SERVERS_DIR" 2> /dev/null && minelib_ls_dir 2> /dev/null > "$SERVER_LIST"
+
+	# Switch options
+	while (( $# ));do
+		case $1 in
+			--verbose|-v)		VERBOSE=true
+			;;
+			--very-verbose|-vv)	VERBOSE=true
+						VERY_VERBOSE=true
+			;;
+			*)			minelib_err  UNKNOWN_PARAM  $1
+		esac
+		shift
+	done
+
+	# Iterate over all servers in the list
+	while read SERVER_NAME; do
+		# We obviously do have servers
+		RETVAL=0
+
+		# Print the server's name
+		# Bold if verbose
+		$VERBOSE && echo -en "\033[1m"
+		echo -en "$SERVER_NAME"
+		$VERBOSE && echo -e "\033[0m" || echo ""
+
+		# Print some more information in verbose mode
+		if ( $VERBOSE ); then
+			minelib_access_server "$SERVER_NAME"
+			echo -e " \033[1mCONFIGURATION:\033[0m"
+			minectl_server_configure
+			if ( $VERY_VERBOSE ); then
+				echo -e " \033[1mPROPERTIES:\033[0m"
+				minectl_server_properties
+			fi
+		fi
+	done < "$SERVER_LIST"
+
+	return $RETVAL
+}
+
+# Rename a server
+minectl_server_rename() {
+	local NEW_NAME="$@"
+
+	if ( srv_status > /dev/null 2>/dev/null ); then
+		minelib_fail SRV_RUNNING
+	else
+		cd ..
+		mv "$SERVER_NAME" "$NEW_NAME" 2> /dev/null || minelib_fail SRV_RENAME_FAILED
+	fi
+}
+
+# Configure minecraft server installation and configuration
+minectl_server_configure() {
+	minectl_server_configure_print() {		
+		# Set temporary configuration file
+		local TMP_SERVER_CONFIG="`mktemp`"
+
+		# Delete comments and empty lines from config file
+		minelib_extract_data $SERVER_CONFIG > $TMP_SERVER_CONFIG 2> /dev/null
+
+		# Print used JAR file
+		if ( minelib_fileop -b contains "JAR_FILE=" "$1" > /dev/null 2> /dev/null); then
+			echo -en "\033[1m"
+		fi
+		echo -e " JAR_FILE=`readlink minecraft_server.jar 2> /dev/null`\033[0m"
+
+		# Print configuration file content
+                minelib_print_file -o " " "$TMP_SERVER_CONFIG" "$1"
+
+		# Remove temp file
+		rm -f $TMP_SERVER_CONFIG 2> /dev/null
+	}
+	
+	# Set a new active JAR file
+	minectl_server_configure_set_jar() {
+		# The second parameter is the JAR file
+		local JAR_FILE_NAME=$1
+		local JAR_FILE=""
+
+		# Read JAR file interactively if not specified via a parameter
+		if [ -z "$JAR_FILE_NAME" ]; then
+			minelib_fail NO_JAR_SPEC
+		fi
+
+		# Check if JAR file is present
+		if [ -f $JAR_FILE_NAME ]; then
+			JAR_FILE=$JAR_FILE_NAME
+		elif [ -f $JAR_DIR/$JAR_FILE_NAME ]; then
+			JAR_FILE=$JAR_DIR/$JAR_FILE_NAME
+		elif [ -f $JAR_DIR/$JAR_FILE_NAME.jar ]; then
+			JAR_FILE=$JAR_DIR/$JAR_FILE_NAME.jar
+		else
+			minelib_fail JAR_FILE_NOT_FOUND
+		fi
+
+		# Link to new JAR file
+		unlink minecraft_server.jar 2> /dev/null; ln -sf $JAR_FILE minecraft_server.jar 2> /dev/null &&	minelib_notify SRV_RESTART || minelib_fail SET_JAR_FAILED
+	}
+
+	# Print configuration of server, if no arguments are specified
+	if [ $# -eq 0 ]; then
+		minectl_server_configure_print
+	else
+		local ALTERED_VARS="`mktemp`"
+
+		while (( $# )); do
+			local VARIABLE="$1"
+			shift
+
+			local -u VAR_NAME="`echo "$VARIABLE" | cut -d "=" -f 1`"
+			local VAR_VAL="`echo "$VARIABLE" | cut -d "=" -f 2-`"
+
+			# Check if we want to change the JAR file
+			if [ "$VAR_NAME" == "JAR_FILE" ]; then
+				minectl_server_configure_set_jar "$VAR_VAL"
+				echo "JAR_FILE=$VAR_VAL" >> "$ALTERED_VARS"
+			else
+				# Change variable
+				minelib_set_var -u "$VARIABLE" "$SERVER_CONFIG" >> "$ALTERED_VARS"
+			fi
+		done
+
+		# Print new configuration after modifications
+		minectl_server_configure_print "$ALTERED_VARS"
+
+		rm -f "$ALTERED_VARS" 2> /dev/null
+	fi
+}
+
+# Configure a server's properties
+minectl_server_properties() {
+	minectl_server_properties_print() {		
+		# Set temporary properties file
+		local TMP_SERVER_PROPERTIES="`mktemp`"
+
+		# Delete comments and empty lines from config file
+		minelib_extract_data $SERVER_PROPERTIES > $TMP_SERVER_PROPERTIES 2> /dev/null
+
+		# Print properties file content
+                minelib_print_file -o " " "$TMP_SERVER_PROPERTIES" "$1"
+
+		# Remove temp file
+		rm -f $TMP_SERVER_PROPERTIES 2> /dev/null
+	}
+
+	if [ $# -eq 0 ]; then
+		minectl_server_properties_print
+	else
+		local ALTERED_VARS="`mktemp`"
+
+		while (( $# )); do
+			local VARIABLE="$1"
+			shift
+
+			# Change variable and			
+			# mark it as altered
+			minelib_set_var -l "$VARIABLE" "$SERVER_PROPERTIES" >> "$ALTERED_VARS"
+		done
+
+		# Print new properties after modifications
+		minectl_server_properties_print "$ALTERED_VARS"
+		rm -f "$ALTERED_VARS" 2> /dev/null
+	fi
+}
+	
+# Manage a server's users
+minectl_server_passwd() {
+	#################
+	# Set variables #
+	#################
+
+	# Set temporary file
+	local TMP="`mktemp`"
+
+	####################
+	# Passwd functions #
+	####################
+
+	# Reload the whitelist
+	minectl_server_passwd_whitelist_reload() {
+		minectl_server_execute whitelist reload > /dev/null 2> /dev/null
+	}
+
+	# Check if we are given a valid user name
+	minectl_server_passwd_valid_user() {
+		# minelib_fail if no user name has been given
+		if [ -z "$1" ]; then
+			minelib_fail no_user_name
+		fi
+	}
+
+	# Check whether a certain user is white-listed
+	minectl_server_passwd_is_whitelisted() {
+		minectl_server_passwd_valid_user "$1"
+		if ( minelib_fileop -f -i contains "$1" "$SERVER_WHITE_LIST" > /dev/null 2 /dev/null ); then
+			minelib_notify "User \033[1m$1\033[0m is \033[1mwhitelisted\033[0m on server \033[1m$SERVER_NAME\033[0m"
+		else
+			minelib_err  "User \033[1m$1\033[0m is \033[1mnot whitelisted\033[0m on server \033[1m$SERVER_NAME\033[0m"
+		fi
+	}
+
+	# Check whether a certain user is an operator
+	minectl_server_passwd_is_op() {
+		minectl_server_passwd_valid_user "$1"
+		if ( minelib_fileop -f -i contains "$1" "$SERVER_OP_LIST" > /dev/null 2 /dev/null ); then
+			minelib_notify "User \033[1m$1\033[0m is \033[1man operator\033[0m on server \033[1m$SERVER_NAME\033[0m."
+		else
+			minelib_err  "User \033[1m$1\033[0m is \033[1mnot an operator\033[0m on server \033[1m$SERVER_NAME\033[0m."
+		fi
+	}
+
+	# Add a user to the white-list, iff he's not in it yet
+	minectl_server_passwd_whitelist() {
+		minectl_server_passwd_valid_user "$1"
+		if ( ! minectl_server_passwd_is_whitelisted "$1" > /dev/null 2> /dev/null ); then
+			if ( minelib_fileop add "$1" "$SERVER_WHITE_LIST" > /dev/null 2> /dev/null ); then
+				minelib_notify "User \033[1m$1 whitelisted\033[0m on server \033[1m$SERVER_NAME\033[0m."
+			else
+				minelib_err  "\033[1mFailed whitelisting $1\033[0m on server \033[1m$SERVER_NAME\033[0m'.\nCheck your configuration."
+			fi
+		else
+			minelib_err  "User \033[1m$1\033[0m is \033[1malready\033[0m whitelisted on server \033[1m$SERVER_NAME\033[0m."
+		fi
+		
+		minectl_server_passwd_whitelist_reload
+	}
+
+	# Remove user from the white list, iff he's in it
+	minectl_server_passwd_remove() {
+		minectl_server_passwd_valid_user "$1"
+		if ( is_whitelisted "$1" > /dev/null 2> /dev/null ); then
+			minectl_server_passwd_deop "$1" 2> /dev/null
+			if ( minelib_fileop -f -i remove "$1" "$SERVER_WHITE_LIST" > /dev/null 2> /dev/null ); then
+				minelib_notify "User \033[1m$1 removed\033[0m on server \033[1m$SERVER_NAME\033[0m."
+			else
+				minelib_err  "\033[1mFailed removing $1\033[0m on server \033[1m$SERVER_NAME\033[0m.\nCheck your configuration."
+			fi
+		else
+			minelib_err  "User \033[1m$1\033[0m is \033[1mnot whitelisted\033[0m on server \033[1m$SERVER_NAME\033[0m."
+		fi
+
+		minectl_server_passwd_whitelist_reload
+	}
+
+	# Add a user to the operators list
+	minectl_server_passwd_op() {
+		minectl_server_passwd_valid_user "$1"
+		if ( minectl_server_passwd_is_whitelisted "$1" > /dev/null 2> /dev/null ); then
+			if ( ! minectl_server_passwd_is_op "$1" > /dev/null 2> /dev/null ); then		
+				if ( minelib_fileop add "$1" "$SERVER_OP_LIST" > /dev/null 2> /dev/null ); then
+					# Make the user an operator instantly 
+					# on the running server
+					minectl_server_execute op "$1" > /dev/null 2> /dev/null
+
+					minelib_notify "User \033[1m$1\033[0m is \033[1mnow an operator\033[0m on server \033[1m$SERVER_NAME\033[0m."
+				else
+					minelib_err  "\033[1mFailed opping $1\033[0m on server \033[1m$SERVER_NAME\033[0m.\nCheck your configuration."
+				fi
+			else
+				minelib_err  "User \033[1m$1\033[0m is \033[1malready an operator\033[0m on server \033[1m$SERVER_NAME\033[0m."
+			fi
+		else
+			minelib_err  "User \033[1m$1\033[0m is \033[1mnot whitelisted\033[0m on server \033[1m$SERVER_NAME\033[0m."
+		fi
+	}
+
+	# Delete a user from the operators list
+	minectl_server_passwd_deop() {
+		minectl_server_passwd_valid_user "$1"
+		if ( minectl_server_passwd_is_op "$1" > /dev/null 2> /dev/null ); then
+			if ( minelib_fileop -f -i remove "$1" "$SERVER_OP_LIST" > /dev/null 2> /dev/null ); then
+				# Deop the user on running server
+				minectl_server_execute deop "$1" > /dev/null 2> /dev/null
+
+				minelib_notify "User \033[1m$1\033[0m is \033[1mno longer an operator\033[0m on server \033[1m$SERVER_NAME\033[0m."
+			else
+				minelib_err  "\033[1mFailed de-opping $1\033[0m on server \033[1m$SERVER_NAME\033[0m.\nCheck your configuration."
+			fi
+		else
+			minelib_err  "User \033[1m$1\033[0m is \033[1mnot an operator\033[0m on server \033[1m$SERVER_NAME\033[0m."
+		fi
+	}
+
+	# Print the status of a user
+	minectl_server_passwd_status() {
+		minectl_server_passwd_valid_user "$1"
+		if ( minectl_server_passwd_is_whitelisted "$1" ); then	
+			is_op "$1"
+		fi
+	}
+
+	# Print the status of the whole server mode, white-list and ops-list configuration
+	minectl_server_passwd_print() {
+		# Determine mode
+		echo -en "Server \033[1m$SERVER_NAME\033[0m is configured as "
+		if ( minelib_fileop -f -i contains "online-mode=true" "$SERVER_PROPERTIES" > /dev/null 2> /dev/null ); then
+			echo -en "\033[1monline\033[0m"
+		else
+			echo -en "\033[1moffline\033[0m"
+		fi
+
+		# Determine whether white-list is enabled
+		echo -n ", its white-list is "
+		if ( minelib_fileop -f -i contains "white-list=true" "$SERVER_PROPERTIES" > /dev/null 2> /dev/null ); then
+			echo -e "\033[1menabled\033[0m."
+		else
+			echo -e "\033[1mdisabled\033[0m."
+		fi	
+
+		# Display users
+		echo -e "\n\033[1mWhitelisted users:\033[0m"
+		cat "$SERVER_WHITE_LIST" 2> /dev/null
+		echo -e "\n\033[1mOperators:\033[0m"
+		cat "$SERVER_OP_LIST" 2> /dev/null
+		echo ""
+	}
+
+	# Lock the server by putting it into online mode and enabling the white-list
+	minectl_server_passwd_lock() {
+		minectl_server_properties "online-mode=true" "white-list=true" > /dev/null && minelib_notify SRV_LOCKED || minelib_fail SRV_LOCKING_FAILED
+	}
+
+	# Unlock the server by putting it into offline mode and disabling the white-list
+	# XXX: This is not recommended. We anyway want to offer this feature for there 
+	# might be user that want to run an open game server e.g. on networking parties
+	minectl_server_passwd_unlock() {
+		minectl_server_properties "online-mode=false" "white-list=false" > /dev/null && minelib_notify SRV_UNLOCKED || minelib_fail SRV_UNLOCKING_FAILED
+	}
+
+	# Error flag
+	local ERROR=false
+	
+	# Switch commands
+	while (( $# )); do
+		case "$1" in
+			reload)				minectl_server_passwd_whitelist_reload
+			;;
+			is-whitelisted)		minectl_server_passwd_is_whitelisted $2
+								if [ $? -ne 0 ]; then
+									ERROR=true
+								fi
+								shift
+			;;
+			add|whitelist)		minectl_server_passwd_whitelist $2
+								shift
+			;;
+			remove|blacklist)	minectl_server_passwd_remove $2
+								shift
+			;;
+			is-op)				minectl_server_passwd_is_op $2
+								if [ $? -ne 0 ]; then
+									ERROR=true
+								fi
+								shift
+			;;
+			op)					minectl_server_passwd_op $2
+								shift
+			;;
+			deop)				minectl_server_passwd_deop $2
+								shift
+			;;
+			status)				minectl_server_passwd_status $2
+								shift
+			;;
+			lock)				minectl_server_passwd_lock
+			;;
+			unlock)				minectl_server_passwd_unlock
+			;;
+			""|list|print)		minectl_server_passwd_print
+			;;
+			*)					minelib_fail UNKNOWN_PARAM $1
+		esac
+		shift
+	done
+	
+	if ( $ERROR ); then
+		return 1
+	fi
+}
+
+# Create a backup of the server
+minectl_server_backup() {
+	# Set current time and date as default backup name
+	local BACKUP_NAME="$SERVER_NAME-`date +%Y.%m.%d-%H.%M`"
+	local MESSAGE_PRE=
+	local MESSAGE_POST=
+
+	# Process params
+	while (( $# )); do
+		case $1 in
+			--message-pre|--message|-m)	MESSAGE_PRE="$2"
+										shift
+			;;
+			--message-post|-p)		MESSAGE_POST="$2"
+									shift
+			;;
+			*)						minelib_err UNKNOWN_PARAM $1
+		esac
+		shift
+	done
+		
+	# If there is still an argument (or more) remaining
+	# it must be the backup's name
+	if [ $# -gt 0 ]; then
+		BACKUP_NAME="$@"
+	fi
+
+	# Display pre-backup message on server
+	# XXX: Execute in a shubshell, so that a failure in
+	# minectl_server_execute won't affect the backup
+	if [ -n "$MESSAGE_PRE" ]; then
+		( minectl_server_execute say "$MESSAGE_PRE" )
+	fi
+	
+	# Create the backup as a gzip compressed tar archive, but with the custom *.mcb suffix 
+	tar czf "$MC_HOME/backup/$BACKUP_NAME.mcb" * > /dev/null 2> /dev/null 
+	if [ $? -le 1 ]; then		
+		# Display pre-backup message on server
+		# XXX: Execute in a shubshell, so that a failure in
+		# minectl_server_execute won't affect the backup
+		if [ -n "$MESSAGE_POST" ]; then
+			( minectl_server_execute say "$MESSAGE_POST" )
+		fi
+
+		return 0
+	else
+		# Display failure message on server, if one type of
+		# notification was enabled.
+		# XXX: Execute in a shubshell, so that a failure in
+		# minectl_server_execute won't affect the backup
+		if [ -n "$MESSAGE_PRE" -o -n "$MESSAGE_POST" ]; then
+			( minectl_server_execute say "WARNING: Attempted backup failed!" )
+		fi
+
+		minelib_fail BACKUP_FAILED
+	fi
+}
+
+# Restore the server
+minectl_server_restore() {
+	# Assume latest backup shall be restored
+	local BACKUP_NAME="`ls -tl $MC_HOME/backup/$SERVER_NAME-* 2> /dev/null | head -n1 | awk '{print $9}'`"
+	local BACKUP=""
+
+	# We don't want to minelib_clean the server directory by default
+	local CLEAN=false
+	
+	# Switch options
+	while (( $# )); do
+		case $1 in
+			--clean|-c)		CLEAN=true
+			;;
+			*)			BACKUP_NAME="$@"
+						break
+		esac
+     		shift
+	done
+
+	# Check whether the backup file is present...
+	# ... as the file itself (full or relative file path)...
+	if [ -f "$BACKUP_NAME" ]; then
+		BACKUP="$BACKUP_NAME"
+	# ... or as the file's name located in the backup folder ...
+	elif [ -f "$MC_HOME/backup/$BACKUP_NAME" ]; then
+		BACKUP="$MC_HOME/backup/$BACKUP_NAME"
+	# ... or finally as the file's name in the backup folder without the suffix specified.
+	elif [ -f "$MC_HOME/backup/$BACKUP_NAME.mcb" ]; then
+		BACKUP="$MC_HOME/backup/$BACKUP_NAME.mcb"
+	# minelib_fail otherwise
+	else
+		minelib_fail BACKUP_NOT_FOUND
+	fi
+
+	# Check if server is still running
+	minectl_server_status > /dev/null 2> /dev/null && minelib_fail SRV_RUNNING
+			
+	# Clean the server if wanted
+	if ( $CLEAN ); then
+		minelib_clean "$SERVER_NAME"
+	fi
+
+	# Perform restore
+	tar xzf "$BACKUP" > /dev/null 2> /dev/null && return 0 || minelib_fail RESTORE_FAILED
+}
+
+# Reset the server
+minectl_server_reset() {
+	# As default we want to keep our configuration
+	local KEEP_CONFIG=false
+
+	# Switch options
+	while (( $# )); do
+		case $1 in
+			--erase-config|-ec|-e)	KEEP_CONFIG=false
+			;;
+			*)			minelib_err  UNKNOWN_PARAM $1
+		esac
+		shift
+	done
+
+	# Check if server is still running
+	minectl_server_status > /dev/null 2> /dev/null && minelib_fail SRV_RUNNING
+
+	# If we want to keep the configuration, we create a temporal archive from them
+	# XXX: Do not mix this up with our server's main backup() function
+	if ( $KEEP_CONFIG ); then
+		tar czf $CFG_BACKUP banned-ips.txt banned-players.txt ops.txt server.properties white-list.txt 2> /dev/null || minelib_fail CONFIG_BACKUP_FAILED
+	fi
+
+	# Remember used jar file
+	local JAR_FILE=`readlink minecraft_server.jar`
+	
+	# Clean up the server
+	minelib_clean "$SERVER_NAME" || minelib_fail
+
+	# Link back to the active minecraft_server.jar
+	ln -s $JAR_FILE minecraft_server.jar || minelib_err RESET_JAR_FAILED
+	
+	# If we wanted to keep our configuration, we now restore its backup	
+	if ( $KEEP_CONFIG ); then
+		tar xzf $CFG_BACKUP 2> /dev/null || minelib_fail RESTORE_CONFIG_FAILED
+		rm $CFG_BACKUP 2> /dev/null
+	fi
+}
+
+# Manage the JAR files
+minectl_jar() {
+	# Set temporary repository for re-formatted repo list
+	local TMP_REPO_LIST="`mktemp`"
+
+	##################
+	# Repo functions #
+	##################
+
+	# Parse the repository list
+	minectl_jar_parse_repository() {
+		# Check whether the repository list exists
+		test -f "$REPO_LIST" 2> /dev/null || minelib_fail CHECK_REPO_FAILED
+
+		# Re-format repo file
+		minelib_extract_data "$REPO_LIST" > "$TMP_REPO_LIST" 2> /dev/null || minelib_fail PARSING_REPO_FAILED
+	}
+
+	# Operate on the repository
+	minectl_jar_repository() {
+		# List available repositories
+		minectl_jar_repository_list() {
+			# Parse our repo list
+			minectl_jar_parse_repository
+
+			# Switch for verbose output
+			VERBOSE=false
+
+			while (( $# )); do
+				case $1 in
+					--verbose|-v)	VERBOSE=true
+					;;
+				esac
+				shift
+			done
+
+			echo -e "\033[2mAvailable Repositories:\033[0m\n"
+
+			# Iterate over each repository entry in the repository list
+			while read REPO; do
+				# The URL to the jar file
+				local REPO_URL="`echo "$REPO" | cut -d "#" -f 1`"
+				# A descriptive name of the JAR file
+				local REPO_NAME="`echo "$REPO" | cut -d "#" -f 2`"
+				# The name of the file we want to store
+				local REPO_FILE="$JAR_DIR/$REPO_NAME.jar"
+
+				echo -e "\033[1m$REPO_NAME\033[0m"
+				if ( $VERBOSE ); then
+					echo -e "\033[2mURL:\033[0m\t$REPO_URL"
+					echo -e "\033[2mFILE:\033[0m\t$REPO_FILE\n"
+				fi
+			done < $TMP_REPO_LIST
+		}
+
+		# Add an entry to the repository
+		minectl_jar_repository_add() {
+			# Clear variables
+			local REPO_URL="$1"
+			local REPO_NAME="$2"
+
+			# If nothing has been specified via the parameters, go to interactive mode
+			if [ -z "$REPO_URL" ]; then
+				minelib_prompt SPEC_REPO_URL
+				read REPO_URL
+			fi
+
+			if [ -z "$REPO_NAME" ]; then
+				minelib_prompt SPEC_REPO_NAME
+				read REPO_NAME
+			fi
+
+			# Store new repository in file
+			echo "$REPO_URL#$REPO_NAME" >> $REPO_LIST 2> /dev/null || minelib_fail REPO_SAVE_FAILED
+		}
+
+		# Remove an entry from the repository list
+		minectl_jar_repository_remove() {
+			# Only argument: The Repo's name
+			local REPO_NAME="$1"
+
+			# If nothing has been specified via the parameters, go to interactive mode
+			if [ -z "$REPO_NAME" ]; then
+				minelib_prompt SPEC_REPO_NAME
+				read REPO_NAME
+			fi
+
+			# Remove repo from the list if it is inside
+			minelib_fileop -e remove  "#$REPO_NAME" "$REPO_LIST" 2> /dev/null
+			
+		}
+
+		local CMD=$1
+		shift
+	
+		# Switch commands
+		case $CMD in
+			list|ls)		minectl_jar_repository_list "$@"
+			;;
+			add)			minectl_jar_repository_add "$@"
+			;;
+			remove|delete|rm)	minectl_jar_repository_remove "$@"
+			;;
+			*)			minelib_fail UNKNOWN_PARAM $CMD
+		esac
+	}
+
+	# List available JAR files
+	minectl_jar_list() {
+		# Change to the JARs' folder
+		cd $JAR_DIR 2> /dev/null || minelib_fail ACCESS_JAR_DIR_FAILED
+
+		# Parse arguments
+		case $1 in
+			-a|--all)	ls --color=auto -alF
+			;;
+			*)		if ( ! ls --color=auto *.jar 2> /dev/null ); then
+						minelib_notify NO_JAR_FILES
+						return 1
+					fi
+		esac
+	}
+
+	# Check if updates for JAR files are available
+	minectl_jar_update() {
+		# Change to temoprary directory
+		cd "$JAR_REPO" > /dev/null 2> /dev/null || minelib_fail ACCESS_REPO_DIR_FAILED
+
+		# Update counter
+		local UPDATES=0
+
+		# Skipping indicator
+		local CONTINUE=false
+
+		# Parse our repo list
+		minectl_jar_parse_repository
+
+		# Iterate over each repository entry in the repository list
+		while read REPO; do
+			# The URL to the jar file
+			local REPO_URL="`echo "$REPO" | cut -d "#" -f 1`"
+			# A descriptive name of the JAR file
+			local REPO_NAME="`echo "$REPO" | cut -d "#" -f 2`"
+			# The name of the file we want to store
+			local REPO_FILE="$JAR_REPO/`date +%s`-$REPO_NAME.jar"
+			# The latest file of the repo
+			local LATEST_FILE="$JAR_REPO/$REPO_NAME.latest.jar"
+
+			# Check if we specified aonly a selection 
+			# of repos and skip unwanted ones
+			for WANTED_REPO in "$@"; do
+				CONTINUE=true
+
+				if [ "$REPO_NAME" == "$WANTED_REPO" ]; then
+					CONTINUE=false
+					break
+				fi		
+			done
+
+			$CONTINUE && continue
+
+			# Download the JAR file
+			minelib_prompt  "Retrieving \033[1m$REPO_NAME\033[0m\t"
+			wget -q "$REPO_URL" -O "$REPO_FILE" 2> /dev/null || minelib_fail "[  failed   ]"
+		
+			# If the file exists...
+			if [ -f "$LATEST_FILE" ]; then
+				# ...and it is the same, we don't need to update it
+				if ( cmp "$LATEST_FILE" "$REPO_FILE" > /dev/null 2> /dev/null ); then
+					rm -f "$REPO_FILE" 2> /dev/null
+					minelib_print "[ up 2 date ]"
+					continue
+				fi
+			fi
+
+			ln -sf "$REPO_FILE" "$LATEST_FILE" 2> /dev/null
+
+			# Increment update counter
+			UPDATES=$(($UPDATES+1))
+
+			minelib_print "[  updated  ]"
+		done < $TMP_REPO_LIST
+
+		# Return value is number of updates
+		return $UPDATES
+	}
+
+	# Upgrade Minecraft's JAR files
+	minectl_jar_upgrade() {
+		# Change to temoprary directory
+		cd "$JAR_REPO" > /dev/null 2> /dev/null || minelib_fail ACCESS_REPO_DIR_FAILED
+
+		# Upgrade counter
+		local UPGRADES=0
+
+		# Skipping indicator
+		local CONTINUE=false
+
+		# Parse our repo list
+		minectl_jar_parse_repository
+
+		# Iterate over each repository entry in the repository list
+		while read REPO; do
+			# The URL to the jar file
+			local REPO_URL="`echo "$REPO" | cut -d "#" -f 1`"
+			# A descriptive name of the JAR file
+			local REPO_NAME="`echo "$REPO" | cut -d "#" -f 2`"
+			# The latest file of the repo
+			local LATEST_FILE="$JAR_REPO/$REPO_NAME.latest.jar"
+			# The current file of the repo
+			local CURRENT_FILE="$JAR_DIR/$REPO_NAME.jar"
+			# Check if we specified aonly a selection 
+			# of repos and skip unwanted ones
+
+			for WANTED_REPO in "$@"; do
+				CONTINUE=true
+
+				if [ "$REPO_NAME" == "$WANTED_REPO" ]; then
+					CONTINUE=false
+					break
+				fi		
+			done
+
+			$CONTINUE && continue
+		
+			minelib_prompt  "JAR file from repo \033[1m$REPO_NAME\033[0m "
+			# If the file exists...
+			if [ -f "$LATEST_FILE" ]; then
+				if [ -f "$CURRENT_FILE" ]; then
+					# ...and it is the same, we don't need to update it
+					if ( cmp "$CURRENT_FILE" "$LATEST_FILE" > /dev/null 2> /dev/null ); then
+						echo "is up to date"
+						continue
+					fi
+				fi
+
+				ln -sf "`readlink $LATEST_FILE`" "$CURRENT_FILE" 2> /dev/null
+
+				# Increment update counter
+				UPGRADES=$(($UPGRADES+1))
+
+				minelib_print "has been upgraded"
+			else
+				minelib_print JAR_UPDATE
+				exit 1
+			fi
+		done < $TMP_REPO_LIST
+
+		# Return value is number of updates
+		return $UPDATES
+	}
+
+
+	local CMD=$1
+	shift
+	
+	# Switch commands
+	case $CMD in
+		list|ls)		minectl_jar_list "$@"
+		;;
+		update)			minectl_jar_update "$@"
+		;;
+		upgrade)		minectl_jar_upgrade "$@"
+		;;
+		repository|repo)	minectl_jar_repository "$@"
+		;;
+		*)			minelib_err  UNKNOWN_PARAM $1
+					exit 1
+	esac
+}
+
+#############################
+# Minecraft server commands #
+#############################
+
+# Send commands to server and print results
+minectl_server_execute() {
+	# Per default, we don't want to see the verbose output
+	local VERBOSE=false
+	local SHOW_TAIL=false
+	local WAIT_TIME=0.1
+	local CLEAN=true
+
+	# Switch options
+	while (( $# )); do
+		case $1 in
+			--verbose|-v)	VERBOSE=true
+					shift
+			;;
+			--show-tail|-s)	SHOW_TAIL=true
+					shift
+			;;
+			--wait-time|-w)	WAIT_TIME=$2
+					shift 2
+			;;
+			--no-clean|-n)	CLEAN=false
+					shift 2
+			;;
+			*)		break
+		esac
+	done
+
+	# Execute a Java command on the server
+	minectl_server_execute_cmd() {
+		minelib_access_server "$SERVER_NAME"
+
+		if ( minectl_server_status > /dev/null 2> /dev/null ); then
+			# Push command into server's stdin pipe
+			echo $@ > $SERVER_STDIN 2> /dev/null || minelib_fail EXEC_CMD_FAILED
+		else
+			minelib_fail SRV_NOT_RUNNING
+		fi
+	}
+
+	# If cleaning is enabled, perform an empty query first
+	if ( $CLEAN ); then
+		# If SHOW_TAIL is enabled, print the recent output
+		if ( $SHOW_TAIL ); then
+			minectl_server_execute_cmd " "
+		# Else, discard the output
+		else
+			minectl_server_execute_cmd " " 2> /dev/null
+		fi
+	fi
+
+	# If verbose information is wanted, also
+	# do not cut off timestamps and info fields
+	if ( $VERBOSE ); then
+		minectl_server_execute_cmd $@
+	else 
+		minectl_server_execute_cmd $@ | cut -d " " -f 4-
+	fi
+}
+
+# List players that are logged in
+# Return 0 iff there are players on the server
+# or 1 else
+minectl_server_players() {
+	local TMP_PLAYERS="`mktemp`"
+	local RETVAL=1
+
+	minectl_server_execute list | tail -n +2 > $TMP_PLAYERS 2> /dev/null
+
+	if [ -n "`cat $TMP_PLAYERS`" ]; then
+		cat "$TMP_PLAYERS"
+		RETVAL=0
+	else
+		minelib_notify NO_PLAYERS
+	fi
+	
+	rm -f $TMP_PLAYERS 2> /dev/null 
+	return $RETVAL	
+}
+
+# Display count of players logged in
+# Return 0 iff there are players on the server
+# or 1 else
+minectl_server_player_count()  {
+	local TMP_PLAYERS="`mktemp`"
+	local RETVAL=1
+	
+	minectl_server_players | head -n 1 | awk '{ print $3 }' | cut -d "/" -f 1 > $TMP_PLAYERS 2> /dev/null
+	cat $TMP_PLAYERS
+	PLAYERS=`cat $TMP_PLAYERS`
+
+	if [ $PLAYERS -gt 0 ]; then
+		RETVAL=0
+	fi
+
+	rm -f $TMP_PLAYERS 2> /dev/null
+	return $RETVAL
+}
+
+##################################
+# Init/Systemd control functions #
+##################################
+
+# Determine status of server
+minectl_server_status() {
+	if [ -f "/lib/systemd/system/minecraft@.service" ]; then
+		/usr/bin/systemctl status minecraft@$SERVER_NAME.service
+	elif [ -f "/etc/init.d/minecraft" ]; then
+		/etc/init.d/minecraft status "$SERVER_NAME" 
+	else
+		minelib_fail DETERMINE_STATUS_FAILED
+	fi
+}
+
+##################
+# Event handling #
+##################
+
+# Handle event configuration
+minectl_server_event() {
+	# List events enabled for the current server
+	minectl_server_event_list() {
+		case $1 in
+			--all)	cd "$EVENT_HANDLERS_DIR"
+			;;
+			*)	cd "$SERVER_EVENT_HANDLERS_DIR"
+		esac
+
+		for EVENT_HANDLER in `ls *.eh 2> /dev/null`; do
+			"./$EVENT_HANDLER" info
+		done
+	}
+
+	# Enable an event on the server
+	minectl_server_event_enable() {
+		while (( $# )); do
+			EVENT_NAME="$1.eh"
+
+			if [ -f "$EVENT_HANDLERS_DIR/$EVENT_NAME" ]; then
+				ln -s "$EVENT_HANDLERS_DIR/$EVENT_NAME" "$SERVER_EVENT_HANDLERS_DIR/$EVENT_NAME" 2> /dev/null
+				"$EVENT_HANDLERS_DIR/$EVENT_NAME" info
+			else
+				minelib_fail NO_SUCH_EVENT "$1"
+			fi
+
+			shift
+		done
+	}
+
+	# Disable an event on the server
+	minectl_server_event_disable() {
+		while (( $# )); do
+			EVENT_NAME="$1.eh"
+
+			if [ -f "$SERVER_EVENT_HANDLERS_DIR/$EVENT_NAME" ]; then
+				unlink "$SERVER_EVENT_HANDLERS_DIR/$EVENT_NAME" 2> /dev/null
+			else
+				minelib_fail NO_SUCH_EVENT $1
+			fi
+
+			shift
+		done
+	}
+
+	local CMD="$1"
+	shift
+
+	case $CMD in
+		ls|list)	minectl_server_event_list "$@"
+		;;
+		enable)		minectl_server_event_enable "$@"
+		;;
+		disable)	minectl_server_event_disable "$@"
+		;;
+		*)		minelib_err UNKNOWN_PARAM $1
+	esac		
+}
+
+######################################################################################################################
+
+###############
+# Main script #
+###############
+
+# Read command
+CMD=$1
+shift
+
+# Check if we are a valid user
+if [ "$USER" != "$MC_USER" ]; then
+	minelib_fail "You need to be $MC_USER to run this"
+fi
+
+# Switch commands and execute appropriate functions
+case $CMD in
+	init)			minectl_init "$@"
+	;;
+	list|ls)		minectl_list_servers "$@"
+	;;
+	add)			minectl_add_server "$@"
+	;;
+	jar)			minectl_jar "$@"
+	;;
+	events)			minectl_server_event list --all
+	;;
+	help|--help|-h)		echo -e "$USAGE"
+	;;
+	"")			minelib_fail "$USAGE"
+	;;
+	--version)		echo -e "`basename $0`-$VERSION.$ARCH - Copyright $YEAR: $AUTHOR under the terms of the $LICENSE"
+	;;
+	all)			# We want to operate on all servers
+				RETVAL=0
+
+				for SERVER in `"$THIS" list`; do
+					echo -e "\033[1m$SERVER\033[0m:"
+					"$THIS" "$SERVER" "$@"
+					SRV_RETVAL=$?
+
+					# Indicate error if at lest one server 
+					# does not return zero-state
+					if [ $SRV_RETVAL -ne 0 ]; then
+						RETVAL=1
+					fi
+
+					# Print exit state
+					echo -e "\033[1mreturned\033[0m: $SRV_RETVAL\n"
+				done
+
+				exit $RETVAL
+	;;
+	*)			# If no commands match, we assume, that
+				# the argument is the server's name
+				SERVER_NAME=$CMD
+
+					
+
+				# Change securely to the server's directory
+				minelib_access_server "$SERVER_NAME"
+
+				# Switch commands on the servers
+				CMD=$1
+				shift
+
+				case $CMD in
+					remove)			minectl_server_remove "$@"
+					;;
+					rename)			minectl_server_rename "$@"
+					;;
+					passwd)			minectl_server_passwd "$@"
+					;;
+					configure|config|cfg)	minectl_server_configure "$@"
+					;;
+					properties|props|pro)	minectl_server_properties "$@"
+					;;
+					backup)			minectl_server_backup "$@"
+					;;
+					restore)		minectl_server_restore "$@"
+					;;
+					reset)			minectl_server_reset "$@"
+					;;
+					event)			minectl_server_event "$@"
+					;;
+					status)			minectl_server_status "$@"
+					;;
+					exec)			minectl_server_execute "$@"
+					;;
+					players)		minectl_server_players "$@"
+					;;
+					player-count)		minectl_server_player_count "$@"
+					;;
+					""|help|--help|-h)	echo -e "$USAGE" | /usr/bin/less -r
+					;;
+					# Assume that we want to run a command of the Java program
+					# iff nothing else applies
+					*)			echo "Executing '$CMD $@' on server '$SERVER_NAME'"
+								minectl_server_execute "$CMD" "$@"
+				esac
+esac
+
+# Return the state of the last command
+exit $?

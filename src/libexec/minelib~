@@ -1,8 +1,8 @@
 #! /bin/bash
 #
-#	minelib - Library for functions frequently used by minectl's plugins
+#	minelib - Library for functions frequently used by minectl's scripts
 #
-#	Version 3.0
+#	Version 2.0
 #
 #	Copyright (C) 2012 Richard Neumann <mail@richard-neumann.de>
 #
@@ -24,151 +24,142 @@
 ####################
 
 # Define default minectl user
-declare -r MC_USER=minecraft
-
-# Debug level for output detail management
-declare -r DEBUG_LEVEL=0
-
-# The current server's name
-declare SERVER_NAME=""
+export MC_USER=minectl
 
 ### Absolute paths ###
 
 # Define home directory
-declare -r MC_HOME="/srv/$MC_USER"
-
-# Define backup directory
-declare -r MC_BACKUP="$MC_HOME/backup"
+export MC_HOME="/home/$MC_USER"
 
 # The directory containing the servers
-declare -r SERVERS_DIR="$MC_HOME/servers"
+export SERVERS_DIR="$MC_HOME/servers"
 
 # JARs' directory
-declare -r JAR_DIR="$MC_HOME/jar"
+export JAR_DIR="$MC_HOME/jar"
+
+# JARs' repository
+export JAR_REPO="$JAR_DIR/repo"
 
 # Define repository list
-declare -r REPO_LIST="$JAR_DIR/.repolist"
+export REPO_LIST="$JAR_REPO/.repolist"
 
 # Name of the event scripts
-declare -r EVENT_HANDLERS_DIR="$MC_HOME/event-handlers"
+export EVENT_HANDLERS_DIR="$MC_HOME/event-handlers"
 
 # Binaries' directory
-declare -r BIN_DIR="/usr/local/bin"
+export BIN_DIR="/usr/local/bin"
 
 # Library directory
-declare -r LIB_DIR="/usr/local/libexec/$MC_USER"
+export LIB_DIR="/usr/local/libexec/$MC_USER"
 
 ### Paths relative to server ###
 
 # The server's log file
-declare -r SERVER_LOG_FILE="./mcsrv.log"
+export SERVER_LOG_FILE="./mcsrv.log"
 
 # Define our configuration file name
-declare -r SERVER_CONFIG="./.mcsrv.cfg"
+export SERVER_CONFIG="./.mcsrv.cfg"
 
 # The server's properties file
-declare -r SERVER_PROPERTIES="./server.properties"
+export SERVER_PROPERTIES="./server.properties"
 
 # The server's white-list
-declare -r SERVER_WHITE_LIST="./white-list.txt"
+export SERVER_WHITE_LIST="./white-list.txt"
 
 # The server's ops-list
-declare -r SERVER_OP_LIST="./ops.txt"
+export SERVER_OP_LIST="./ops.txt"
 
 # Name of the event scripts
-declare -r SERVER_EVENT_HANDLERS_DIR="./eh.d"
+export SERVER_EVENT_HANDLERS_DIR="./eh.d"
 
 ### Pipes ###
 
 # The server's stdin pipe
-declare -r SERVER_STDIN="./.stdin"
+export SERVER_STDIN="./.stdin"
 
 # The server's stdout pipe
-declare -r SERVER_STDOUT="./.stdout"
+export SERVER_STDOUT="./.stdout"
 
 # The server's stderr pipe
-declare -r SERVER_STDERR="./.stderr"
+export SERVER_STDERR="./.stderr"
 
-#####################
-# Private functions #
-#####################
+####################
+# Global functions #
+####################
 
-# Test if input is an integer
-_minelib_is_int() {
-	local INT=$1
+# Display prompt before reading stuff from CMD line
+minelib_prompt() {
+        local -u MSG_TYPE="$1"
+	local MSG_VAR="ASK_$MSG_TYPE"
+	local MSG=${!MSG_VAR}
 
-	test $INT -eq $INT 2> /dev/null
+	if [ -n "$MSG" ]; then
+		shift
+		echo -en "$MSG $@"
+	else
+		echo -en "$@ "
+	fi
 }
 
-# Display stuff
-_minelib_print() {
-	local STDERR=false
+# Display notifications
+minelib_notify() {
+	local -u MSG_TYPE="$1"
+	local MSG_VAR="NOTIFY_$MSG_TYPE"
+	local MSG=${!MSG_VAR}
 
-	local FAIL=false
-	local RETVAL=0
-
-	local ON_DEBUG_LEVEL=0
-	local ECHO_ARGS=""
-	local MESSAGE=""
-
-	while (( $# )); do
-		case $1 in
-			--stdout|-1)	STDERR=false
-			;;
-			--stderr|-2)	STDERR=true
-			;;
-			--level|-l)	ON_DEBUG_LEVEL=$2
-					shift
-			;;
-			--error)	STDERR=true
-					if ( _minelib_is_int $2 ); then
-						RETVAL=$2
-						shift
-					else
-						RETVAL=1
-					fi
-			;;
-			--fail)		STDERR=true
-					FAIL=true
-					if ( _minelib_is_int $2 ); then
-						RETVAL=$2
-						shift
-					else
-						RETVAL=2
-					fi
-			;;
-			-n)		ECHO_ARGS="$ECHO_ARGS -n"
-			;;
-			*)		MESSAGE="$*"
-					break
-		esac
+	if [ -n "$MSG" ]; then
 		shift
-	done
+		echo -e "$MSG $@"
+	else
+		echo -e "$@"
+	fi
+}
 
-	# Define debug level, iff undefined
-	if [ -z "$DEBUG_LEVEL" ]; then
-		echo "ERROR: Debug level undefined!" 1>&2
+# Display errors
+minelib_err () {
+	if [ -n "$1" ]; then
+		local -u MSG_TYPE="$1"
+		local MSG_VAR="ERR_$MSG_TYPE"
+		local CODE_VAR="CODE_$MSG_TYPE"
+		local MSG=${!MSG_VAR}
+		local CODE=${!CODE_VAR}
+
+		if [ -n "$MSG" ]; then
+			if [ -n "$CODE" ]; then
+				shift
+				echo -e "$MSG $@"  1>&2
+				return $CODE
+			else
+				return -1
+			fi
+		else
+			echo -e "$1"
+			if [ -n "$2" ]; then
+				return $2
+			else
+				return 1
+			fi
+		fi
+	else
+		echo -e "[   error   ]" 1>&2
 		return 1
 	fi
+}
 
-	# Print if debug level matches
-	if [ $ON_DEBUG_LEVEL -le $DEBUG_LEVEL ]; then
-		if ( $STDERR ); then
-			echo -e $ECHO_ARGS "$MESSAGE" 1>&2
-		else
-			echo -e $ECHO_ARGS "$MESSAGE"
-		fi
-	fi
-
-	if ( $FAIL ); then
-		exit $RETVAL
+# New function for displaying fails
+minelib_fail() {
+	if [ -n "$1" ]; then
+		minelib_err  "$1" "$2"
+		exit $?
 	else
-		return $RETVAL
+		echo -e "[  failed   ]" 1>&2
+		exit 1
 	fi
-}		
+}
+		
 
 # List (just) directories in the current folder (without sub directories)
-_minelib_ls_dir() {
+minelib_ls_dir() {
 	local DIR="$1"
 
 	if [ -z "$DIR" ]; then
@@ -179,7 +170,7 @@ _minelib_ls_dir() {
 }
 
 # Operate on files
-_minelib_fileop() {
+minelib_fileop() {
 	local GREP="grep"
 	local IGNORE_CASE=false
 	local BEGINS_WITH=false
@@ -187,13 +178,13 @@ _minelib_fileop() {
 	local CMD=
 
 	# Add a string to a file
-	_minelib_fileop_add() {
+	minelib_fileop_add() {
 		echo "$PATTERN" >> "$FILE"
 		return $?
 	}
 
 	# Check if a certain string is contained in a file
-	_minelib_fileop_contains() {
+	minelib_fileop_contains() {
 		if ( $BEGINS_WITH && $ENDS_WITH ); then
 			$GREP -E "^[[:blank:]]*$PATTERN[[:blank:]]*$" "$FILE" 2> /dev/null
 		elif ( $BEGINS_WITH ); then
@@ -208,7 +199,7 @@ _minelib_fileop() {
 	}
 
 	# Remove a string that is in the beginning of a file from this file
-	_minelib_fileop_remove() {
+	minelib_fileop_remove() {
 		while read MATCH; do
 			local TMP="`mktemp`"		
 			grep -v "$MATCH" "$FILE" > "$TMP" 2> /dev/null
@@ -243,28 +234,26 @@ _minelib_fileop() {
 	local FILE="$3"
 
 	case $CMD in
-		contains)	_minelib_fileop_contains
+		contains)	minelib_fileop_contains
 		;;
 		remove)		local TMP_FILE="`mktemp`"
-				_minelib_fileop_contains > "$TMP_FILE"
-				_minelib_fileop_remove "$TMP_FILE"
+				minelib_fileop_contains > "$TMP_FILE"
+				minelib_fileop_remove "$TMP_FILE"
 				rm -f "$TMP_FILE" 2> /dev/null
 		;;
-		add)		_minelib_fileop_add
+		add)		minelib_fileop_add
 		;;
-		*)		print --error "Unknown file operation \"CMD\""
+		*)		minelib_err or "Unknown file operation \"CMD\""
 	esac
 }
 
 # Extract data from a file removing comments and empty lines
-_minelib_extract_data() {
-	local FILE="$1"
-
-	grep -vE "^[[:blank:]]*$|^[[:blank:]]*#" "$FILE" 2> /dev/null
+minelib_extract_data() {
+	grep -vE "^[[:blank:]]*$|^[[:blank:]]*#" $1 2> /dev/null
 }
 
 # Ask a question and return 0 on 'yes' or 1 otherwise
-_minelib_ask() {
+minelib_ask() {
 	local USAGE="\
 	Usage: ask [The question]\nReturns 0 on \"y\" or 1 else."
 
@@ -273,11 +262,19 @@ _minelib_ask() {
 		return 2
 	fi
 
-	local MSG="$@"
 	local ANSWER=
 	local RETVAL=1
 
-	echo -en "$MSG"
+	local -u MSG_TYPE="$1"
+	local MSG_VAR="ASK_$MSG_TYPE"
+	local MSG=${!MSG_VAR}
+
+	if [ -n "$MSG" ]; then
+		shift
+		echo -en "$MSG $@"
+	else
+		echo -en "$@ "
+	fi
 
 	# Read and print answer 
 	read ANSWER
@@ -293,7 +290,7 @@ _minelib_ask() {
 }
 
 # Change the value of a variable inside a file
-_minelib_set_var() {
+minelib_set_var() {
 	# Arguments for variable name declaration
 	local DECLARE_ARGS=
 
@@ -310,33 +307,33 @@ _minelib_set_var() {
 	# The second argument is the file to operate on
 	local FILE="$2"
 
-	local VARIABLE_PURE="$(echo "$VAR_DEC" | cut -d "=" -f 1)"
+	local VARIABLE_PURE="`echo "$VAR_DEC" | cut -d "=" -f 1`"
 	local $DECLARE_ARGS VARIABLE="$VARIABLE_PURE"
-	local VALUE="$(echo "$VAR_DEC" | cut -d "=" -f 2)"
+	local VALUE="`echo "$VAR_DEC" | cut -d "=" -f 2`"
 
 	# Check if variable is not empty
 	if [ -n "$VARIABLE_PURE" ]; then
 		# If the variable name preceeds a "-", that means
 		# we want the variable to be removed from the file
-		if [ -n "$(echo "$VARIABLE_PURE" | grep ^"-" 2> /dev/null)" ]; then
+		if [ -n "`echo "$VARIABLE_PURE" | grep ^"-" 2> /dev/null`" ]; then
 			VARIABLE_PURE="`echo "$VARIABLE_PURE" | cut -d "-" -f 2`"
-			_minelib_fileop -b remove "$VARIABLE_PURE" "$FILE" 2> /dev/null
+			minelib_fileop -b remove "$VARIABLE_PURE" "$FILE" 2> /dev/null
 		else
 			# Search for variable inside the file	
 			local VAR_LINE="`grep ^"$VARIABLE=" "$FILE" 2> /dev/null`"
 
 			# If the variable is in the file, replace it with its new value
-			if ( _minelib_fileop -b contains "$VARIABLE=" "$FILE" > /dev/null 2> /dev/null ); then
+			if ( minelib_fileop -b contains "$VARIABLE=" "$FILE" > /dev/null 2> /dev/null ); then
 				sed -i "s|$VAR_LINE|$VARIABLE=$VALUE|" "$FILE" 2> /dev/null
 			else
-				_minelib_fileop add "$VARIABLE=$VALUE" "$FILE"
+				minelib_fileop add "$VARIABLE=$VALUE" "$FILE"
 			fi
 
 			# Print out the new variable assignment
 			echo "$VARIABLE=$VALUE"
 		fi
 	else
-		print --error "No variable specified"
+		minelib_err or "No variable specified"
 		return 2
 	fi
 	
@@ -345,7 +342,7 @@ _minelib_set_var() {
 
 # Print out a file and highlight changes. Usage:
 # print_file [--offset, -o <offset>] <file_name> [change_log]
-_minelib_print_file() {
+minelib_print_file() {
 	local OFFSET=""
 
 	# Check if we specified an offset
@@ -375,7 +372,7 @@ _minelib_print_file() {
 		$CONTINUE && continue
 
 		echo -e "$OFFSET$LINE"
-        done < "$FILE"
+        done < $FILE
 }
 
 # Access a server's directory securely
@@ -383,116 +380,46 @@ _minelib_print_file() {
 # if a user does not specify a server name by mistake, we will change to $MC_HOME/servers 
 # and, if clean is called "clean()", may remove all servers by mistake. That won't be good!
 # 'access_server' also makes sure that a certain server (directory) exists
-_minelib_access_server() {
+minelib_access_server() {
 	# First parameter is the server name
 	# XXX: This variable needs to be global!
 	SERVER_NAME="$1"
 	
 	# Check is server name is not empty
-	test -n "$SERVER_NAME" 2> /dev/null || print --fail no_srv_name
+	test -n "$SERVER_NAME" 2> /dev/null || minelib_fail no_srv_name
 
 	# Check whether server's directory exists
-	test -d "$SERVERS_DIR/$SERVER_NAME" 2> /dev/null || print --fail srv_not_existant
+	test -d "$SERVERS_DIR/$SERVER_NAME" 2> /dev/null || minelib_fail srv_not_existant
 
 	# Check whether server's directory is accessible
-	cd "$SERVERS_DIR/$SERVER_NAME" 2> /dev/null || print --fail access_srv_dir_failed
+	cd "$SERVERS_DIR/$SERVER_NAME" 2> /dev/null || minelib_fail access_srv_dir_failed
 
 	# Check if we did really change to a subfolder of $MC_HOME/servers
-	test "$(dirname $PWD)" == "$SERVERS_DIR" 2> /dev/null || print --fail inside_srv_dir
+	test "`dirname $PWD`" == "$SERVERS_DIR" 2> /dev/null || minelib_fail inside_srv_dir
 }
 
 # Clean up the server directory
-_minelib_clean() {
+minelib_clean() {
 	# First parameter is the server name
 	SERVER_NAME=$1
 	shift
 
 	# Change to server's directory
-	_mineclib_access_server "$SERVER_NAME"
+	access_server "$SERVER_NAME"
 
 	# Remove server directory's content
-	rm -R * > /dev/null 2> /dev/null || print --fail srv_clean_failed
+	rm -R * > /dev/null 2> /dev/null || minelib_fail srv_clean_failed
 }
 
-# Check dependencies
-_minelib_checkdeps() {
-	true
+# Create named pipes
+minelib_mk_fifos() {
+        for FIFO in $SERVER_STDIN $SERVER_STDOUT $SERVER_STDERR $SERVER_EVENT_QUEUE; do
+                if [ -e $FIFO ]; then
+                        if [ ! -p $FIFO ]; then
+                                minelib_fail file_blocking_pipe
+                        fi
+                else
+                        mkfifo $FIFO
+                fi
+        done
 }
-
-# Test if debug level is verbose
-_minelib_verbose() {
-	test $DEBUG_LEVEL -ge 1 2> /dev/null
-}
-
-# Test if debug level is very verbose
-_minelib_very_verbose() {
-	test $DEBUG_LEVEL -ge 2 2> /dev/null
-}
-
-# Test if a certain function is defined
-_minelib_function_exists() {
-	local FUNCTION_NAME="$1"
-
-	type $FUNCTION_NAME 2> /dev/null | grep -q ^"$1 ()"
-}
-
-###################
-# Public funtions #
-###################
-
-is_int() {
-	_minelib_is_int "$@"
-}
-
-print() {
-	_minelib_print "$@"
-}		
-
-ls_dir() {
-	_minelib_ls_dir "$@"
-}
-
-fileop() {
-	_minelib_fileop "$@"
-}
-
-extract_data() {
-	_minelib_extract_data "$@"
-}
-
-ask() {
-	_minelib_ask "$@"
-}
-
-set_var() {
-	_minelib_set_var "$@"
-}
-
-print_file() {
-	_minelib_print_file "$@"
-}
-
-access_server() {
-	_minelib_access_server "$@"
-}
-
-clean() {
-	_minelib_clean "$@"
-}
-
-checkdeps() {
-	_minelib_checkdeps "$@"
-}
-
-verbose() {
-	_minelib_verbose "$@"
-}
-
-very_verbose() {
-	_minelib_very_verbose "$@"
-}
-
-function_exists() {
-	_minelib_function_exists "$@"
-}
-
